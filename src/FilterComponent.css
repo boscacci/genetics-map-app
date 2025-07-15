@@ -508,6 +508,18 @@
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25) !important; /* Enhanced shadow for better visibility */
   }
 
+  /* Enhanced focus states for better dropdown visibility */
+  .react-select__control--is-focused {
+    border-color: #3498db !important;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2) !important;
+  }
+
+  /* Ensure focused dropdowns have maximum z-index */
+  .react-select__menu--is-focused {
+    z-index: 10001 !important;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3) !important;
+  }
+
   /* Keyboard indicator styling */
   .filter-minimize-btn.keyboard-active {
     background: #e74c3c !important;

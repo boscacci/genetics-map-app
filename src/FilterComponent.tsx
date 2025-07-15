@@ -43,6 +43,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   const [isMinimized, setIsMinimized] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [initialViewportHeight, setInitialViewportHeight] = useState(window.innerHeight);
+  const [focusedDropdown, setFocusedDropdown] = useState<string | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
 
   // Detect mobile device
@@ -432,6 +433,18 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     setSelectedLanguages(values);
   };
 
+  // Handle dropdown focus events for z-index management
+  const handleDropdownFocus = (dropdownType: string) => {
+    setFocusedDropdown(dropdownType);
+  };
+
+  const handleDropdownBlur = () => {
+    // Small delay to allow for option selection
+    setTimeout(() => {
+      setFocusedDropdown(null);
+    }, 100);
+  };
+
   const toggleMinimize = () => {
     setIsMinimized(!isMinimized);
   };
@@ -506,6 +519,15 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 isSearchable
                 isClearable
                 menuPlacement="top"
+                onMenuOpen={() => handleDropdownFocus('country')}
+                onMenuClose={handleDropdownBlur}
+                onBlur={handleDropdownBlur}
+                styles={{
+                  menu: (base) => ({
+                    ...base,
+                    zIndex: focusedDropdown === 'country' ? 10001 : 9999
+                  })
+                }}
               />
             </div>
             <div className="filter-group">
@@ -520,6 +542,15 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 isSearchable
                 isClearable
                 menuPlacement="top"
+                onMenuOpen={() => handleDropdownFocus('city')}
+                onMenuClose={handleDropdownBlur}
+                onBlur={handleDropdownBlur}
+                styles={{
+                  menu: (base) => ({
+                    ...base,
+                    zIndex: focusedDropdown === 'city' ? 10001 : 9999
+                  })
+                }}
               />
             </div>
             <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
@@ -534,6 +565,15 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 isSearchable
                 isClearable
                 menuPlacement="top"
+                onMenuOpen={() => handleDropdownFocus('language')}
+                onMenuClose={handleDropdownBlur}
+                onBlur={handleDropdownBlur}
+                styles={{
+                  menu: (base) => ({
+                    ...base,
+                    zIndex: focusedDropdown === 'language' ? 10001 : 9999
+                  })
+                }}
               />
             </div>
           </div>
