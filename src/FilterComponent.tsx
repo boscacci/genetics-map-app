@@ -288,15 +288,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     minLng = Math.max(minLng - lngPadding, -180);
     maxLng = Math.min(maxLng + lngPadding, 180);
     
-    // Special handling for United States to ensure full country visibility
-    if (selectedCountries.includes('United States')) {
-      // US bounds: roughly 24°N to 71°N, 66°W to 125°W
-      minLat = Math.min(minLat, 24);
-      maxLat = Math.max(maxLat, 71);
-      minLng = Math.min(minLng, -125);
-      maxLng = Math.max(maxLng, -66);
-    }
-    
     // Calculate center
     const centerLat = (minLat + maxLat) / 2;
     const centerLng = (minLng + maxLng) / 2;
@@ -309,15 +300,37 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     // Much more aggressive zoom levels for better country/city focus
     let zoom = 6; // Default zoom (much higher than before)
     
-    if (maxDiff > 100) zoom = 2;      // Very wide area (multiple continents)
-    else if (maxDiff > 50) zoom = 3;  // Wide area (continent level)
-    else if (maxDiff > 25) zoom = 4;  // Large country/region
-    else if (maxDiff > 15) zoom = 5;  // Medium country
-    else if (maxDiff > 8) zoom = 6;   // Small country/state
-    else if (maxDiff > 4) zoom = 7;   // Large city/metro area
-    else if (maxDiff > 2) zoom = 8;   // City level
-    else if (maxDiff > 1) zoom = 9;   // Neighborhood level
-    else zoom = 10;                   // Street level
+    // Special handling for United States to ensure full country visibility
+    if (selectedCountries.includes('United States')) {
+      // US bounds: roughly 24°N to 71°N, 66°W to 125°W
+      minLat = Math.min(minLat, 24);
+      maxLat = Math.max(maxLat, 71);
+      minLng = Math.min(minLng, -125);
+      maxLng = Math.max(maxLng, -66);
+      
+      // Force a more aggressive zoom for US to show better detail
+      const usLatDiff = maxLat - minLat;
+      const usLngDiff = maxLng - minLng;
+      const usMaxDiff = Math.max(usLatDiff, usLngDiff);
+      
+      // Much more aggressive zoom for US
+      if (usMaxDiff > 60) zoom = 3;      // Very wide US view
+      else if (usMaxDiff > 40) zoom = 4; // Wide US view
+      else if (usMaxDiff > 25) zoom = 5; // Standard US view
+      else if (usMaxDiff > 15) zoom = 6; // Closer US view
+      else zoom = 7;                     // Very close US view
+    } else {
+      // Standard zoom calculation for other countries
+      if (maxDiff > 100) zoom = 2;      // Very wide area (multiple continents)
+      else if (maxDiff > 50) zoom = 3;  // Wide area (continent level)
+      else if (maxDiff > 25) zoom = 4;  // Large country/region
+      else if (maxDiff > 15) zoom = 5;  // Medium country
+      else if (maxDiff > 8) zoom = 6;   // Small country/state
+      else if (maxDiff > 4) zoom = 7;   // Large city/metro area
+      else if (maxDiff > 2) zoom = 8;   // City level
+      else if (maxDiff > 1) zoom = 9;   // Neighborhood level
+      else zoom = 10;                   // Street level
+    }
     
     // For country filters, ensure we get at least zoom level 5
     if (selectedCountries.length > 0 && zoom < 5) {
