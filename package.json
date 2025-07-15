@@ -1,0 +1,51 @@
+{
+  "name": "genetics-map-app",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://boscacci.github.io/genetics-map-app",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "prebuild": "node scripts/process-data.js",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+    "@types/leaflet": "^1.9.20",
+    "@types/papaparse": "^5.3.16",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3",
+    "papaparse": "^5.5.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-leaflet": "^5.0.0",
+    "react-leaflet-markercluster": "^5.0.0-rc.0",
+    "react-scripts": "^5.0.1",
+    "react-select": "^5.10.2",
+    "typescript": "^4.9.5"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
+}
