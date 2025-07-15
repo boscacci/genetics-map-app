@@ -483,9 +483,9 @@
     transform: none !important; /* Prevent any transforms */
   }
 
-  /* Simple keyboard handling - just move to top */
+  /* Simple keyboard handling - position 40% down from top */
   .topright-filter-container.keyboard-visible {
-    top: 10px !important;
+    top: 40% !important;
     bottom: auto !important;
     position: fixed !important;
     z-index: 10000 !important;

@@ -108,10 +108,13 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   // Simple mobile positioning - just move to top when keyboard is visible
   const updateMobilePosition = () => {
     if (isKeyboardVisible) {
-      // When keyboard is visible, move filter box to top
+      // When keyboard is visible, position filter box 40% down from top
+      const viewportHeight = window.innerHeight;
+      const topPosition = Math.floor(viewportHeight * 0.4); // 40% down from top
+      
       setPosition({ 
         x: 10, 
-        y: 10 
+        y: topPosition 
       });
     } else {
       // Normal mobile positioning at bottom
