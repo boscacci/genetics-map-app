@@ -68,7 +68,7 @@
   border: 1px solid #ddd !important;
   border-radius: 4px !important;
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15) !important;
-  z-index: 9999 !important; /* Much higher z-index to appear above everything */
+  z-index: 999999 !important; /* Maximum z-index to appear above everything */
   display: block !important;
   visibility: visible !important;
   margin-bottom: 12px !important;
@@ -416,7 +416,7 @@
   
   .react-select__menu {
     max-height: 150px !important; /* Shorter menu for mobile */
-    z-index: 9999 !important; /* Much higher z-index to appear above everything */
+    z-index: 999999 !important; /* Maximum z-index to appear above everything */
     margin-bottom: 12px !important;
     border-bottom: 2px solid #3498db !important;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15) !important;
