@@ -57,8 +57,11 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     }
   }, []);
 
+  // Only allow dragging on desktop
+  const allowDrag = !isMobile();
+
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (isMinimized) return;
+    if (!allowDrag || isMinimized) return;
     setIsDragging(true);
     const rect = boxRef.current?.getBoundingClientRect();
     if (rect) {
@@ -70,7 +73,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (isMinimized) return;
+    if (!allowDrag || isMinimized) return;
     setIsDragging(true);
     const rect = boxRef.current?.getBoundingClientRect();
     if (rect && e.touches[0]) {
@@ -122,9 +125,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     setIsDragging(false);
   };
 
-  // Add event listeners for dragging
+  // Add event listeners for dragging (desktop only)
   useEffect(() => {
-    if (isDragging) {
+    if (isDragging && allowDrag) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       document.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -137,7 +140,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
         document.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, [isDragging, dragOffset, isMinimized]);
+  }, [isDragging, dragOffset, isMinimized, allowDrag]);
 
   // Extract unique values for filters
   const countries = getUniqueValues(specialists.map(s => s.Country));
@@ -277,6 +280,10 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     setIsMinimized(!isMinimized);
   };
 
+  // Show drag handle only on desktop, minimize button on mobile
+  const showDragHandle = allowDrag;
+  const showMinimizeButton = isMobile();
+
   // If minimized, show only the floating button
   if (isMinimized) {
     return (
@@ -305,20 +312,24 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
           userSelect: 'none'
         }}
       >
-        <button 
-          className="filter-minimize-btn"
-          onClick={toggleMinimize}
-          title="Minimize filters"
-        >
-          −
-        </button>
-        <div 
-          className="filter-drag-handle" 
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-        >
-          <span style={{ fontSize: '14px' }}>⋮⋮</span>
-        </div>
+        {showMinimizeButton && (
+          <button 
+            className="filter-minimize-btn"
+            onClick={toggleMinimize}
+            title="Minimize filters"
+          >
+            −
+          </button>
+        )}
+        {showDragHandle && (
+          <div 
+            className="filter-drag-handle" 
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+          >
+            <span style={{ fontSize: '14px' }}>⋮⋮</span>
+          </div>
+        )}
         <div className="filter-grid">
           <div className="filter-group">
             <label>Country</label>
