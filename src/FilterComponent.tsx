@@ -105,7 +105,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     };
   }, [isKeyboardVisible]);
 
-  // Simple mobile positioning - just move to top when keyboard is visible
+  // Mobile positioning - always at top, adjust when keyboard is visible
   const updateMobilePosition = () => {
     if (isKeyboardVisible) {
       // When keyboard is visible, position filter box 40% down from top
@@ -117,17 +117,12 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
         y: topPosition 
       });
     } else {
-      // Normal mobile positioning at bottom
-      const viewportHeight = window.innerHeight;
-      const estimatedPanelHeight = 200;
-      const safeBottomMargin = 50;
-      
-      // Calculate bottom position
-      const bottomPosition = Math.max(10, viewportHeight - estimatedPanelHeight - safeBottomMargin);
+      // Normal mobile positioning at top
+      const safeTopMargin = 20;
       
       setPosition({ 
         x: 10, 
-        y: bottomPosition 
+        y: safeTopMargin 
       });
     }
   };
