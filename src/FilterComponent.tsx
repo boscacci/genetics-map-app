@@ -468,6 +468,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 classNamePrefix="react-select"
                 isSearchable
                 isClearable
+                menuPlacement={isMobile() ? "top" : "auto"}
+                menuPortalTarget={typeof window !== 'undefined' ? window.document.body : undefined}
+                styles={{ menuPortal: base => ({ ...base, zIndex: 3000 }) }}
               />
             </div>
           </div>
