@@ -288,17 +288,28 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     const lngDiff = maxLng - minLng;
     const maxDiff = Math.max(latDiff, lngDiff);
     
-    let zoom = 4; // Default zoom
-    if (maxDiff > 50) zoom = 2;      // Very wide area
-    else if (maxDiff > 20) zoom = 3; // Wide area
-    else if (maxDiff > 10) zoom = 4; // Medium area
-    else if (maxDiff > 5) zoom = 5;  // Smaller area
-    else if (maxDiff > 2) zoom = 6;  // City level
-    else if (maxDiff > 1) zoom = 7;  // Neighborhood level
-    else zoom = 8;                   // Street level
+    // Much more aggressive zoom levels for better country/city focus
+    let zoom = 6; // Default zoom (much higher than before)
     
-    // Add some padding by adjusting zoom
-    zoom = Math.max(zoom - 1, 2);
+    if (maxDiff > 100) zoom = 2;      // Very wide area (multiple continents)
+    else if (maxDiff > 50) zoom = 3;  // Wide area (continent level)
+    else if (maxDiff > 25) zoom = 4;  // Large country/region
+    else if (maxDiff > 15) zoom = 5;  // Medium country
+    else if (maxDiff > 8) zoom = 6;   // Small country/state
+    else if (maxDiff > 4) zoom = 7;   // Large city/metro area
+    else if (maxDiff > 2) zoom = 8;   // City level
+    else if (maxDiff > 1) zoom = 9;   // Neighborhood level
+    else zoom = 10;                   // Street level
+    
+    // For country filters, ensure we get at least zoom level 5
+    if (selectedCountries.length > 0 && zoom < 5) {
+      zoom = 5;
+    }
+    
+    // For city filters, ensure we get at least zoom level 7
+    if (selectedCities.length > 0 && zoom < 7) {
+      zoom = 7;
+    }
     
     onMapNavigation(centerLat, centerLng, zoom);
   };
