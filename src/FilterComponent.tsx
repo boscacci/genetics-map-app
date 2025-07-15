@@ -41,8 +41,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isMinimized, setIsMinimized] = useState(false);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [initialViewportHeight, setInitialViewportHeight] = useState(window.innerHeight);
   const [focusedDropdown, setFocusedDropdown] = useState<string | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
 
@@ -50,81 +48,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   const isMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
            (window.innerWidth <= 900);
-  };
-
-  // Simple keyboard detection for mobile - just move up when input is focused
-  useEffect(() => {
-    if (!isMobile()) return;
-
-    const handleFocusIn = (e: FocusEvent) => {
-      if (isMobile() && (e.target as HTMLElement).tagName === 'INPUT') {
-        // Immediately move filter box up when any input is focused
-        setIsKeyboardVisible(true);
-      }
-    };
-
-    const handleFocusOut = () => {
-      if (isMobile()) {
-        // Move filter box back down when input loses focus
-        setTimeout(() => {
-          setIsKeyboardVisible(false);
-        }, 300);
-      }
-    };
-
-    document.addEventListener('focusin', handleFocusIn);
-    document.addEventListener('focusout', handleFocusOut);
-    
-    return () => {
-      document.removeEventListener('focusin', handleFocusIn);
-      document.removeEventListener('focusout', handleFocusOut);
-    };
-  }, []);
-
-  // Initialize position based on device type
-  useEffect(() => {
-    if (isMobile()) {
-      updateMobilePosition();
-    }
-  }, [isKeyboardVisible]);
-
-  // Handle window resize for mobile positioning
-  useEffect(() => {
-    const handleResize = () => {
-      if (isMobile()) {
-        updateMobilePosition();
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
-    };
-  }, [isKeyboardVisible]);
-
-  // Mobile positioning - always at top, adjust when keyboard is visible
-  const updateMobilePosition = () => {
-    if (isKeyboardVisible) {
-      // When keyboard is visible, position filter box 40% down from top
-      const viewportHeight = window.innerHeight;
-      const topPosition = Math.floor(viewportHeight * 0.4); // 40% down from top
-      
-      setPosition({ 
-        x: 10, 
-        y: topPosition 
-      });
-    } else {
-      // Normal mobile positioning at top
-      const safeTopMargin = 20;
-      
-      setPosition({ 
-        x: 10, 
-        y: safeTopMargin 
-      });
-    }
   };
 
   // Only allow dragging on desktop
@@ -433,16 +356,16 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
           position: isMobile() ? 'fixed' : 'absolute',
           left: isMobile() ? '10px' : position.x,
           right: isMobile() ? '10px' : 'auto',
-          top: isMobile() ? position.y : position.y,
+          top: isMobile() ? 20 : position.y, // Always 20px on mobile
           bottom: isMobile() ? 'auto' : 'auto',
-          zIndex: isKeyboardVisible ? 3000 : 2000, // Higher z-index when keyboard is visible
+          zIndex: 2000, // Lower z-index as it's always at the top
           overflow: 'visible',
-          transition: isMobile() ? 'top 0.3s ease-out' : 'none' // Smooth transition for mobile
+          transition: 'none' // No transitions on mobile
         }}
       >
         <div 
           ref={boxRef}
-          className={`topright-filter-container ${isKeyboardVisible ? 'keyboard-visible' : ''}`}
+          className={`topright-filter-container`}
           style={{
             cursor: isDragging ? 'grabbing' : 'default',
             userSelect: 'none'
@@ -450,11 +373,11 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
         >
           {showMinimizeButton && (
             <button 
-              className={`filter-minimize-btn ${isKeyboardVisible ? 'keyboard-active' : ''}`}
+              className={`filter-minimize-btn`}
               onClick={toggleMinimize}
-              title={isKeyboardVisible ? "Keyboard mode active - Minimize filters" : "Minimize filters"}
+              title="Minimize filters"
             >
-              {isKeyboardVisible ? "⌨️" : "−"}
+              −
             </button>
           )}
           {showDragHandle && (

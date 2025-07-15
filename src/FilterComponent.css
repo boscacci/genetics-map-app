@@ -372,6 +372,7 @@
     top: 20px !important;
     left: 10px !important;
     right: 10px !important;
+    bottom: auto !important;
     min-width: auto !important;
     max-width: none !important;
     max-height: calc(100% - 80px) !important; /* Account for mobile browser UI */
@@ -383,7 +384,7 @@
     background: #fff;
     border: 1px solid #e0e0e0;
     z-index: 2000 !important;
-    transition: all 0.3s ease-out !important;
+    transition: none !important;
   }
   
   .filter-group {
@@ -481,75 +482,6 @@
     max-height: 24px !important;
     z-index: 2001 !important; /* Ensure it's above the filter container */
     transform: none !important; /* Prevent any transforms */
-  }
-
-  /* Simple keyboard handling - position 40% down from top */
-  .topright-filter-container.keyboard-visible {
-    top: 40% !important;
-    bottom: auto !important;
-    position: fixed !important;
-    z-index: 10000 !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2) !important;
-    transition: all 0.3s ease-out !important;
-  }
-
-  .topright-filter-container.keyboard-visible .filter-group label {
-    color: #3498db !important;
-    font-weight: 600 !important;
-  }
-
-  .topright-filter-container.keyboard-visible .react-select__control {
-    border-color: #3498db !important;
-    background: #fff !important;
-  }
-
-  /* Ensure dropdown menus are always on top when keyboard is visible */
-  .topright-filter-container.keyboard-visible .react-select__menu {
-    z-index: 10000 !important; /* Highest z-index when keyboard is visible */
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25) !important; /* Enhanced shadow for better visibility */
-  }
-
-  /* Enhanced focus states for better dropdown visibility */
-  .react-select__control--is-focused {
-    border-color: #3498db !important;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2) !important;
-  }
-
-  /* Ensure focused dropdowns have maximum z-index */
-  .react-select__menu--is-focused {
-    z-index: 10001 !important;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3) !important;
-  }
-
-  /* Country dropdown gets absolute highest priority */
-  .filter-group:first-child .react-select__menu {
-    z-index: 10002 !important;
-  }
-
-  .filter-group:first-child .react-select__menu--is-focused {
-    z-index: 10003 !important;
-    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.4) !important;
-  }
-
-  /* Ensure Country dropdown is always on top when keyboard is visible */
-  .topright-filter-container.keyboard-visible .filter-group:first-child .react-select__menu {
-    z-index: 10004 !important;
-    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.5) !important;
-  }
-
-  /* Keyboard indicator styling */
-  .filter-minimize-btn.keyboard-active {
-    background: #e74c3c !important;
-    animation: keyboard-pulse 2s infinite;
-  }
-
-  @keyframes keyboard-pulse {
-    0%, 100% { 
-      box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3) !important;
-    }
-    50% { 
-      box-shadow: 0 2px 16px rgba(231, 76, 60, 0.5) !important;
-    }
   }
 } 
 
