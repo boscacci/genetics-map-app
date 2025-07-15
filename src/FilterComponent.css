@@ -344,17 +344,21 @@
   
   /* Mobile positioning - bottom of screen with better viewport handling */
   .topright-filter-container {
-    position: relative !important;
+    position: fixed !important;
+    bottom: 10px !important;
+    left: 10px !important;
+    right: 10px !important;
     min-width: auto !important;
     max-width: none !important;
-    max-height: calc(100vh - 40px) !important; /* Prevent overflow */
-    overflow: visible !important; /* Allow minimize button to be visible */
+    max-height: calc(100vh - 80px) !important; /* Account for mobile browser UI */
+    overflow-y: auto !important; /* Allow scrolling if needed */
     padding: 8px 8px 8px 8px;
     border-radius: 10px;
     box-shadow: 0 6px 24px rgba(0,0,0,0.13);
     gap: 6px;
     background: #fff;
     border: 1px solid #e0e0e0;
+    z-index: 2000 !important;
   }
   
   /* Mobile grid layout */
@@ -445,7 +449,7 @@
 @media (max-width: 900px) and (max-height: 700px) {
   /* For shorter screens like some mobile devices */
   .topright-filter-container {
-    max-height: calc(100vh - 60px) !important;
+    max-height: calc(100vh - 100px) !important;
     bottom: 15px !important;
   }
   
@@ -467,7 +471,7 @@
 @media (max-width: 900px) and (max-height: 600px) {
   /* For very short screens */
   .topright-filter-container {
-    max-height: calc(100vh - 80px) !important;
+    max-height: calc(100vh - 120px) !important;
     bottom: 20px !important;
     padding: 6px 6px 6px 6px !important;
   }

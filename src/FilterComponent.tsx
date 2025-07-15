@@ -52,16 +52,16 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   // Initialize position based on device type
   useEffect(() => {
     if (isMobile()) {
-      // On mobile, position at bottom with better viewport handling
+      // On mobile, use fixed positioning at bottom with more conservative margins
       const viewportHeight = window.innerHeight;
-      const viewportWidth = window.innerWidth;
       
-      // Estimate filter panel height (approximately 200px for 3 filter groups)
-      const estimatedPanelHeight = 200;
-      const safeBottomMargin = 20; // Extra margin from bottom
+      // More conservative estimate for mobile browser UI (address bar, navigation)
+      const mobileUISpace = 120; // Account for address bar, navigation, etc.
+      const estimatedPanelHeight = 180; // Slightly smaller estimate
+      const safeBottomMargin = 30; // More margin from bottom
       
       // Calculate safe bottom position
-      const safeBottomPosition = viewportHeight - estimatedPanelHeight - safeBottomMargin;
+      const safeBottomPosition = viewportHeight - estimatedPanelHeight - safeBottomMargin - mobileUISpace;
       
       // Ensure we don't go below 10px from bottom
       const bottomPosition = Math.max(10, safeBottomPosition);
@@ -78,9 +78,14 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     const handleResize = () => {
       if (isMobile()) {
         const viewportHeight = window.innerHeight;
-        const estimatedPanelHeight = 200;
-        const safeBottomMargin = 20;
-        const safeBottomPosition = viewportHeight - estimatedPanelHeight - safeBottomMargin;
+        
+        // More conservative estimate for mobile browser UI (address bar, navigation)
+        const mobileUISpace = 120; // Account for address bar, navigation, etc.
+        const estimatedPanelHeight = 180; // Slightly smaller estimate
+        const safeBottomMargin = 30; // More margin from bottom
+        
+        // Calculate safe bottom position
+        const safeBottomPosition = viewportHeight - estimatedPanelHeight - safeBottomMargin - mobileUISpace;
         const bottomPosition = Math.max(10, safeBottomPosition);
         
         setPosition({ 
