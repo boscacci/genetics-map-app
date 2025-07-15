@@ -483,19 +483,14 @@
     transform: none !important; /* Prevent any transforms */
   }
 
-  /* Enhanced mobile keyboard handling */
+  /* Simple keyboard handling - just move to top */
   .topright-filter-container.keyboard-visible {
-    box-shadow: 0 12px 40px rgba(0,0,0,0.25) !important;
-    border-color: #3498db !important;
-    background: #f8f9fa !important;
-    top: 5px !important;
+    top: 10px !important;
     bottom: auto !important;
-    left: 5px !important;
-    right: 5px !important;
-    max-height: calc(100vh - 250px) !important;
-    transform: translateY(0) !important;
     position: fixed !important;
     z-index: 10000 !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2) !important;
+    transition: all 0.3s ease-out !important;
   }
 
   .topright-filter-container.keyboard-visible .filter-group label {
