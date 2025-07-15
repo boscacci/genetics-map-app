@@ -41,6 +41,8 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [initialViewportHeight, setInitialViewportHeight] = useState(window.innerHeight);
   const boxRef = useRef<HTMLDivElement>(null);
 
   // Detect mobile device
@@ -49,49 +51,82 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
            (window.innerWidth <= 900);
   };
 
+  // Keyboard detection for mobile
+  useEffect(() => {
+    if (!isMobile()) return;
+
+    const handleResize = () => {
+      const currentHeight = window.innerHeight;
+      const heightDifference = initialViewportHeight - currentHeight;
+      
+      // If viewport height decreased significantly, keyboard is likely visible
+      if (heightDifference > 150) {
+        setIsKeyboardVisible(true);
+      } else {
+        setIsKeyboardVisible(false);
+      }
+    };
+
+    const handleFocusIn = (e: FocusEvent) => {
+      if (isMobile() && (e.target as HTMLElement).tagName === 'INPUT') {
+        // Set a small delay to allow keyboard to appear
+        setTimeout(() => {
+          const currentHeight = window.innerHeight;
+          const heightDifference = initialViewportHeight - currentHeight;
+          if (heightDifference > 150) {
+            setIsKeyboardVisible(true);
+          }
+        }, 300);
+      }
+    };
+
+    const handleFocusOut = () => {
+      if (isMobile()) {
+        // Set a delay to allow keyboard to hide
+        setTimeout(() => {
+          const currentHeight = window.innerHeight;
+          const heightDifference = initialViewportHeight - currentHeight;
+          if (heightDifference <= 150) {
+            setIsKeyboardVisible(false);
+          }
+        }, 300);
+      }
+    };
+
+    // Store initial viewport height
+    setInitialViewportHeight(window.innerHeight);
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', () => {
+      // Reset on orientation change
+      setTimeout(() => {
+        setInitialViewportHeight(window.innerHeight);
+        setIsKeyboardVisible(false);
+      }, 500);
+    });
+    
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('focusout', handleFocusOut);
+    };
+  }, [initialViewportHeight]);
+
   // Initialize position based on device type
   useEffect(() => {
     if (isMobile()) {
-      // On mobile, use fixed positioning at bottom with more conservative margins
-      const viewportHeight = window.innerHeight;
-      
-      // More conservative estimate for mobile browser UI (address bar, navigation)
-      const mobileUISpace = 120; // Account for address bar, navigation, etc.
-      const estimatedPanelHeight = 180; // Slightly smaller estimate
-      const safeBottomMargin = 30; // More margin from bottom
-      
-      // Calculate safe bottom position
-      const safeBottomPosition = viewportHeight - estimatedPanelHeight - safeBottomMargin - mobileUISpace;
-      
-      // Ensure we don't go below 10px from bottom
-      const bottomPosition = Math.max(10, safeBottomPosition);
-      
-      setPosition({ 
-        x: 10, 
-        y: bottomPosition 
-      });
+      updateMobilePosition();
     }
-  }, []);
+  }, [isKeyboardVisible]);
 
   // Handle window resize for mobile positioning
   useEffect(() => {
     const handleResize = () => {
       if (isMobile()) {
-        const viewportHeight = window.innerHeight;
-        
-        // More conservative estimate for mobile browser UI (address bar, navigation)
-        const mobileUISpace = 120; // Account for address bar, navigation, etc.
-        const estimatedPanelHeight = 180; // Slightly smaller estimate
-        const safeBottomMargin = 30; // More margin from bottom
-        
-        // Calculate safe bottom position
-        const safeBottomPosition = viewportHeight - estimatedPanelHeight - safeBottomMargin - mobileUISpace;
-        const bottomPosition = Math.max(10, safeBottomPosition);
-        
-        setPosition({ 
-          x: 10, 
-          y: bottomPosition 
-        });
+        updateMobilePosition();
       }
     };
 
@@ -102,7 +137,34 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
     };
-  }, []);
+  }, [isKeyboardVisible]);
+
+  // Function to update mobile position
+  const updateMobilePosition = () => {
+    const viewportHeight = window.innerHeight;
+    
+    if (isKeyboardVisible) {
+      // When keyboard is visible, position at the very top
+      setPosition({ 
+        x: 10, 
+        y: 10 
+      });
+    } else {
+      // Normal mobile positioning at bottom
+      const mobileUISpace = 120; // Account for address bar, navigation, etc.
+      const estimatedPanelHeight = 180; // Slightly smaller estimate
+      const safeBottomMargin = 30; // More margin from bottom
+      
+      // Calculate safe bottom position
+      const safeBottomPosition = viewportHeight - estimatedPanelHeight - safeBottomMargin - mobileUISpace;
+      const bottomPosition = Math.max(10, safeBottomPosition);
+      
+      setPosition({ 
+        x: 10, 
+        y: bottomPosition 
+      });
+    }
+  };
 
   // Only allow dragging on desktop
   const allowDrag = !isMobile();
@@ -400,13 +462,14 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
           right: isMobile() ? '10px' : 'auto',
           top: isMobile() ? position.y : position.y,
           bottom: isMobile() ? 'auto' : 'auto',
-          zIndex: 2000,
-          overflow: 'visible'
+          zIndex: isKeyboardVisible ? 3000 : 2000, // Higher z-index when keyboard is visible
+          overflow: 'visible',
+          transition: isMobile() ? 'top 0.3s ease-out' : 'none' // Smooth transition for mobile
         }}
       >
         <div 
           ref={boxRef}
-          className="topright-filter-container" 
+          className={`topright-filter-container ${isKeyboardVisible ? 'keyboard-visible' : ''}`}
           style={{
             cursor: isDragging ? 'grabbing' : 'default',
             userSelect: 'none'
@@ -414,11 +477,11 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
         >
           {showMinimizeButton && (
             <button 
-              className="filter-minimize-btn"
+              className={`filter-minimize-btn ${isKeyboardVisible ? 'keyboard-active' : ''}`}
               onClick={toggleMinimize}
-              title="Minimize filters"
+              title={isKeyboardVisible ? "Keyboard mode active - Minimize filters" : "Minimize filters"}
             >
-              −
+              {isKeyboardVisible ? "⌨️" : "−"}
             </button>
           )}
           {showDragHandle && (

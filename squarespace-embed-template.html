@@ -1,12 +1,33 @@
 <!-- Genetics Map Embed Code for Squarespace -->
 <!-- Copy this entire block into your Squarespace Code Block -->
 
-<div style="width:100%;height:100vh;min-height:400px;box-sizing:border-box;position:relative;overflow:hidden;">
+<style>
+  /* Use dynamic viewport units for better mobile support */
+  .genetics-map-embed-container {
+    width: 100vw;
+    height: 100dvh;
+    min-width: 320px;
+    min-height: 400px;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+  }
+  .genetics-map-embed-iframe {
+    width: 100vw;
+    height: 100dvh;
+    border: 0;
+    display: block;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+  }
+</style>
+
+<div class="genetics-map-embed-container">
   <iframe 
+      class="genetics-map-embed-iframe"
       id="genetics-map" 
       src="https://boscacci.github.io/genetics-map-app/?key={key}"
       title="Global Genetics Professionals"
-      style="width:100%;height:100%;border:0;display:block;position:absolute;top:0;left:0;right:0;bottom:0;"
       allowfullscreen="true">
   </iframe>
 </div> 
