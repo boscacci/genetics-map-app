@@ -520,6 +520,22 @@
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3) !important;
   }
 
+  /* Country dropdown gets absolute highest priority */
+  .filter-group:first-child .react-select__menu {
+    z-index: 10002 !important;
+  }
+
+  .filter-group:first-child .react-select__menu--is-focused {
+    z-index: 10003 !important;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  /* Ensure Country dropdown is always on top when keyboard is visible */
+  .topright-filter-container.keyboard-visible .filter-group:first-child .react-select__menu {
+    z-index: 10004 !important;
+    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.5) !important;
+  }
+
   /* Keyboard indicator styling */
   .filter-minimize-btn.keyboard-active {
     background: #e74c3c !important;

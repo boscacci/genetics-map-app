@@ -525,7 +525,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 styles={{
                   menu: (base) => ({
                     ...base,
-                    zIndex: focusedDropdown === 'country' ? 10001 : 9999
+                    zIndex: focusedDropdown === 'country' ? 10002 : 9999 // Country gets highest priority
                   })
                 }}
               />
