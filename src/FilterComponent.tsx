@@ -351,14 +351,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     setSelectedLanguages(values);
   };
 
-  const handleClearAllFilters = () => {
-    setSelectedCountries([]);
-    setSelectedCities([]);
-    setSelectedLanguages([]);
-    setAvailableCities(cities); // Reset to all cities
-    setAvailableLanguages(languages); // Reset to all languages
-  };
-
   return (
     <div 
       ref={boxRef}
@@ -440,29 +432,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
           isSearchable
           isClearable
         />
-      </div>
-      <div className="filter-group" style={{ marginTop: '16px' }}>
-        <button
-          onClick={handleClearAllFilters}
-          style={{
-            width: '100%',
-            padding: '8px 16px',
-            backgroundColor: '#f0f0f0',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            color: '#666'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = '#e0e0e0';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = '#f0f0f0';
-          }}
-        >
-          Clear All Filters
-        </button>
       </div>
     </div>
   );

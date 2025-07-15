@@ -186,22 +186,14 @@ const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      <div className="header">
-        <h1>Global Genetics Professionals</h1>
-        <div className="header-controls">
-                      <div className="specialist-count">
-              {filteredSpecialists.length > 0
-                ? `Showing ${filteredSpecialists.length} of ${specialists.length} professionals`
-                : `${specialists.length} professionals with location data`}
-            </div>
+      <div className="map-container">
+        <div className="search-overlay">
           <GlobalSearchBar 
             value={globalSearch} 
             onChange={setGlobalSearch} 
             onLocationSearch={handleLocationSearch}
           />
         </div>
-      </div>
-      <div className="map-container">
         <MapComponent
           specialists={specialists}
           filteredSpecialists={filteredSpecialists}
