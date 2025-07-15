@@ -266,82 +266,82 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   const navigateToFilteredArea = (filteredSpecialists: MapPoint[]) => {
     if (!onMapNavigation || filteredSpecialists.length === 0) return;
 
-    // Calculate the center and bounds of filtered specialists
-    const validSpecialists = filteredSpecialists.filter(s => s.Latitude && s.Longitude);
-    
+    let validSpecialists = filteredSpecialists.filter(s => s.Latitude && s.Longitude);
+
+    // Special handling for United States: exclude Alaska and Hawaii from bounds
+    if (selectedCountries.includes('United States')) {
+      validSpecialists = validSpecialists.filter(s => {
+        // Contiguous US: lat 24–50, lng -125 to -66
+        return s.Latitude >= 24 && s.Latitude <= 50 && s.Longitude >= -125 && s.Longitude <= -66;
+      });
+    }
+
     if (validSpecialists.length === 0) return;
 
-    const lats = validSpecialists.map(s => s.Latitude!);
-    const lngs = validSpecialists.map(s => s.Longitude!);
-    
+    let lats = validSpecialists.map(s => s.Latitude!);
+    let lngs = validSpecialists.map(s => s.Longitude!);
+
     let minLat = Math.min(...lats);
     let maxLat = Math.max(...lats);
     let minLng = Math.min(...lngs);
     let maxLng = Math.max(...lngs);
-    
+
     // Add padding to ensure full country visibility
-    const latPadding = (maxLat - minLat) * 0.15; // 15% padding
-    const lngPadding = (maxLng - minLng) * 0.15; // 15% padding
-    
+    const latPadding = (maxLat - minLat) * 0.15;
+    const lngPadding = (maxLng - minLng) * 0.15;
+
     minLat = Math.max(minLat - latPadding, -90);
     maxLat = Math.min(maxLat + latPadding, 90);
     minLng = Math.max(minLng - lngPadding, -180);
     maxLng = Math.min(maxLng + lngPadding, 180);
-    
+
+    // Special handling for United States to ensure full contiguous country visibility
+    if (selectedCountries.includes('United States')) {
+      minLat = Math.min(minLat, 24);
+      maxLat = Math.max(maxLat, 50);
+      minLng = Math.min(minLng, -125);
+      maxLng = Math.max(maxLng, -66);
+    }
+
     // Calculate center
     const centerLat = (minLat + maxLat) / 2;
     const centerLng = (minLng + maxLng) / 2;
-    
+
     // Calculate appropriate zoom level based on the spread
     const latDiff = maxLat - minLat;
     const lngDiff = maxLng - minLng;
     const maxDiff = Math.max(latDiff, lngDiff);
-    
+
     // Much more aggressive zoom levels for better country/city focus
-    let zoom = 6; // Default zoom (much higher than before)
-    
-    // Special handling for United States to ensure full country visibility
+    let zoom = 6; // Default zoom
+
+    // Special zoom logic for contiguous US
     if (selectedCountries.includes('United States')) {
-      // US bounds: roughly 24°N to 71°N, 66°W to 125°W
-      minLat = Math.min(minLat, 24);
-      maxLat = Math.max(maxLat, 71);
-      minLng = Math.min(minLng, -125);
-      maxLng = Math.max(maxLng, -66);
-      
-      // Force a more aggressive zoom for US to show better detail
-      const usLatDiff = maxLat - minLat;
-      const usLngDiff = maxLng - minLng;
-      const usMaxDiff = Math.max(usLatDiff, usLngDiff);
-      
-      // Much more aggressive zoom for US
-      if (usMaxDiff > 60) zoom = 3;      // Very wide US view
-      else if (usMaxDiff > 40) zoom = 4; // Wide US view
-      else if (usMaxDiff > 25) zoom = 5; // Standard US view
-      else if (usMaxDiff > 15) zoom = 6; // Closer US view
-      else zoom = 7;                     // Very close US view
+      if (maxDiff > 40) zoom = 4;
+      else if (maxDiff > 25) zoom = 5;
+      else if (maxDiff > 15) zoom = 6;
+      else zoom = 7;
     } else {
-      // Standard zoom calculation for other countries
-      if (maxDiff > 100) zoom = 2;      // Very wide area (multiple continents)
-      else if (maxDiff > 50) zoom = 3;  // Wide area (continent level)
-      else if (maxDiff > 25) zoom = 4;  // Large country/region
-      else if (maxDiff > 15) zoom = 5;  // Medium country
-      else if (maxDiff > 8) zoom = 6;   // Small country/state
-      else if (maxDiff > 4) zoom = 7;   // Large city/metro area
-      else if (maxDiff > 2) zoom = 8;   // City level
-      else if (maxDiff > 1) zoom = 9;   // Neighborhood level
-      else zoom = 10;                   // Street level
+      if (maxDiff > 100) zoom = 2;
+      else if (maxDiff > 50) zoom = 3;
+      else if (maxDiff > 25) zoom = 4;
+      else if (maxDiff > 15) zoom = 5;
+      else if (maxDiff > 8) zoom = 6;
+      else if (maxDiff > 4) zoom = 7;
+      else if (maxDiff > 2) zoom = 8;
+      else if (maxDiff > 1) zoom = 9;
+      else zoom = 10;
     }
-    
+
     // For country filters, ensure we get at least zoom level 5
     if (selectedCountries.length > 0 && zoom < 5) {
       zoom = 5;
     }
-    
     // For city filters, ensure we get at least zoom level 7
     if (selectedCities.length > 0 && zoom < 7) {
       zoom = 7;
     }
-    
+
     onMapNavigation(centerLat, centerLng, zoom);
   };
 
