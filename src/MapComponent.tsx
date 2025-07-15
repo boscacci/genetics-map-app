@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import L from 'leaflet';
-import { GeneticSpecialist } from './types';
+import { MapPoint } from './types';
 
 // Fix icon paths issue in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -13,15 +13,15 @@ L.Icon.Default.mergeOptions({
 });
 
 interface MapComponentProps {
-  specialists: GeneticSpecialist[];
-  filteredSpecialists: GeneticSpecialist[];
+  specialists: MapPoint[];
+  filteredSpecialists: MapPoint[];
   center: [number, number];
   zoom: number;
 }
 
 // Component to access the map instance
 const MapController: React.FC<{ 
-  filteredSpecialists: GeneticSpecialist[];
+  filteredSpecialists: MapPoint[];
   center: [number, number];
   zoom: number;
 }> = ({ filteredSpecialists, center, zoom }) => {
@@ -65,7 +65,7 @@ const CustomZoomControl: React.FC = () => {
 };
 
 // Memoized marker component to prevent unnecessary re-renders
-const SpecialistMarkers: React.FC<{ specialists: GeneticSpecialist[] }> = React.memo(({ specialists }) => {
+const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ specialists }) => {
   const getWebsiteLink = (website: string) => {
     if (!website) return null;
     
@@ -82,7 +82,7 @@ const SpecialistMarkers: React.FC<{ specialists: GeneticSpecialist[] }> = React.
     );
   };
 
-  const createTooltipContent = (specialist: GeneticSpecialist) => {
+  const createTooltipContent = (specialist: MapPoint) => {
     return `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; line-height: 1.4;">
         <div style="font-weight: 600; color: #2c3e50; margin-bottom: 4px; font-size: 13px;">

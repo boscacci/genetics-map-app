@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Select from 'react-select';
-import { GeneticSpecialist } from './types';
+import { MapPoint } from './types';
 import './FilterComponent.css';
 
 interface FilterComponentProps {
-  specialists: GeneticSpecialist[];
-  onFilterChange: (filtered: GeneticSpecialist[]) => void;
+  specialists: MapPoint[];
+  onFilterChange: (filtered: MapPoint[]) => void;
   onMapNavigation?: (lat: number, lng: number, zoom: number) => void;
 }
 
@@ -52,9 +52,51 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   // Initialize position based on device type
   useEffect(() => {
     if (isMobile()) {
-      // On mobile, position at bottom right
-      setPosition({ x: window.innerWidth - 320, y: window.innerHeight - 200 });
+      // On mobile, position at bottom with better viewport handling
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      
+      // Estimate filter panel height (approximately 200px for 3 filter groups)
+      const estimatedPanelHeight = 200;
+      const safeBottomMargin = 20; // Extra margin from bottom
+      
+      // Calculate safe bottom position
+      const safeBottomPosition = viewportHeight - estimatedPanelHeight - safeBottomMargin;
+      
+      // Ensure we don't go below 10px from bottom
+      const bottomPosition = Math.max(10, safeBottomPosition);
+      
+      setPosition({ 
+        x: 10, 
+        y: bottomPosition 
+      });
     }
+  }, []);
+
+  // Handle window resize for mobile positioning
+  useEffect(() => {
+    const handleResize = () => {
+      if (isMobile()) {
+        const viewportHeight = window.innerHeight;
+        const estimatedPanelHeight = 200;
+        const safeBottomMargin = 20;
+        const safeBottomPosition = viewportHeight - estimatedPanelHeight - safeBottomMargin;
+        const bottomPosition = Math.max(10, safeBottomPosition);
+        
+        setPosition({ 
+          x: 10, 
+          y: bottomPosition 
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
   }, []);
 
   // Only allow dragging on desktop
@@ -221,7 +263,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   };
 
   // Helper function to navigate to the filtered area
-  const navigateToFilteredArea = (filteredSpecialists: GeneticSpecialist[]) => {
+  const navigateToFilteredArea = (filteredSpecialists: MapPoint[]) => {
     if (!onMapNavigation || filteredSpecialists.length === 0) return;
 
     // Calculate the center and bounds of filtered specialists
@@ -300,75 +342,82 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   return (
     <>
       <div 
-        ref={boxRef}
-        className="topright-filter-container" 
         style={{
           position: isMobile() ? 'fixed' : 'absolute',
           left: isMobile() ? '10px' : position.x,
           right: isMobile() ? '10px' : 'auto',
-          top: isMobile() ? 'auto' : position.y,
-          bottom: isMobile() ? '10px' : 'auto',
-          cursor: isDragging ? 'grabbing' : 'default',
-          userSelect: 'none'
+          top: isMobile() ? position.y : position.y,
+          bottom: isMobile() ? 'auto' : 'auto',
+          zIndex: 2000,
+          overflow: 'visible'
         }}
       >
-        {showMinimizeButton && (
-          <button 
-            className="filter-minimize-btn"
-            onClick={toggleMinimize}
-            title="Minimize filters"
-          >
-            −
-          </button>
-        )}
-        {showDragHandle && (
-          <div 
-            className="filter-drag-handle" 
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
-          >
-            <span style={{ fontSize: '14px' }}>⋮⋮</span>
-          </div>
-        )}
-        <div className="filter-grid">
-          <div className="filter-group">
-            <label>Country</label>
-            <Select
-              isMulti
-              options={toSelectOptions(countries)}
-              onChange={handleCountryChange}
-              placeholder="Select countries..."
-              className="react-select-container"
-              classNamePrefix="react-select"
-              isSearchable
-              isClearable
-            />
-          </div>
-          <div className="filter-group">
-            <label>City</label>
-            <Select
-              isMulti
-              options={toSelectOptions(availableCities)}
-              onChange={handleCityChange}
-              placeholder="Select cities..."
-              className="react-select-container"
-              classNamePrefix="react-select"
-              isSearchable
-              isClearable
-            />
-          </div>
-          <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
-            <label>Language</label>
-            <Select
-              isMulti
-              options={toSelectOptions(availableLanguages)}
-              onChange={handleLanguageChange}
-              placeholder="Select languages..."
-              className="react-select-container"
-              classNamePrefix="react-select"
-              isSearchable
-              isClearable
-            />
+        <div 
+          ref={boxRef}
+          className="topright-filter-container" 
+          style={{
+            cursor: isDragging ? 'grabbing' : 'default',
+            userSelect: 'none'
+          }}
+        >
+          {showMinimizeButton && (
+            <button 
+              className="filter-minimize-btn"
+              onClick={toggleMinimize}
+              title="Minimize filters"
+            >
+              −
+            </button>
+          )}
+          {showDragHandle && (
+            <div 
+              className="filter-drag-handle" 
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+            >
+              <span style={{ fontSize: '14px' }}>⋮⋮</span>
+            </div>
+          )}
+          <div className="filter-grid">
+            <div className="filter-group">
+              <label>Country</label>
+              <Select
+                isMulti
+                options={toSelectOptions(countries)}
+                onChange={handleCountryChange}
+                placeholder="Select countries..."
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isSearchable
+                isClearable
+              />
+            </div>
+            <div className="filter-group">
+              <label>City</label>
+              <Select
+                isMulti
+                options={toSelectOptions(availableCities)}
+                onChange={handleCityChange}
+                placeholder="Select cities..."
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isSearchable
+                isClearable
+              />
+            </div>
+            <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
+              <label>Language</label>
+              <Select
+                isMulti
+                options={toSelectOptions(availableLanguages)}
+                onChange={handleLanguageChange}
+                placeholder="Select languages..."
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isSearchable
+                isClearable
+              />
+            </div>
           </div>
         </div>
       </div>

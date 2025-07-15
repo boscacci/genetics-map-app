@@ -1,4 +1,4 @@
-export interface GeneticSpecialist {
+export interface MapPoint {
   name_first: string;
   name_last: string;
   email: string;

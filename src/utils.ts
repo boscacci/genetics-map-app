@@ -1,4 +1,4 @@
-import { GeneticSpecialist } from './types';
+import { MapPoint } from './types';
 import Papa from 'papaparse';
 
 // Function to clean up language strings by removing punctuation and normalizing whitespace
@@ -12,7 +12,7 @@ const cleanLanguageString = (languageString: string): string => {
 };
 
 // Synchronous version for embedded data
-export const parseCSVString = (csvString: string): GeneticSpecialist[] => {
+export const parseCSVString = (csvString: string): MapPoint[] => {
   try {
     // Use Papa Parse to handle CSV parsing properly
     const { data, errors } = Papa.parse(csvString, {
@@ -52,14 +52,14 @@ export const parseCSVString = (csvString: string): GeneticSpecialist[] => {
     console.log("First few specialists with coordinates:", specialists.slice(0, 3));
     console.log("First few specialists without coordinates:", specialistsWithoutCoords.slice(0, 3));
     
-    return specialists as GeneticSpecialist[];
+    return specialists as MapPoint[];
   } catch (error) {
     console.error('Error parsing CSV:', error);
     return [];
   }
 };
 
-export const parseCSV = async (url: string): Promise<GeneticSpecialist[]> => {
+export const parseCSV = async (url: string): Promise<MapPoint[]> => {
   try {
     const response = await fetch(url);
     const text = await response.text();
@@ -102,7 +102,7 @@ export const parseCSV = async (url: string): Promise<GeneticSpecialist[]> => {
     console.log("First few specialists with coordinates:", specialists.slice(0, 3));
     console.log("First few specialists without coordinates:", specialistsWithoutCoords.slice(0, 3));
     
-    return specialists as GeneticSpecialist[];
+    return specialists as MapPoint[];
   } catch (error) {
     console.error('Error parsing CSV:', error);
     return [];

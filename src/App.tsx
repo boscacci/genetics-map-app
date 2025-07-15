@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { GeneticSpecialist } from './types';
+import { MapPoint } from './types';
 import MapComponent from './MapComponent';
 import FilterComponent from './FilterComponent';
 import GlobalSearchBar from './GlobalSearchBar';
 import { specialistsData } from './specialistsData';
 import './App.css';
 
-// SECURITY: Use environment variable for passphrase
 const SECRET_PASSPHRASE = process.env.REACT_APP_SECRET_PASSPHRASE || '';
 
 const App: React.FC = () => {
-  const [specialists, setSpecialists] = useState<GeneticSpecialist[]>([]);
+  const [specialists, setSpecialists] = useState<MapPoint[]>([]);
   const [globalSearch, setGlobalSearch] = useState('');
-  const [filteredSpecialists, setFilteredSpecialists] = useState<GeneticSpecialist[]>([]);
+  const [filteredSpecialists, setFilteredSpecialists] = useState<MapPoint[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([15, 30]);
@@ -21,27 +20,14 @@ const App: React.FC = () => {
   const [authChecked, setAuthChecked] = useState<boolean>(false);
   const [authAttempts, setAuthAttempts] = useState<number>(0);
 
-  // Detect mobile device
   const isMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
            (window.innerWidth <= 768);
   };
 
-  // Authentication logic
   useEffect(() => {
-    // 1. Check URL param for local/test use
     const urlParams = new URLSearchParams(window.location.search);
     const urlPass = urlParams.get('key');
-    
-    // Debug URL parameter authentication
-    if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.log('[DEBUG] URL parameter key:', urlPass);
-      // eslint-disable-next-line no-console
-      console.log('[DEBUG] Expected passphrase:', SECRET_PASSPHRASE);
-      // eslint-disable-next-line no-console
-      console.log('[DEBUG] Authentication match:', urlPass === SECRET_PASSPHRASE);
-    }
     
     if (urlPass === SECRET_PASSPHRASE) {
       setIsAuthenticated(true);
@@ -49,7 +35,6 @@ const App: React.FC = () => {
       return;
     }
 
-    // 2. Check if we're in an iframe (for Squarespace embedding)
     const isInIframe = window !== window.parent;
     
     if (isInIframe) {
@@ -57,7 +42,6 @@ const App: React.FC = () => {
       let timeoutId: number | null = null;
       let retryTimeoutId: number | null = null;
       
-      // Wait for postMessage from parent
       messageHandler = (event: MessageEvent) => {
         if (
           event.data &&
@@ -67,7 +51,6 @@ const App: React.FC = () => {
           setIsAuthenticated(true);
           setAuthChecked(true);
           
-          // Clean up
           if (messageHandler) window.removeEventListener('message', messageHandler);
           if (timeoutId) window.clearTimeout(timeoutId);
           if (retryTimeoutId) window.clearTimeout(retryTimeoutId);
@@ -76,16 +59,13 @@ const App: React.FC = () => {
       
       window.addEventListener('message', messageHandler);
       
-      // Mobile-specific timeout: 20 seconds for mobile, 15 for desktop
       const timeoutDuration = isMobile() ? 20000 : 15000;
       
       timeoutId = window.setTimeout(() => {
-        // If we're on mobile and postMessage failed, try a fallback
         if (isMobile() && authAttempts < 2) {
           console.log('Mobile authentication timeout, attempting fallback...');
           setAuthAttempts(prev => prev + 1);
           
-          // Try sending a message to parent requesting authentication
           try {
             window.parent.postMessage({
               type: 'requestAuthentication',
@@ -95,7 +75,6 @@ const App: React.FC = () => {
             console.log('Fallback postMessage failed:', e);
           }
           
-          // Wait another 10 seconds for the fallback
           retryTimeoutId = window.setTimeout(() => {
             setAuthChecked(true);
           }, 10000);
@@ -110,38 +89,33 @@ const App: React.FC = () => {
         if (retryTimeoutId) window.clearTimeout(retryTimeoutId);
       };
     } else {
-      // 3. Direct access - show authentication prompt
       setAuthChecked(true);
     }
   }, [authAttempts]);
 
-  // SECURE: Data loading from processed data
   useEffect(() => {
     if (isAuthenticated) {
       try {
         setSpecialists(specialistsData);
         setLoading(false);
       } catch (err) {
-        setError('Failed to load genetic professionals data');
+        setError('Failed to load data');
         setLoading(false);
         console.error(err);
       }
     }
   }, [isAuthenticated]);
 
-  // Handle location search
   const handleLocationSearch = (lat: number, lng: number, name: string, zoom: number) => {
     setMapCenter([lat, lng]);
-    setMapZoom(zoom); // Use the context-fitting zoom level
+    setMapZoom(zoom);
   };
 
-  // Handle filter-triggered map navigation
   const handleFilterMapNavigation = (lat: number, lng: number, zoom: number) => {
     setMapCenter([lat, lng]);
     setMapZoom(zoom);
   };
 
-  // Conditional rendering - after all hooks
   if (!authChecked) {
     return (
       <div className="app-container">
@@ -162,7 +136,7 @@ const App: React.FC = () => {
       <div className="app-container">
         <div className="header" style={{color:'#b71c1c', textAlign: 'center', padding: '2rem'}}>
           <h2>Authentication Required</h2>
-          <p>This application requires authentication to access genetic professionals data.</p>
+          <p>This application requires authentication to access data.</p>
           {isMobile() && (
             <div style={{marginTop: '1rem', fontSize: '0.9rem'}}>
               <p><strong>Mobile users:</strong> If you're having trouble accessing the map, try:</p>
@@ -178,7 +152,7 @@ const App: React.FC = () => {
     );
   }
   if (loading) {
-    return <div className="app-container"><div className="header">Loading genetic professionals data...</div></div>;
+    return <div className="app-container"><div className="header">Loading data...</div></div>;
   }
   if (error) {
     return <div className="app-container"><div className="header">Error: {error}</div></div>;

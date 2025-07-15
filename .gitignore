@@ -18,7 +18,7 @@
 .env.test.local
 .env.production.local
 
-# SECURITY: Environment files - NEVER commit these
+# Environment files
 .env
 .env.*
 
@@ -26,14 +26,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# SECURITY: Never commit the original data.csv file
+# Data files
 data.csv
 *.csv
 
-# Generated data files (these are auto-generated during build)
+# Generated data files
 /src/specialistsData.ts
 
-# SECURITY: Additional sensitive files
+# Security files
 *.pem
 *.key
 *.crt
@@ -43,12 +43,5 @@ id_rsa*
 id_dsa*
 .ssh/
 
-# SECURITY: Map preview with authentication (contains secrets)
-map-preview.html
-
-# SECURITY: Environment files with secrets
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local 
+# Preview files
+map-preview.html 
