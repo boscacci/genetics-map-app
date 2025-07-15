@@ -188,7 +188,9 @@ const App: React.FC = () => {
                   <span className="counter-total"> of {specialists.length}</span>
                 </>
               ) : (
-                <span className="counter-label">Professionals</span>
+                <>
+                  {specialists.length} <span className="counter-label">Professionals</span>
+                </>
               )}
             </span>
           </div>
