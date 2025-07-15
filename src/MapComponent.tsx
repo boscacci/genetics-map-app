@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import L from 'leaflet';
 import { GeneticSpecialist } from './types';
@@ -82,6 +82,26 @@ const SpecialistMarkers: React.FC<{ specialists: GeneticSpecialist[] }> = React.
     );
   };
 
+  const createTooltipContent = (specialist: GeneticSpecialist) => {
+    return `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; line-height: 1.4;">
+        <div style="font-weight: 600; color: #2c3e50; margin-bottom: 4px; font-size: 13px;">
+          ${specialist.name_first} ${specialist.name_last}
+        </div>
+        <div style="color: #555; margin-bottom: 2px;">
+          <strong>Institution:</strong> ${specialist.work_institution}
+        </div>
+        ${specialist.email ? `<div style="color: #555; margin-bottom: 2px;"><strong>Email:</strong> ${specialist.email}</div>` : ''}
+        ${specialist.phone_work ? `<div style="color: #555; margin-bottom: 2px;"><strong>Phone:</strong> ${specialist.phone_work}</div>` : ''}
+        ${specialist.work_website ? `<div style="color: #555; margin-bottom: 2px;"><strong>Website:</strong> ${specialist.work_website}</div>` : ''}
+        <div style="color: #555; margin-bottom: 2px;">
+          <strong>Address:</strong> ${specialist.work_address || `${specialist.City}, ${specialist.Country}`}
+        </div>
+        ${specialist.language_spoken ? `<div style="color: #555;"><strong>Languages:</strong> ${specialist.language_spoken}</div>` : ''}
+      </div>
+    `;
+  };
+
   return (
     <>
       {specialists.map((specialist, index) => (
@@ -89,6 +109,15 @@ const SpecialistMarkers: React.FC<{ specialists: GeneticSpecialist[] }> = React.
           key={`${specialist.Latitude}-${specialist.Longitude}-${index}`}
           position={[specialist.Latitude, specialist.Longitude]}
         >
+          <Tooltip 
+            direction="top" 
+            offset={[0, -10]}
+            opacity={1}
+            permanent={false}
+            className="specialist-tooltip"
+          >
+            <div dangerouslySetInnerHTML={{ __html: createTooltipContent(specialist) }} />
+          </Tooltip>
           <Popup>
             <div>
               <h3>{specialist.name_first} {specialist.name_last}</h3>

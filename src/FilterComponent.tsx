@@ -363,75 +363,53 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
         userSelect: 'none'
       }}
     >
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 16
-      }}>
-        <div 
-          className="filter-drag-handle" 
-          style={{
-            cursor: 'grab',
-            fontWeight: 500, 
-            color: '#888', 
-            fontSize: 13
-          }}
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-        >
-          <span style={{ fontSize: '16px' }}>⋮⋮</span>
+      <div 
+        className="filter-drag-handle" 
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+      >
+        <span style={{ fontSize: '14px' }}>⋮⋮</span>
+      </div>
+      <div className="filter-grid">
+        <div className="filter-group">
+          <label>Country</label>
+          <Select
+            isMulti
+            options={toSelectOptions(countries)}
+            onChange={handleCountryChange}
+            placeholder="Select countries..."
+            className="react-select-container"
+            classNamePrefix="react-select"
+            isSearchable
+            isClearable
+          />
         </div>
-        <h2 style={{
-          margin: 0,
-          fontSize: '18px',
-          fontWeight: '600',
-          color: '#333',
-          flex: 1,
-          textAlign: 'center'
-        }}>
-          Filters
-        </h2>
-        <div style={{ width: '20px' }}></div> {/* Spacer to balance the dots */}
-      </div>
-      <div className="filter-group">
-        <label>Country</label>
-        <Select
-          isMulti
-          options={toSelectOptions(countries)}
-          onChange={handleCountryChange}
-          placeholder="Select countries..."
-          className="react-select-container"
-          classNamePrefix="react-select"
-          isSearchable
-          isClearable
-        />
-      </div>
-      <div className="filter-group">
-        <label>City</label>
-        <Select
-          isMulti
-          options={toSelectOptions(availableCities)}
-          onChange={handleCityChange}
-          placeholder="Select cities..."
-          className="react-select-container"
-          classNamePrefix="react-select"
-          isSearchable
-          isClearable
-        />
-      </div>
-      <div className="filter-group">
-        <label>Language</label>
-        <Select
-          isMulti
-          options={toSelectOptions(availableLanguages)}
-          onChange={handleLanguageChange}
-          placeholder="Select languages..."
-          className="react-select-container"
-          classNamePrefix="react-select"
-          isSearchable
-          isClearable
-        />
+        <div className="filter-group">
+          <label>City</label>
+          <Select
+            isMulti
+            options={toSelectOptions(availableCities)}
+            onChange={handleCityChange}
+            placeholder="Select cities..."
+            className="react-select-container"
+            classNamePrefix="react-select"
+            isSearchable
+            isClearable
+          />
+        </div>
+        <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
+          <label>Language</label>
+          <Select
+            isMulti
+            options={toSelectOptions(availableLanguages)}
+            onChange={handleLanguageChange}
+            placeholder="Select languages..."
+            className="react-select-container"
+            classNamePrefix="react-select"
+            isSearchable
+            isClearable
+          />
+        </div>
       </div>
     </div>
   );

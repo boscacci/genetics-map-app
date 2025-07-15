@@ -139,29 +139,135 @@
   position: absolute;
   z-index: 2000;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.13);
-  padding: 14px 18px 10px 18px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-width: 260px;
+  gap: 8px;
+  min-width: 240px;
   max-width: 320px;
-  border: 2px solid transparent;
+  border: 1px solid #e0e0e0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .topright-filter-container:hover {
-  border-color: #e0e0e0;
+  border-color: #3498db;
   box-shadow: 0 6px 32px rgba(0,0,0,0.15);
 }
 
 .filter-drag-handle {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  cursor: grab;
+  color: #999;
+  font-size: 12px;
   transition: color 0.2s ease;
+  z-index: 1;
 }
 
 .filter-drag-handle:hover {
   color: #555 !important;
+}
+
+/* Grid layout for filters */
+.filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.filter-group {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+  color: #666;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* React Select Styling */
+.react-select-container {
+  width: 100%;
+}
+
+.react-select__control {
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  min-height: 32px !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+}
+
+.react-select__control:hover {
+  border-color: #b3b3b3 !important;
+}
+
+.react-select__control--is-focused {
+  border-color: #3498db !important;
+  box-shadow: 0 0 0 1px #3498db !important;
+}
+
+.react-select__menu {
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.react-select__option {
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+}
+
+.react-select__option--is-focused {
+  background-color: #f8f9fa !important;
+  color: #333 !important;
+}
+
+.react-select__option--is-selected {
+  background-color: #3498db !important;
+  color: white !important;
+}
+
+.react-select__multi-value {
+  background-color: #e3f2fd !important;
+  border-radius: 3px !important;
+  margin: 1px !important;
+}
+
+.react-select__multi-value__label {
+  color: #1565c0 !important;
+  font-size: 11px !important;
+  padding: 1px 4px !important;
+}
+
+.react-select__multi-value__remove {
+  color: #1565c0 !important;
+  padding: 1px 3px !important;
+}
+
+.react-select__multi-value__remove:hover {
+  background-color: #bbdefb !important;
+  color: #0d47a1 !important;
+}
+
+.react-select__placeholder {
+  color: #999 !important;
+  font-size: 12px !important;
+}
+
+.react-select__input-container {
+  font-size: 12px !important;
 }
 
 @media (max-width: 900px) {
@@ -180,17 +286,24 @@
     top: 48px;
     min-width: 180px;
     max-width: 98vw;
-    padding: 8px 8px 6px 8px;
+    padding: 6px 8px;
+  }
+  
+  /* Mobile grid layout */
+  .filter-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 6px;
   }
   
   /* Mobile-specific React-Select improvements */
   .react-select__control {
-    min-height: 44px !important; /* Better touch target */
+    min-height: 40px !important; /* Better touch target */
   }
   
   .react-select__option {
-    padding: 12px 16px !important; /* Larger touch targets */
-    font-size: 16px !important; /* Prevent zoom on iOS */
+    padding: 10px 12px !important; /* Larger touch targets */
+    font-size: 14px !important; /* Prevent zoom on iOS */
   }
   
   .react-select__menu {
@@ -198,11 +311,11 @@
   }
   
   .react-select__multi-value {
-    margin: 3px !important; /* More spacing for touch */
+    margin: 2px !important; /* More spacing for touch */
   }
   
   .react-select__multi-value__remove {
-    padding: 4px 6px !important; /* Larger touch target */
+    padding: 3px 5px !important; /* Larger touch target */
   }
   
   /* Prevent zoom on input focus */
@@ -212,7 +325,7 @@
   
   /* Better touch targets for mobile */
   .filter-drag-handle {
-    min-height: 44px !important;
+    min-height: 40px !important;
     display: flex !important;
     align-items: center !important;
   }

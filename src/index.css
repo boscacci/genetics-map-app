@@ -82,6 +82,23 @@ body {
   color: #2c3e50;
 }
 
+/* Specialist tooltip styling */
+.leaflet-tooltip.specialist-tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: 280px;
+  backdrop-filter: blur(4px);
+}
+
+.leaflet-tooltip.specialist-tooltip::before {
+  border-top-color: rgba(255, 255, 255, 0.95);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .header {
@@ -102,5 +119,12 @@ body {
   
   .specialist-count {
     font-size: 12px;
+  }
+  
+  /* Mobile tooltip adjustments */
+  .leaflet-tooltip.specialist-tooltip {
+    max-width: 240px;
+    font-size: 11px;
+    padding: 6px 10px;
   }
 } 
