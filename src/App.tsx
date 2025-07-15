@@ -179,6 +179,16 @@ const App: React.FC = () => {
           onFilterChange={setFilteredSpecialists}
           onMapNavigation={handleFilterMapNavigation}
         />
+        {!isMobile() && (
+          <div className="specialist-counter">
+            <span className="counter-text">
+              {filteredSpecialists.length > 0 ? filteredSpecialists.length : specialists.length}
+              {filteredSpecialists.length > 0 && filteredSpecialists.length !== specialists.length && (
+                <span className="counter-total"> / {specialists.length}</span>
+              )}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
