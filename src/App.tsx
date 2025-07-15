@@ -15,8 +15,8 @@ const App: React.FC = () => {
   const [filteredSpecialists, setFilteredSpecialists] = useState<GeneticSpecialist[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([20, 50]);
-  const [mapZoom, setMapZoom] = useState<number>(4);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([15, 30]);
+  const [mapZoom, setMapZoom] = useState<number>(3);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authChecked, setAuthChecked] = useState<boolean>(false);
   const [authAttempts, setAuthAttempts] = useState<number>(0);
