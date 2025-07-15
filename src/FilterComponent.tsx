@@ -274,10 +274,28 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     const lats = validSpecialists.map(s => s.Latitude!);
     const lngs = validSpecialists.map(s => s.Longitude!);
     
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
+    let minLat = Math.min(...lats);
+    let maxLat = Math.max(...lats);
+    let minLng = Math.min(...lngs);
+    let maxLng = Math.max(...lngs);
+    
+    // Add padding to ensure full country visibility
+    const latPadding = (maxLat - minLat) * 0.15; // 15% padding
+    const lngPadding = (maxLng - minLng) * 0.15; // 15% padding
+    
+    minLat = Math.max(minLat - latPadding, -90);
+    maxLat = Math.min(maxLat + latPadding, 90);
+    minLng = Math.max(minLng - lngPadding, -180);
+    maxLng = Math.min(maxLng + lngPadding, 180);
+    
+    // Special handling for United States to ensure full country visibility
+    if (selectedCountries.includes('United States')) {
+      // US bounds: roughly 24°N to 71°N, 66°W to 125°W
+      minLat = Math.min(minLat, 24);
+      maxLat = Math.max(maxLat, 71);
+      minLng = Math.min(minLng, -125);
+      maxLng = Math.max(maxLng, -66);
+    }
     
     // Calculate center
     const centerLat = (minLat + maxLat) / 2;
