@@ -396,7 +396,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 isMulti
                 options={toSelectOptions(countries)}
                 onChange={handleCountryChange}
-                placeholder="Select countries..."
+                placeholder="Countries..."
                 className="react-select-container"
                 classNamePrefix="react-select"
                 isSearchable
@@ -409,7 +409,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 isMulti
                 options={toSelectOptions(availableCities)}
                 onChange={handleCityChange}
-                placeholder="Select cities..."
+                placeholder="Cities..."
                 className="react-select-container"
                 classNamePrefix="react-select"
                 isSearchable
@@ -422,7 +422,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 isMulti
                 options={toSelectOptions(availableLanguages)}
                 onChange={handleLanguageChange}
-                placeholder="Select languages..."
+                placeholder="Languages..."
                 className="react-select-container"
                 classNamePrefix="react-select"
                 isSearchable
