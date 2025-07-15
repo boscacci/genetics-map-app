@@ -342,6 +342,11 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
       zoom = 7;
     }
 
+    // For mobile, zoom out a bit more for US
+    if (selectedCountries.includes('United States') && isMobile()) {
+      zoom = Math.max(zoom - 1, 2);
+    }
+
     onMapNavigation(centerLat, centerLng, zoom);
   };
 
