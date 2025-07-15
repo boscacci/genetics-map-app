@@ -99,6 +99,11 @@ body {
   border-top-color: rgba(255, 255, 255, 0.95);
 }
 
+/* Hide Leaflet attribution */
+.leaflet-control-attribution {
+  display: none !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .header {
