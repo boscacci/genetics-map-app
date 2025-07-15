@@ -383,6 +383,7 @@
     background: #fff;
     border: 1px solid #e0e0e0;
     z-index: 2000 !important;
+    transition: all 0.3s ease-out !important;
   }
   
   .filter-group {
@@ -487,9 +488,14 @@
     box-shadow: 0 12px 40px rgba(0,0,0,0.25) !important;
     border-color: #3498db !important;
     background: #f8f9fa !important;
-    top: 10px !important;
+    top: 5px !important;
     bottom: auto !important;
-    max-height: calc(100vh - 200px) !important;
+    left: 5px !important;
+    right: 5px !important;
+    max-height: calc(100vh - 250px) !important;
+    transform: translateY(0) !important;
+    position: fixed !important;
+    z-index: 10000 !important;
   }
 
   .topright-filter-container.keyboard-visible .filter-group label {

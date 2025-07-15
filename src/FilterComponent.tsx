@@ -52,45 +52,66 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
            (window.innerWidth <= 900);
   };
 
-  // Keyboard detection for mobile
+  // Enhanced keyboard detection for mobile
   useEffect(() => {
     if (!isMobile()) return;
 
+    let resizeTimeout: NodeJS.Timeout;
+    let focusTimeout: NodeJS.Timeout;
+
     const handleResize = () => {
-      const currentHeight = window.innerHeight;
-      const heightDifference = initialViewportHeight - currentHeight;
-      
-      // If viewport height decreased significantly, keyboard is likely visible
-      if (heightDifference > 150) {
-        setIsKeyboardVisible(true);
-      } else {
-        setIsKeyboardVisible(false);
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        const currentHeight = window.innerHeight;
+        const heightDifference = initialViewportHeight - currentHeight;
+        
+        // More aggressive detection - if viewport height decreased by more than 100px
+        if (heightDifference > 100) {
+          setIsKeyboardVisible(true);
+        } else {
+          setIsKeyboardVisible(false);
+        }
+      }, 100);
+    };
+
+    // Use visual viewport API if available for better keyboard detection
+    const handleVisualViewportChange = () => {
+      if ('visualViewport' in window) {
+        const visualViewport = (window as any).visualViewport;
+        const heightDifference = initialViewportHeight - visualViewport.height;
+        
+        if (heightDifference > 100) {
+          setIsKeyboardVisible(true);
+        } else {
+          setIsKeyboardVisible(false);
+        }
       }
     };
 
     const handleFocusIn = (e: FocusEvent) => {
       if (isMobile() && (e.target as HTMLElement).tagName === 'INPUT') {
-        // Set a small delay to allow keyboard to appear
-        setTimeout(() => {
+        clearTimeout(focusTimeout);
+        focusTimeout = setTimeout(() => {
           const currentHeight = window.innerHeight;
           const heightDifference = initialViewportHeight - currentHeight;
-          if (heightDifference > 150) {
+          // Immediate detection when input is focused
+          if (heightDifference > 50) {
             setIsKeyboardVisible(true);
           }
-        }, 300);
+        }, 200);
       }
     };
 
     const handleFocusOut = () => {
       if (isMobile()) {
-        // Set a delay to allow keyboard to hide
-        setTimeout(() => {
+        clearTimeout(focusTimeout);
+        focusTimeout = setTimeout(() => {
           const currentHeight = window.innerHeight;
           const heightDifference = initialViewportHeight - currentHeight;
-          if (heightDifference <= 150) {
+          if (heightDifference <= 50) {
             setIsKeyboardVisible(false);
           }
-        }, 300);
+        }, 500);
       }
     };
 
@@ -106,13 +127,23 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
       }, 500);
     });
     
+    // Add visual viewport listener if available
+    if ('visualViewport' in window) {
+      (window as any).visualViewport.addEventListener('resize', handleVisualViewportChange);
+    }
+    
     document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('focusout', handleFocusOut);
     
     return () => {
       window.removeEventListener('resize', handleResize);
+      if ('visualViewport' in window) {
+        (window as any).visualViewport.removeEventListener('resize', handleVisualViewportChange);
+      }
       document.removeEventListener('focusin', handleFocusIn);
       document.removeEventListener('focusout', handleFocusOut);
+      clearTimeout(resizeTimeout);
+      clearTimeout(focusTimeout);
     };
   }, [initialViewportHeight]);
 
@@ -143,12 +174,13 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   // Function to update mobile position
   const updateMobilePosition = () => {
     const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
     
     if (isKeyboardVisible) {
-      // When keyboard is visible, position at the very top
+      // When keyboard is visible, position at the very top with aggressive positioning
       setPosition({ 
-        x: 10, 
-        y: 10 
+        x: 5, 
+        y: 5 // Very top position
       });
     } else {
       // Normal mobile positioning at bottom
