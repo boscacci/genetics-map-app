@@ -182,9 +182,13 @@ const App: React.FC = () => {
         {!isMobile() && (
           <div className="specialist-counter">
             <span className="counter-text">
-              {filteredSpecialists.length > 0 ? filteredSpecialists.length : specialists.length}
-              {filteredSpecialists.length > 0 && filteredSpecialists.length !== specialists.length && (
-                <span className="counter-total"> / {specialists.length}</span>
+              {filteredSpecialists.length > 0 && filteredSpecialists.length !== specialists.length ? (
+                <>
+                  <span className="counter-label">Showing:</span> {filteredSpecialists.length}
+                  <span className="counter-total"> of {specialists.length}</span>
+                </>
+              ) : (
+                <span className="counter-label">Professionals</span>
               )}
             </span>
           </div>
