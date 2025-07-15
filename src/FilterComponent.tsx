@@ -442,6 +442,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 classNamePrefix="react-select"
                 isSearchable
                 isClearable
+                menuPlacement="top"
               />
             </div>
             <div className="filter-group">
@@ -455,6 +456,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 classNamePrefix="react-select"
                 isSearchable
                 isClearable
+                menuPlacement="top"
               />
             </div>
             <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
@@ -468,9 +470,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 classNamePrefix="react-select"
                 isSearchable
                 isClearable
-                menuPlacement={isMobile() ? "top" : "auto"}
-                menuPortalTarget={typeof window !== 'undefined' ? window.document.body : undefined}
-                styles={{ menuPortal: base => ({ ...base, zIndex: 3000 }) }}
+                menuPlacement="top"
               />
             </div>
           </div>

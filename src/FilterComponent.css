@@ -21,6 +21,8 @@
   min-width: 0;
   margin-bottom: 0;
   flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .filter-group label {
@@ -65,7 +67,15 @@
 .react-select__menu {
   border: 1px solid #ddd !important;
   border-radius: 4px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15) !important;
+  z-index: 3000 !important;
+  display: block !important;
+  visibility: visible !important;
+  margin-bottom: 12px !important;
+  border-bottom: 2px solid #3498db !important;
+  transform: translateY(-8px) !important;
+  max-height: 200px !important;
+  overflow: auto !important;
 }
 
 .react-select__option {
@@ -151,6 +161,7 @@
   max-width: 420px;
   border: 1px solid #e0e0e0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: visible;
 }
 
 .topright-filter-container:hover {
@@ -238,7 +249,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto auto;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
   margin-top: 4px;
 }
@@ -374,11 +385,19 @@
     z-index: 2000 !important;
   }
   
+  .filter-group {
+    overflow: visible !important;
+  }
+  
+  .react-select-container {
+    overflow: visible !important;
+  }
+  
   /* Mobile grid layout */
   .filter-grid {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
-    gap: 6px;
+    gap: 10px;
   }
   
   /* Mobile-specific React-Select improvements */
@@ -395,7 +414,12 @@
   
   .react-select__menu {
     max-height: 150px !important; /* Shorter menu for mobile */
-    z-index: 2001 !important; /* Ensure menu appears above filter panel */
+    z-index: 3001 !important; /* Ensure menu appears above filter panel */
+    margin-bottom: 12px !important;
+    border-bottom: 2px solid #3498db !important;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-8px) !important;
+    overflow: auto !important;
   }
   
   .react-select__multi-value {
