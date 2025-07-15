@@ -9,7 +9,7 @@ interface FilterComponentProps {
   onMapNavigation?: (lat: number, lng: number, zoom: number) => void;
 }
 
-// Function to clean up language strings by removing punctuation and normalizing whitespace
+// Helper function to clean language strings
 const cleanLanguageString = (languageString: string): string => {
   if (!languageString) return '';
   
@@ -21,67 +21,75 @@ const cleanLanguageString = (languageString: string): string => {
 
 // Helper function to get unique values from an array
 const getUniqueValues = (arr: (string | undefined)[]): string[] => {
-  // Filter out undefined/null values and create a unique set
-  const uniqueSet = new Set<string>();
-  arr.forEach(item => {
-    if (item) uniqueSet.add(item);
-  });
-  
-  // Convert to array and sort
-  return Array.from(uniqueSet).sort();
+  const cleaned = arr
+    .filter(Boolean)
+    .map(item => cleanLanguageString(item!))
+    .filter(Boolean);
+  return [...new Set(cleaned)].sort();
 };
 
-// Convert string array to react-select options
+// Helper function to convert array to select options
 const toSelectOptions = (values: string[]) => {
   return values.map(value => ({ value, label: value }));
 };
 
 const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilterChange, onMapNavigation }) => {
-  // Simple drag state
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [position, setPosition] = useState({ x: 20, y: 20 }); // Top-left with minimal padding
-  const boxRef = useRef<HTMLDivElement>(null);
-
-  // Available filter options
-  const [countries, setCountries] = useState<string[]>([]);
-  const [cities, setCities] = useState<string[]>([]);
-  const [languages, setLanguages] = useState<string[]>([]);
-
-  // Selected filter values
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [position, setPosition] = useState({ x: 20, y: 20 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isMinimized, setIsMinimized] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
 
-  // Computed city options based on selected countries
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  // Detect mobile device
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           (window.innerWidth <= 900);
+  };
 
-  // Computed language options based on selected geography
-  const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
+  // Initialize position based on device type
+  useEffect(() => {
+    if (isMobile()) {
+      // On mobile, position at bottom center
+      setPosition({ x: 10, y: window.innerHeight - 200 });
+    }
+  }, []);
 
-  // Clean drag handlers - support both mouse and touch
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
+    if (isMinimized) return;
     setIsDragging(true);
-    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+    const rect = boxRef.current?.getBoundingClientRect();
+    if (rect) {
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
-    const touch = e.touches[0];
+    if (isMinimized) return;
     setIsDragging(true);
-    setDragStart({ x: touch.clientX - position.x, y: touch.clientY - position.y });
+    const rect = boxRef.current?.getBoundingClientRect();
+    if (rect && e.touches[0]) {
+      setDragOffset({
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      });
+    }
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || isMinimized) return;
     
-    const newX = e.clientX - dragStart.x;
-    const newY = e.clientY - dragStart.y;
+    const newX = e.clientX - dragOffset.x;
+    const newY = e.clientY - dragOffset.y;
     
-    // Keep within bounds
-    const maxX = window.innerWidth - 320;
-    const maxY = window.innerHeight - 200;
+    // Constrain to viewport
+    const maxX = window.innerWidth - (boxRef.current?.offsetWidth || 300);
+    const maxY = window.innerHeight - (boxRef.current?.offsetHeight || 200);
     
     setPosition({
       x: Math.max(0, Math.min(newX, maxX)),
@@ -90,16 +98,15 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   };
 
   const handleTouchMove = (e: TouchEvent) => {
-    if (!isDragging) return;
-    e.preventDefault(); // Prevent scrolling while dragging
+    if (!isDragging || isMinimized) return;
+    e.preventDefault();
     
-    const touch = e.touches[0];
-    const newX = touch.clientX - dragStart.x;
-    const newY = touch.clientY - dragStart.y;
+    const newX = e.touches[0].clientX - dragOffset.x;
+    const newY = e.touches[0].clientY - dragOffset.y;
     
-    // Keep within bounds
-    const maxX = window.innerWidth - 320;
-    const maxY = window.innerHeight - 200;
+    // Constrain to viewport
+    const maxX = window.innerWidth - (boxRef.current?.offsetWidth || 300);
+    const maxY = window.innerHeight - (boxRef.current?.offsetHeight || 200);
     
     setPosition({
       x: Math.max(0, Math.min(newX, maxX)),
@@ -115,13 +122,14 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     setIsDragging(false);
   };
 
-  // Global mouse and touch listeners
+  // Add event listeners for dragging
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       document.addEventListener('touchmove', handleTouchMove, { passive: false });
       document.addEventListener('touchend', handleTouchEnd);
+      
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
@@ -129,115 +137,29 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
         document.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, [isDragging, dragStart]);
+  }, [isDragging, dragOffset, isMinimized]);
 
-  // Extract unique values for each filter
-  useEffect(() => {
-    if (specialists.length > 0) {
-      // Get unique countries
-      const uniqueCountries = getUniqueValues(specialists.map(s => s.Country));
-      setCountries(uniqueCountries);
+  // Extract unique values for filters
+  const countries = getUniqueValues(specialists.map(s => s.Country));
+  const cities = getUniqueValues(specialists.map(s => s.City));
+  const allLanguages = specialists
+    .map(s => s.language_spoken)
+    .filter(Boolean)
+    .flatMap(lang => lang!.split(/,|;|\sand\s|\s+/))
+    .map(lang => cleanLanguageString(lang))
+    .filter(Boolean);
+  const availableLanguages = [...new Set(allLanguages)].sort();
 
-      // Get unique cities
-      const uniqueCities = getUniqueValues(specialists.map(s => s.City));
-      setCities(uniqueCities);
+  // Filter cities based on selected countries
+  const availableCities = selectedCountries.length > 0
+    ? getUniqueValues(
+        specialists
+          .filter(s => selectedCountries.includes(s.Country))
+          .map(s => s.City)
+      )
+    : cities;
 
-      // Extract and normalize all languages
-      const allLanguages: string[] = [];
-      specialists.forEach(s => {
-        if (s.language_spoken) {
-          // Split by commas, semicolons, 'and', or spaces, then trim whitespace and clean
-          const langs = s.language_spoken
-            .split(/,|;|\sand\s|\s+/)
-            .map(lang => cleanLanguageString(lang))
-            .filter(Boolean);
-          
-          allLanguages.push(...langs);
-        }
-      });
-      
-      // Get unique languages and sort
-      const uniqueLanguages = getUniqueValues(allLanguages);
-      setLanguages(uniqueLanguages);
-    }
-  }, [specialists]);
-
-  // Update available cities based on selected countries
-  useEffect(() => {
-    if (selectedCountries.length > 0) {
-      // Filter specialists by selected countries
-      const specialistsInSelectedCountries = specialists.filter(s => 
-        s.Country && selectedCountries.includes(s.Country)
-      );
-      
-      // Get cities from those specialists
-      const citiesInSelectedCountries = getUniqueValues(
-        specialistsInSelectedCountries.map(s => s.City)
-      );
-      
-      setAvailableCities(citiesInSelectedCountries);
-      
-      // Clear any selected cities that are no longer available
-      const validSelectedCities = selectedCities.filter(city => 
-        citiesInSelectedCountries.includes(city)
-      );
-      
-      if (validSelectedCities.length !== selectedCities.length) {
-        setSelectedCities(validSelectedCities);
-      }
-    } else {
-      // If no countries selected, show all cities
-      setAvailableCities(cities);
-    }
-  }, [selectedCountries, specialists, cities, selectedCities]);
-
-  // Update available languages based on selected geography
-  useEffect(() => {
-    if (selectedCountries.length > 0 || selectedCities.length > 0) {
-      // Filter specialists by selected geography
-      const specialistsInSelectedGeography = specialists.filter(s => {
-        // If countries are selected, specialist must be in one of them
-        if (selectedCountries.length > 0 && (!s.Country || !selectedCountries.includes(s.Country))) {
-          return false;
-        }
-        // If cities are selected, specialist must be in one of them
-        if (selectedCities.length > 0 && (!s.City || !selectedCities.includes(s.City))) {
-          return false;
-        }
-        return true;
-      });
-
-      // Extract and normalize all languages spoken by specialists in the filtered geography
-      const allLanguagesInFilteredGeography: string[] = [];
-      specialistsInSelectedGeography.forEach(s => {
-        if (s.language_spoken) {
-          const langs = s.language_spoken
-            .split(/,|;|\sand\s|\s+/)
-            .map(lang => cleanLanguageString(lang))
-            .filter(Boolean);
-          allLanguagesInFilteredGeography.push(...langs);
-        }
-      });
-
-      // Get unique languages and sort
-      const uniqueLanguagesInFilteredGeography = getUniqueValues(allLanguagesInFilteredGeography);
-      setAvailableLanguages(uniqueLanguagesInFilteredGeography);
-      
-      // Clear any selected languages that are no longer available
-      const validSelectedLanguages = selectedLanguages.filter(lang => 
-        uniqueLanguagesInFilteredGeography.includes(lang)
-      );
-      
-      if (validSelectedLanguages.length !== selectedLanguages.length) {
-        setSelectedLanguages(validSelectedLanguages);
-      }
-    } else {
-      // If no geography filters applied, show all languages
-      setAvailableLanguages(languages);
-    }
-  }, [selectedCountries, selectedCities, specialists, languages, selectedLanguages]);
-
-  // Apply filters whenever selection changes
+  // Apply filters when selections change
   useEffect(() => {
     applyFilters();
   }, [selectedCountries, selectedCities, selectedLanguages]);
@@ -351,67 +273,95 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     setSelectedLanguages(values);
   };
 
-  return (
-    <div 
-      ref={boxRef}
-      className="topright-filter-container" 
-      style={{
-        position: 'absolute',
-        left: position.x,
-        top: position.y,
-        cursor: isDragging ? 'grabbing' : 'default',
-        userSelect: 'none'
-      }}
-    >
-      <div 
-        className="filter-drag-handle" 
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
+  const toggleMinimize = () => {
+    setIsMinimized(!isMinimized);
+  };
+
+  // If minimized, show only the floating button
+  if (isMinimized) {
+    return (
+      <button 
+        className="filter-floating-btn"
+        onClick={toggleMinimize}
+        title="Show filters"
       >
-        <span style={{ fontSize: '14px' }}>⋮⋮</span>
+        🔍
+      </button>
+    );
+  }
+
+  return (
+    <>
+      <div 
+        ref={boxRef}
+        className="topright-filter-container" 
+        style={{
+          position: isMobile() ? 'fixed' : 'absolute',
+          left: isMobile() ? '10px' : position.x,
+          right: isMobile() ? '10px' : 'auto',
+          top: isMobile() ? 'auto' : position.y,
+          bottom: isMobile() ? '10px' : 'auto',
+          cursor: isDragging ? 'grabbing' : 'default',
+          userSelect: 'none'
+        }}
+      >
+        <button 
+          className="filter-minimize-btn"
+          onClick={toggleMinimize}
+          title="Minimize filters"
+        >
+          −
+        </button>
+        <div 
+          className="filter-drag-handle" 
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+        >
+          <span style={{ fontSize: '14px' }}>⋮⋮</span>
+        </div>
+        <div className="filter-grid">
+          <div className="filter-group">
+            <label>Country</label>
+            <Select
+              isMulti
+              options={toSelectOptions(countries)}
+              onChange={handleCountryChange}
+              placeholder="Select countries..."
+              className="react-select-container"
+              classNamePrefix="react-select"
+              isSearchable
+              isClearable
+            />
+          </div>
+          <div className="filter-group">
+            <label>City</label>
+            <Select
+              isMulti
+              options={toSelectOptions(availableCities)}
+              onChange={handleCityChange}
+              placeholder="Select cities..."
+              className="react-select-container"
+              classNamePrefix="react-select"
+              isSearchable
+              isClearable
+            />
+          </div>
+          <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
+            <label>Language</label>
+            <Select
+              isMulti
+              options={toSelectOptions(availableLanguages)}
+              onChange={handleLanguageChange}
+              placeholder="Select languages..."
+              className="react-select-container"
+              classNamePrefix="react-select"
+              isSearchable
+              isClearable
+            />
+          </div>
+        </div>
       </div>
-      <div className="filter-grid">
-        <div className="filter-group">
-          <label>Country</label>
-          <Select
-            isMulti
-            options={toSelectOptions(countries)}
-            onChange={handleCountryChange}
-            placeholder="Select countries..."
-            className="react-select-container"
-            classNamePrefix="react-select"
-            isSearchable
-            isClearable
-          />
-        </div>
-        <div className="filter-group">
-          <label>City</label>
-          <Select
-            isMulti
-            options={toSelectOptions(availableCities)}
-            onChange={handleCityChange}
-            placeholder="Select cities..."
-            className="react-select-container"
-            classNamePrefix="react-select"
-            isSearchable
-            isClearable
-          />
-        </div>
-        <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
-          <label>Language</label>
-          <Select
-            isMulti
-            options={toSelectOptions(availableLanguages)}
-            onChange={handleLanguageChange}
-            placeholder="Select languages..."
-            className="react-select-container"
-            classNamePrefix="react-select"
-            isSearchable
-            isClearable
-          />
-        </div>
-      </div>
-    </div>
+    </>
   );
 };
 
