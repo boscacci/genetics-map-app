@@ -52,8 +52,8 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   // Initialize position based on device type
   useEffect(() => {
     if (isMobile()) {
-      // On mobile, position at bottom center
-      setPosition({ x: 10, y: window.innerHeight - 200 });
+      // On mobile, position at bottom right
+      setPosition({ x: window.innerWidth - 320, y: window.innerHeight - 200 });
     }
   }, []);
 
