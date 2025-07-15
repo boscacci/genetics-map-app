@@ -141,12 +141,12 @@
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.13);
-  padding: 8px 12px;
+  padding: 10px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 240px;
-  max-width: 320px;
+  min-width: 320px;
+  max-width: 420px;
   border: 1px solid #e0e0e0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -236,7 +236,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto auto;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
   margin-top: 4px;
 }
