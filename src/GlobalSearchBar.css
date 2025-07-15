@@ -1,12 +1,14 @@
 .global-search-container {
   position: relative;
-  display: inline-block;
+  display: block;
+  width: 100%;
 }
 
 .global-search-bar {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .global-search-input {
@@ -14,10 +16,11 @@
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 14px;
-  width: 200px;
+  width: 100%;
   background: white;
   outline: none;
   transition: border-color 0.2s ease;
+  box-sizing: border-box;
 }
 
 .global-search-input:focus {
