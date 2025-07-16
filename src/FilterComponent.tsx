@@ -389,7 +389,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
           position: isMobile() ? 'fixed' : 'absolute',
           left: isMobile() ? '10px' : position.x,
           right: isMobile() ? '10px' : 'auto',
-          top: isMobile() ? 20 : position.y, // Always 20px on mobile
+          top: isMobile() ? 80 : position.y, // 80px from top on mobile to make room for search
           bottom: isMobile() ? 'auto' : 'auto',
           zIndex: isAnyDropdownOpen ? 10000 : 2000, // Higher z-index when dropdowns are open
           overflow: 'visible',

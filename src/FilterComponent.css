@@ -433,10 +433,10 @@
   /* Mobile positioning - top of screen with better viewport handling */
   .topright-filter-container {
     position: fixed !important;
-    top: 20px !important;
+    top: 80px !important;
+    bottom: auto !important;
     left: 10px !important;
     right: 10px !important;
-    bottom: auto !important;
     min-width: auto !important;
     max-width: none !important;
     max-height: none !important; /* Remove height constraint to allow dropdowns */
