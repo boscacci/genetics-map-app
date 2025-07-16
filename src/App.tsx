@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authChecked, setAuthChecked] = useState<boolean>(false);
   const [authAttempts, setAuthAttempts] = useState<number>(0);
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState<boolean>(false);
 
   const isMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
@@ -116,6 +117,10 @@ const App: React.FC = () => {
     setMapZoom(zoom);
   };
 
+  const handleFilterDropdownStateChange = (isOpen: boolean) => {
+    setIsFilterDropdownOpen(isOpen);
+  };
+
   if (!authChecked) {
     return (
       <div className="app-container">
@@ -161,11 +166,12 @@ const App: React.FC = () => {
   return (
     <div className="app-container">
       <div className="map-container">
-        <div className="search-overlay">
+        <div className={`search-overlay ${isFilterDropdownOpen ? 'filter-dropdown-open' : ''}`}>
           <GlobalSearchBar 
             value={globalSearch} 
             onChange={setGlobalSearch} 
             onLocationSearch={handleLocationSearch}
+            isFilterDropdownOpen={isFilterDropdownOpen}
           />
         </div>
         <MapComponent
@@ -178,9 +184,10 @@ const App: React.FC = () => {
           specialists={specialists}
           onFilterChange={setFilteredSpecialists}
           onMapNavigation={handleFilterMapNavigation}
+          onDropdownStateChange={handleFilterDropdownStateChange}
         />
         {!isMobile() && (
-          <div className="specialist-counter">
+          <div className={`specialist-counter ${isFilterDropdownOpen ? 'filter-dropdown-open' : ''}`}>
             <span className="counter-text">
               {filteredSpecialists.length > 0 && filteredSpecialists.length !== specialists.length ? (
                 <>

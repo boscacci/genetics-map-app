@@ -5,6 +5,7 @@ interface GlobalSearchBarProps {
   value: string;
   onChange: (value: string) => void;
   onLocationSearch: (lat: number, lng: number, name: string, zoom: number) => void;
+  isFilterDropdownOpen?: boolean;
 }
 
 interface GeocodingResult {
@@ -16,7 +17,7 @@ interface GeocodingResult {
   class?: string;
 }
 
-const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({ value, onChange, onLocationSearch }) => {
+const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({ value, onChange, onLocationSearch, isFilterDropdownOpen = false }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<GeocodingResult[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -130,7 +131,7 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({ value, onChange, onLo
       </div>
       
       {showResults && searchResults.length > 0 && (
-        <div className="search-results">
+        <div className={`search-results ${isFilterDropdownOpen ? 'filter-dropdown-open' : ''}`}>
           {searchResults.map((result, index) => (
             <div
               key={index}

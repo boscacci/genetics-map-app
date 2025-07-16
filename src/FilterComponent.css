@@ -1,3 +1,15 @@
+/* Backdrop overlay for dropdowns */
+.filter-dropdown-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 9998;
+  pointer-events: none;
+}
+
 .filter-container {
   background-color: #fff;
   border-radius: 12px;
@@ -11,6 +23,7 @@
   gap: 18px;
   width: 100%;
   max-width: 1100px;
+  overflow: visible !important;
 }
 
 .filter-header {
@@ -23,6 +36,7 @@
   flex: 1;
   position: relative;
   z-index: 1;
+  overflow: visible !important;
 }
 
 .filter-group label {
@@ -45,7 +59,9 @@
 .react-select-container {
   width: 100%;
   max-width: 100%;
-  overflow: visible;
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
 }
 
 .react-select__control {
@@ -66,17 +82,51 @@
 
 .react-select__menu {
   border: 1px solid #ddd !important;
-  border-radius: 4px !important;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15) !important;
-  z-index: 999999 !important; /* Maximum z-index to appear above everything */
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+  z-index: 999999 !important; /* Extremely high z-index to ensure it's on top */
   display: block !important;
   visibility: visible !important;
   margin-bottom: 12px !important;
-  border-bottom: 2px solid #3498db !important;
-  transform: translateY(-8px) !important;
+  border: none !important;
   max-height: 200px !important;
-  overflow: auto !important;
-  position: fixed !important; /* Ensure it renders outside container */
+  background: white !important; /* Ensure opaque background */
+  backdrop-filter: none !important; /* Remove backdrop blur to ensure full opacity */
+  position: fixed !important; /* Use fixed positioning to avoid container constraints */
+  top: auto !important; /* Let React Select calculate position */
+  left: auto !important; /* Let React Select calculate position */
+  right: auto !important; /* Let React Select calculate position */
+  width: auto !important; /* Let React Select calculate width */
+  min-width: 200px !important; /* Minimum width for dropdown */
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: none !important; /* Prevent any transforms that might affect positioning */
+}
+
+/* Force dropdown to be visible when open */
+.react-select__menu--is-open {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+/* Ensure the menu portal renders correctly */
+.react-select__menu-portal {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+/* Ensure menu list is properly positioned */
+.react-select__menu-list {
+  background: white !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid #ddd !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
 }
 
 .react-select__option {
@@ -152,17 +202,18 @@
   position: absolute;
   z-index: 2000;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
-  padding: 10px 16px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 320px;
-  max-width: 420px;
+  gap: 12px;
+  min-width: 600px;
+  max-width: 800px;
   border: 1px solid #e0e0e0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   overflow: visible;
+  isolation: isolate; /* Create a new stacking context */
 }
 
 .topright-filter-container:hover {
@@ -248,8 +299,8 @@
 /* Grid layout for filters */
 .filter-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto;
   gap: 12px;
   width: 100%;
   margin-top: 4px;
@@ -262,27 +313,30 @@
 
 .filter-group label {
   display: block;
-  margin-bottom: 2px;
-  font-size: 11px;
-  color: #666;
-  font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #333;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 /* React Select Styling */
 .react-select-container {
   width: 100%;
   max-width: 100%;
-  overflow: visible;
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
 }
 
 .react-select__control {
   border: 1px solid #ddd !important;
-  border-radius: 4px !important;
-  min-height: 32px !important;
+  border-radius: 8px !important;
+  min-height: 40px !important;
   box-shadow: none !important;
-  font-size: 12px !important;
+  font-size: 14px !important;
+  background-color: #fafafa !important;
 }
 
 .react-select__control:hover {
@@ -296,13 +350,22 @@
 
 .react-select__menu {
   border: 1px solid #ddd !important;
-  border-radius: 4px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  border: none !important;
+  z-index: 999999 !important; /* Extremely high z-index to ensure it's on top */
+  background: white !important; /* Ensure opaque background */
+  backdrop-filter: none !important; /* Remove backdrop blur to ensure full opacity */
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
 }
 
 .react-select__option {
-  padding: 6px 10px !important;
-  font-size: 12px !important;
+  padding: 10px 12px !important;
+  font-size: 14px !important;
 }
 
 .react-select__option--is-focused {
@@ -417,13 +480,17 @@
   
   .react-select__menu {
     max-height: 150px !important; /* Shorter menu for mobile */
-    z-index: 999999 !important; /* Maximum z-index to appear above everything */
+    z-index: 999999 !important; /* Extremely high z-index to ensure it's on top */
     margin-bottom: 12px !important;
-    border-bottom: 2px solid #3498db !important;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15) !important;
-    transform: translateY(-8px) !important;
-    overflow: auto !important;
-    position: fixed !important; /* Ensure it renders outside container */
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+    background: white !important; /* Ensure opaque background */
+    backdrop-filter: none !important; /* Remove backdrop blur to ensure full opacity */
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
   }
   
   .react-select__multi-value {

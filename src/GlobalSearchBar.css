@@ -55,6 +55,11 @@
   margin-top: 4px;
 }
 
+/* When filter dropdowns are open, push search results behind */
+.search-results.filter-dropdown-open {
+  z-index: 9997 !important;
+}
+
 .search-result-item {
   padding: 12px;
   cursor: pointer;

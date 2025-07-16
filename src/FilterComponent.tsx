@@ -7,6 +7,7 @@ interface FilterComponentProps {
   specialists: MapPoint[];
   onFilterChange: (filtered: MapPoint[]) => void;
   onMapNavigation?: (lat: number, lng: number, zoom: number) => void;
+  onDropdownStateChange?: (isOpen: boolean) => void;
 }
 
 // Helper function to clean language strings
@@ -33,7 +34,7 @@ const toSelectOptions = (values: string[]) => {
   return values.map(value => ({ value, label: value }));
 };
 
-const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilterChange, onMapNavigation }) => {
+const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilterChange, onMapNavigation, onDropdownStateChange }) => {
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
@@ -41,7 +42,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isMinimized, setIsMinimized] = useState(false);
-  const [focusedDropdown, setFocusedDropdown] = useState<string | null>(null);
+  const [isAnyDropdownOpen, setIsAnyDropdownOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
   // Detect mobile device
@@ -146,6 +147,22 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     .filter(Boolean);
   const availableLanguages = [...new Set(allLanguages)].sort();
 
+  // Debug logging
+  console.log('FilterComponent Debug:', {
+    specialistsCount: specialists.length,
+    countriesCount: countries.length,
+    citiesCount: cities.length,
+    languagesCount: availableLanguages.length,
+    sampleCountries: countries.slice(0, 5),
+    sampleCities: cities.slice(0, 5),
+    sampleLanguages: availableLanguages.slice(0, 5)
+  });
+
+  // Fallback options if no data is available
+  const fallbackCountries = countries.length > 0 ? countries : ['United States', 'Canada', 'United Kingdom'];
+  const fallbackCities = cities.length > 0 ? cities : ['New York', 'Los Angeles', 'Chicago'];
+  const fallbackLanguages = availableLanguages.length > 0 ? availableLanguages : ['English', 'Spanish', 'French'];
+
   // Filter cities based on selected countries
   const availableCities = selectedCountries.length > 0
     ? getUniqueValues(
@@ -153,7 +170,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
           .filter(s => selectedCountries.includes(s.Country))
           .map(s => s.City)
       )
-    : cities;
+    : fallbackCities;
 
   // Apply filters when selections change
   useEffect(() => {
@@ -316,16 +333,15 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     setSelectedLanguages(values);
   };
 
-  // Handle dropdown focus events for z-index management
-  const handleDropdownFocus = (dropdownType: string) => {
-    setFocusedDropdown(dropdownType);
+  // Handle dropdown state for z-index management
+  const handleDropdownOpen = () => {
+    setIsAnyDropdownOpen(true);
+    onDropdownStateChange?.(true);
   };
 
-  const handleDropdownBlur = () => {
-    // Small delay to allow for option selection
-    setTimeout(() => {
-      setFocusedDropdown(null);
-    }, 100);
+  const handleDropdownClose = () => {
+    setIsAnyDropdownOpen(false);
+    onDropdownStateChange?.(false);
   };
 
   const toggleMinimize = () => {
@@ -351,6 +367,23 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
 
   return (
     <>
+      {/* Backdrop overlay when dropdowns are open */}
+      {isAnyDropdownOpen && (
+        <div 
+          className="filter-dropdown-backdrop"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            zIndex: 9998,
+            pointerEvents: 'none'
+          }}
+        />
+      )}
+      
       <div 
         style={{
           position: isMobile() ? 'fixed' : 'absolute',
@@ -358,7 +391,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
           right: isMobile() ? '10px' : 'auto',
           top: isMobile() ? 20 : position.y, // Always 20px on mobile
           bottom: isMobile() ? 'auto' : 'auto',
-          zIndex: 2000, // Lower z-index as it's always at the top
+          zIndex: isAnyDropdownOpen ? 10000 : 2000, // Higher z-index when dropdowns are open
           overflow: 'visible',
           transition: 'none' // No transitions on mobile
         }}
@@ -394,21 +427,26 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
               <label>Country</label>
               <Select
                 isMulti
-                options={toSelectOptions(countries)}
+                options={toSelectOptions(fallbackCountries)}
                 onChange={handleCountryChange}
                 placeholder="Countries..."
                 className="react-select-container"
                 classNamePrefix="react-select"
                 isSearchable
                 isClearable
-                menuPlacement="top"
-                onMenuOpen={() => handleDropdownFocus('country')}
-                onMenuClose={handleDropdownBlur}
-                onBlur={handleDropdownBlur}
+                menuPlacement="auto"
+                menuPortalTarget={document.body}
+                onMenuOpen={handleDropdownOpen}
+                onMenuClose={handleDropdownClose}
                 styles={{
                   menu: (base) => ({
                     ...base,
-                    zIndex: focusedDropdown === 'country' ? 10002 : 9999 // Country gets highest priority
+                    zIndex: 999999,
+                    position: 'fixed'
+                  }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 999999
                   })
                 }}
               />
@@ -424,37 +462,47 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 classNamePrefix="react-select"
                 isSearchable
                 isClearable
-                menuPlacement="top"
-                onMenuOpen={() => handleDropdownFocus('city')}
-                onMenuClose={handleDropdownBlur}
-                onBlur={handleDropdownBlur}
+                menuPlacement="auto"
+                menuPortalTarget={document.body}
+                onMenuOpen={handleDropdownOpen}
+                onMenuClose={handleDropdownClose}
                 styles={{
                   menu: (base) => ({
                     ...base,
-                    zIndex: focusedDropdown === 'city' ? 10001 : 9999
+                    zIndex: 999999,
+                    position: 'fixed'
+                  }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 999999
                   })
                 }}
               />
             </div>
-            <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
+            <div className="filter-group">
               <label>Language</label>
               <Select
                 isMulti
-                options={toSelectOptions(availableLanguages)}
+                options={toSelectOptions(fallbackLanguages)}
                 onChange={handleLanguageChange}
                 placeholder="Languages..."
                 className="react-select-container"
                 classNamePrefix="react-select"
                 isSearchable
                 isClearable
-                menuPlacement="top"
-                onMenuOpen={() => handleDropdownFocus('language')}
-                onMenuClose={handleDropdownBlur}
-                onBlur={handleDropdownBlur}
+                menuPlacement="auto"
+                menuPortalTarget={document.body}
+                onMenuOpen={handleDropdownOpen}
+                onMenuClose={handleDropdownClose}
                 styles={{
                   menu: (base) => ({
                     ...base,
-                    zIndex: focusedDropdown === 'language' ? 10001 : 9999
+                    zIndex: 999999,
+                    position: 'fixed'
+                  }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 999999
                   })
                 }}
               />
