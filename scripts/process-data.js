@@ -14,7 +14,15 @@ if (!SECRET_KEY) {
 
 // Read and parse CSV
 const csvPath = path.resolve(__dirname, '../data.csv');
-const csvContent = fs.readFileSync(csvPath, 'utf8');
+let csvContent;
+if (fs.existsSync(csvPath)) {
+  csvContent = fs.readFileSync(csvPath, 'utf8');
+} else if (process.env.DATA_CSV) {
+  csvContent = process.env.DATA_CSV;
+  console.log('Loaded CSV data from DATA_CSV environment variable.');
+} else {
+  throw new Error('No data.csv file found and DATA_CSV environment variable is not set.');
+}
 const { data, errors } = Papa.parse(csvContent, {
   header: true,
   dynamicTyping: true,
