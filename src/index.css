@@ -119,11 +119,11 @@ body {
   padding: 8px 12px;
   font-size: 12px;
   line-height: 1.4;
-  max-width: 280px;
+  min-width: 200px;
+  max-width: 320px;
   backdrop-filter: blur(4px);
   word-break: break-word;
-  overflow-wrap: anywhere;
-  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .leaflet-tooltip.specialist-tooltip::before {
@@ -132,8 +132,7 @@ body {
 
 .leaflet-tooltip.specialist-tooltip * {
   word-break: break-word !important;
-  overflow-wrap: anywhere !important;
-  white-space: normal !important;
+  overflow-wrap: break-word !important;
   box-sizing: border-box;
 }
 
