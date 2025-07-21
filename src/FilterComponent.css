@@ -1,0 +1,601 @@
+/* Backdrop overlay for dropdowns */
+.filter-dropdown-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 9998;
+  pointer-events: none;
+}
+
+.filter-container {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+  padding: 12px 20px 8px 20px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  min-height: 64px;
+  gap: 18px;
+  width: 100%;
+  max-width: 1100px;
+  overflow: visible !important;
+}
+
+.filter-header {
+  display: none;
+}
+
+.filter-group {
+  min-width: 0;
+  margin-bottom: 0;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  overflow: visible !important;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* React Select Styling */
+.react-select-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
+}
+
+.react-select__control {
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  min-height: 38px !important;
+  box-shadow: none !important;
+}
+
+.react-select__control:hover {
+  border-color: #b3b3b3 !important;
+}
+
+.react-select__control--is-focused {
+  border-color: #3498db !important;
+  box-shadow: 0 0 0 1px #3498db !important;
+}
+
+.react-select__menu {
+  border: 1px solid #ddd !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+  z-index: 999999 !important; /* Extremely high z-index to ensure it's on top */
+  display: block !important;
+  visibility: visible !important;
+  margin-bottom: 12px !important;
+  border: none !important;
+  max-height: 200px !important;
+  background: white !important; /* Ensure opaque background */
+  backdrop-filter: none !important; /* Remove backdrop blur to ensure full opacity */
+  position: fixed !important; /* Use fixed positioning to avoid container constraints */
+  top: auto !important; /* Let React Select calculate position */
+  left: auto !important; /* Let React Select calculate position */
+  right: auto !important; /* Let React Select calculate position */
+  width: auto !important; /* Let React Select calculate width */
+  min-width: 200px !important; /* Minimum width for dropdown */
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: none !important; /* Prevent any transforms that might affect positioning */
+}
+
+/* Force dropdown to be visible when open */
+.react-select__menu--is-open {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+/* Ensure the menu portal renders correctly */
+.react-select__menu-portal {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+/* Ensure menu list is properly positioned */
+.react-select__menu-list {
+  background: white !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid #ddd !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+}
+
+.react-select__option {
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+}
+
+.react-select__option--is-focused {
+  background-color: #f8f9fa !important;
+  color: #333 !important;
+}
+
+.react-select__option--is-selected {
+  background-color: #3498db !important;
+  color: white !important;
+}
+
+.react-select__multi-value {
+  background-color: #e3f2fd !important;
+  border-radius: 4px !important;
+  margin: 2px !important;
+}
+
+.react-select__multi-value__label {
+  color: #1565c0 !important;
+  font-size: 13px !important;
+  padding: 2px 6px !important;
+}
+
+.react-select__multi-value__remove {
+  color: #1565c0 !important;
+  padding: 2px 4px !important;
+}
+
+.react-select__multi-value__remove:hover {
+  background-color: #bbdefb !important;
+  color: #0d47a1 !important;
+}
+
+.react-select__placeholder {
+  color: #999 !important;
+  font-size: 14px !important;
+}
+
+.react-select__input-container {
+  font-size: 14px !important;
+}
+
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 0;
+}
+
+.filter-tag {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clear-btn {
+  display: none;
+}
+
+.topright-filter-container {
+  position: absolute;
+  z-index: 2000;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 600px;
+  max-width: 800px;
+  border: 1px solid #e0e0e0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: visible;
+  isolation: isolate; /* Create a new stacking context */
+}
+
+.topright-filter-container:hover {
+  border-color: #3498db;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.15);
+}
+
+.filter-drag-handle {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  cursor: grab;
+  color: #999;
+  font-size: 12px;
+  transition: color 0.2s ease;
+  z-index: 1;
+}
+
+.filter-drag-handle:hover {
+  color: #555 !important;
+}
+
+/* Minimize button */
+.filter-minimize-btn {
+  position: absolute;
+  top: -22px;
+  left: -18px;
+  width: 40px;
+  height: 40px;
+  background: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 22px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.18);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s, transform 0.2s;
+}
+
+.filter-minimize-btn:hover {
+  background: #2176bd;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(52, 152, 219, 0.28);
+  transform: scale(1.08);
+}
+
+/* Floating minimize button */
+.filter-floating-btn {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 2000;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #3498db;
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(52, 152, 219, 0.3);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.filter-floating-btn:hover {
+  background: #2980b9;
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+  transform: scale(1.05);
+}
+
+.filter-floating-btn:active {
+  transform: scale(0.95);
+}
+
+/* Grid layout for filters */
+.filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto;
+  gap: 12px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.filter-group {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #333;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* React Select Styling */
+.react-select-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
+}
+
+.react-select__control {
+  border: 1px solid #ddd !important;
+  border-radius: 8px !important;
+  min-height: 40px !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+  background-color: #fafafa !important;
+}
+
+.react-select__control:hover {
+  border-color: #b3b3b3 !important;
+}
+
+.react-select__control--is-focused {
+  border-color: #3498db !important;
+  box-shadow: 0 0 0 1px #3498db !important;
+}
+
+.react-select__menu {
+  border: 1px solid #ddd !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  border: none !important;
+  z-index: 999999 !important; /* Extremely high z-index to ensure it's on top */
+  background: white !important; /* Ensure opaque background */
+  backdrop-filter: none !important; /* Remove backdrop blur to ensure full opacity */
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+}
+
+.react-select__option {
+  padding: 10px 12px !important;
+  font-size: 14px !important;
+}
+
+.react-select__option--is-focused {
+  background-color: #f8f9fa !important;
+  color: #333 !important;
+}
+
+.react-select__option--is-selected {
+  background-color: #3498db !important;
+  color: white !important;
+}
+
+.react-select__multi-value {
+  background-color: #e3f2fd !important;
+  border-radius: 3px !important;
+  margin: 1px !important;
+}
+
+.react-select__multi-value__label {
+  color: #1565c0 !important;
+  font-size: 11px !important;
+  padding: 1px 4px !important;
+}
+
+.react-select__multi-value__remove {
+  color: #1565c0 !important;
+  padding: 1px 3px !important;
+}
+
+.react-select__multi-value__remove:hover {
+  background-color: #bbdefb !important;
+  color: #0d47a1 !important;
+}
+
+.react-select__placeholder {
+  color: #999 !important;
+  font-size: 12px !important;
+}
+
+.react-select__input-container {
+  font-size: 12px !important;
+}
+
+@media (max-width: 900px) {
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 0;
+    max-width: 100%;
+    padding: 10px 6px 6px 6px;
+    gap: 8px;
+    overflow: visible;
+  }
+  .filter-group {
+    min-width: 0;
+    max-width: 100%;
+    overflow: visible;
+  }
+  .react-select-container {
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+  }
+  
+  /* Mobile positioning - top of screen with better viewport handling */
+  .topright-filter-container {
+    position: fixed !important;
+    top: 80px !important;
+    bottom: auto !important;
+    left: 10px !important;
+    right: 10px !important;
+    min-width: auto !important;
+    max-width: none !important;
+    max-height: none !important; /* Remove height constraint to allow dropdowns */
+    overflow: visible !important; /* Allow dropdowns to overflow */
+    padding: 8px 8px 8px 8px;
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+    gap: 6px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    z-index: 2000 !important;
+    transition: none !important;
+  }
+  
+  .filter-group {
+    overflow: visible !important;
+  }
+  
+  .react-select-container {
+    overflow: visible !important;
+  }
+  
+  /* Mobile grid layout */
+  .filter-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 10px;
+  }
+  
+  /* Mobile-specific React-Select improvements */
+  .react-select__control {
+    min-height: 36px !important; /* Better touch target */
+    font-size: 14px !important;
+    padding: 0 4px !important;
+  }
+  
+  .react-select__option {
+    padding: 10px 8px !important; /* Larger touch targets */
+    font-size: 14px !important; /* Prevent zoom on iOS */
+  }
+  
+  .react-select__menu {
+    max-height: 150px !important; /* Shorter menu for mobile */
+    z-index: 999999 !important; /* Extremely high z-index to ensure it's on top */
+    margin-bottom: 12px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+    background: white !important; /* Ensure opaque background */
+    backdrop-filter: none !important; /* Remove backdrop blur to ensure full opacity */
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+  }
+  
+  .react-select__multi-value {
+    margin: 2px !important; /* More spacing for touch */
+  }
+  
+  .react-select__multi-value__remove {
+    padding: 4px 6px !important; /* Larger touch target */
+  }
+  
+  /* Prevent zoom on input focus */
+  .react-select__input-container input {
+    font-size: 16px !important;
+  }
+  
+  /* Better touch targets for mobile */
+  .filter-drag-handle {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  .filter-minimize-btn {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    font-size: 16px !important;
+  }
+  
+  /* Floating button positioning for mobile */
+  .filter-floating-btn {
+    top: 80px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+  }
+
+  .filter-minimize-btn {
+    position: absolute !important;
+    top: -12px !important;
+    right: -6px !important;
+    left: auto !important;
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 14px !important;
+    background: #3498db !important;
+    border-radius: 50% !important;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    z-index: 2001 !important; /* Ensure it's above the filter container */
+    transform: none !important; /* Prevent any transforms */
+  }
+} 
+
+/* Additional mobile-specific improvements */
+@media (max-width: 900px) and (max-height: 700px) {
+  /* For shorter screens like some mobile devices */
+  .topright-filter-container {
+    max-height: none !important; /* Remove height constraint */
+    top: 15px !important;
+  }
+  
+  .filter-grid {
+    gap: 4px !important;
+  }
+  
+  .react-select__control {
+    min-height: 32px !important;
+    font-size: 13px !important;
+  }
+  
+  .react-select__option {
+    padding: 8px 6px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 600px) {
+  /* For very short screens */
+  .topright-filter-container {
+    max-height: none !important; /* Remove height constraint */
+    top: 20px !important;
+    padding: 6px 6px 6px 6px !important;
+  }
+  
+  .filter-grid {
+    gap: 3px !important;
+  }
+  
+  .react-select__control {
+    min-height: 30px !important;
+    font-size: 12px !important;
+  }
+  
+  .react-select__option {
+    padding: 6px 4px !important;
+    font-size: 12px !important;
+  }
+} 

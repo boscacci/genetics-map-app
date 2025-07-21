@@ -1,0 +1,56 @@
+{
+  "name": "interactive-map-app",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://boscacci.github.io/genetics-map-app",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "node hash-secret.js",
+    "start": "dotenv -e .env.generated -- react-scripts start",
+    "prebuild": "node hash-secret.js",
+    "build": "dotenv -e .env.generated -- react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "generate-auth": "node scripts/generate-auth-hash.js",
+    "fetch-data": "node scripts/fetch-data.js",
+    "fetch-data-simple": "node scripts/fetch-data-simple.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+    "@types/leaflet": "^1.9.20",
+    "@types/papaparse": "^5.3.16",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "crypto-js": "^4.2.0",
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3",
+    "papaparse": "^5.5.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-leaflet": "^5.0.0",
+    "react-leaflet-markercluster": "^5.0.0-rc.0",
+    "react-router-dom": "^7.7.0",
+    "react-scripts": "^5.0.1",
+    "react-select": "^5.10.2",
+    "typescript": "^4.9.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.15",
+    "dotenv-cli": "^7.0.0",
+    "ts-node": "^10.9.2"
+  }
+}

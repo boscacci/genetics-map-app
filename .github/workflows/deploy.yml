@@ -1,0 +1,44 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate encrypted data and hash
+        run: |
+          node scripts/process-data.js
+          node hash-secret.js
+
+      - name: Update secret hash in App.tsx
+        run: |
+          HASH=$(grep REACT_APP_SECRET_HASH .env.generated | cut -d'=' -f2)
+          sed -i "s|const SECRET_HASH = \"[a-f0-9]*\";|const SECRET_HASH = \"$HASH\";|" src/App.tsx
+
+      - name: Build app
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: gh-pages 
