@@ -94,6 +94,22 @@ body {
   white-space: normal;
 }
 
+.leaflet-popup-content-wrapper, .leaflet-popup-content {
+  max-width: 350px !important;
+  min-width: 180px;
+  box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.leaflet-popup-content *, .leaflet-popup-content strong, .leaflet-popup-content a {
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  white-space: normal !important;
+  box-sizing: border-box;
+}
+
 /* Specialist tooltip styling */
 .leaflet-tooltip.specialist-tooltip {
   background: rgba(255, 255, 255, 0.95);
