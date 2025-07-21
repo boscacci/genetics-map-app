@@ -135,7 +135,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
             <div>
               <h3>{specialist.name_first} {specialist.name_last}</h3>
               <p><strong>Institution:</strong> {specialist.work_institution}</p>
-              {specialist.email && <p><strong>Email:</strong> <a href={`mailto:${specialist.email}`}>{specialist.email}</a></p>}
+              {specialist.email && <p className="popup-email" style={{wordBreak: 'break-all', whiteSpace: 'normal'}}><strong>Email:</strong> <a href={`mailto:${specialist.email}`}>{specialist.email}</a></p>}
               {specialist.phone_work && <p><strong>Phone:</strong> {specialist.phone_work}</p>}
               {specialist.work_website && <p><strong>Website:</strong> {getWebsiteLink(specialist.work_website)}</p>}
               <p><strong>Address:</strong> {specialist.work_address || `${specialist.City}, ${specialist.Country}`}</p>

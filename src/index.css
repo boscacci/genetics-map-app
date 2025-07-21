@@ -82,6 +82,12 @@ body {
   color: #2c3e50;
 }
 
+.popup-email {
+  word-break: break-all;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 /* Specialist tooltip styling */
 .leaflet-tooltip.specialist-tooltip {
   background: rgba(255, 255, 255, 0.95);
