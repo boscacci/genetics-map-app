@@ -73,6 +73,8 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
            (window.innerWidth <= 900);
   };
 
+  const [openPopupIndex, setOpenPopupIndex] = useState<number | null>(null);
+
   const getWebsiteLink = (website: string) => {
     if (!website) return null;
     
@@ -124,17 +126,15 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
   return (
     <>
       {specialists.map((specialist, index) => {
-        // Track popup open state per marker
-        const [popupOpen, setPopupOpen] = useState(false);
         // Determine tooltip class for mobile popup state
-        const tooltipClass = `specialist-tooltip${isMobile() && popupOpen ? ' hide-on-mobile-popup' : ''}`;
+        const tooltipClass = `specialist-tooltip${isMobile() && openPopupIndex === index ? ' hide-on-mobile-popup' : ''}`;
         return (
           <Marker 
             key={`${specialist.Latitude}-${specialist.Longitude}-${index}`}
             position={[specialist.Latitude, specialist.Longitude]}
           >
             {/* Only show tooltip if not mobile with popup open */}
-            {!(isMobile() && popupOpen) && (
+            {!(isMobile() && openPopupIndex === index) && (
               <Tooltip 
                 direction="top" 
                 offset={[0, -10]}
@@ -147,8 +147,8 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
             )}
             <Popup
               eventHandlers={{
-                popupopen: () => setPopupOpen(true),
-                popupclose: () => setPopupOpen(false),
+                popupopen: () => setOpenPopupIndex(index),
+                popupclose: () => setOpenPopupIndex(null),
               }}
             >
               <div>
