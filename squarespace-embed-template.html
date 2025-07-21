@@ -2,15 +2,12 @@
 <!-- Copy this entire block into your Squarespace Code Block -->
 
 <style>
-  /* Container-relative sizing to prevent iframe overflow */
   .genetics-map-embed-container {
     width: 100%;
-    height: 100%;
     min-width: 320px;
-    min-height: 400px;
-    max-width: 100%;
-    max-height: 100%;
-    box-sizing: border-box;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
     position: relative;
     overflow: hidden;
   }
@@ -21,8 +18,14 @@
     display: block;
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    max-width: 100%;
-    max-height: 100%;
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+  @media (max-width: 600px) {
+    .genetics-map-embed-container {
+      height: 100vh;
+      min-height: 70vh;
+    }
   }
 </style>
 
@@ -32,6 +35,7 @@
       id="genetics-map" 
       src="https://boscacci.github.io/genetics-map-app/?key={key}"
       title="Global Genetics Professionals"
-      allowfullscreen="true">
+      allowfullscreen="true"
+      >
   </iframe>
 </div> 

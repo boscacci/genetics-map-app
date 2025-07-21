@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-l
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import L from 'leaflet';
 import { MapPoint } from './types';
+import { cleanLanguageString } from './utils';
 
 // Fix icon paths issue in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -82,6 +83,17 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     );
   };
 
+  // Utility to format languages with commas
+  const formatLanguages = (languages: string) => {
+    if (!languages) return '';
+    // Split on common delimiters: comma, semicolon, ' and ', or whitespace
+    return languages
+      .split(/,|;|\sand\s|\s+/)
+      .map(lang => cleanLanguageString(lang))
+      .filter(Boolean)
+      .join(', ');
+  };
+
   const createTooltipContent = (specialist: MapPoint) => {
     return `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; line-height: 1.4;">
@@ -97,7 +109,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
         <div style="color: #555; margin-bottom: 2px;">
           <strong>Address:</strong> ${specialist.work_address || `${specialist.City}, ${specialist.Country}`}
         </div>
-        ${specialist.language_spoken ? `<div style="color: #555;"><strong>Languages:</strong> ${specialist.language_spoken}</div>` : ''}
+        ${specialist.language_spoken ? `<div style="color: #555;"><strong>Languages:</strong> ${formatLanguages(specialist.language_spoken)}</div>` : ''}
         <div style="color: #555; margin-top: 2px;"><strong>Interpreter Services:</strong> ${specialist.interpreter_services || 'unknown'}</div>
       </div>
     `;
@@ -127,7 +139,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
               {specialist.phone_work && <p><strong>Phone:</strong> {specialist.phone_work}</p>}
               {specialist.work_website && <p><strong>Website:</strong> {getWebsiteLink(specialist.work_website)}</p>}
               <p><strong>Address:</strong> {specialist.work_address || `${specialist.City}, ${specialist.Country}`}</p>
-              {specialist.language_spoken && <p><strong>Languages:</strong> {specialist.language_spoken}</p>}
+              {specialist.language_spoken && <p><strong>Languages:</strong> {formatLanguages(specialist.language_spoken)}</p>}
               <p><strong>Interpreter Services:</strong> {specialist.interpreter_services || 'unknown'}</p>
             </div>
           </Popup>

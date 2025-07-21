@@ -3,7 +3,7 @@ import Papa from 'papaparse';
 import CryptoJS from 'crypto-js';
 
 // Function to clean up language strings by removing punctuation and normalizing whitespace
-const cleanLanguageString = (languageString: string): string => {
+export const cleanLanguageString = (languageString: string): string => {
   if (!languageString) return '';
   
   return languageString
