@@ -88,6 +88,12 @@ body {
   overflow-wrap: anywhere;
 }
 
+.leaflet-popup-content, .leaflet-popup-content p, .leaflet-popup-content div, .leaflet-popup-content a {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 /* Specialist tooltip styling */
 .leaflet-tooltip.specialist-tooltip {
   background: rgba(255, 255, 255, 0.95);
