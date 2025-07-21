@@ -126,6 +126,8 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
       {specialists.map((specialist, index) => {
         // Track popup open state per marker
         const [popupOpen, setPopupOpen] = useState(false);
+        // Determine tooltip class for mobile popup state
+        const tooltipClass = `specialist-tooltip${isMobile() && popupOpen ? ' hide-on-mobile-popup' : ''}`;
         return (
           <Marker 
             key={`${specialist.Latitude}-${specialist.Longitude}-${index}`}
@@ -138,7 +140,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                 offset={[0, -10]}
                 opacity={1}
                 permanent={false}
-                className="specialist-tooltip"
+                className={tooltipClass}
               >
                 <div dangerouslySetInnerHTML={{ __html: createTooltipContent(specialist) }} />
               </Tooltip>

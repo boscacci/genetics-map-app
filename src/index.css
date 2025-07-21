@@ -183,5 +183,17 @@ body {
     min-width: 0;
     padding: 10px 6px;
     font-size: 13px;
+    max-height: 60vh;
+    overflow-y: auto;
   }
+  .leaflet-popup-content {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }
+}
+
+/* Hide tooltip when popup is open on mobile (class added via JS) */
+.leaflet-tooltip.specialist-tooltip.hide-on-mobile-popup {
+  display: none !important;
 } 
