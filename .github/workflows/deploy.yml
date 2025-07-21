@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
+      DATA_CSV: ${{ secrets.DATA_CSV }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
