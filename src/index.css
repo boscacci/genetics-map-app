@@ -63,10 +63,6 @@ body {
 }
 
 /* Make popups more readable */
-.leaflet-popup-content {
-  max-width: 300px;
-}
-
 .leaflet-popup-content h3 {
   margin-top: 0;
   margin-bottom: 10px;
@@ -90,40 +86,52 @@ body {
 
 .leaflet-popup-content, .leaflet-popup-content p, .leaflet-popup-content div, .leaflet-popup-content a {
   word-break: break-word;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   white-space: normal;
 }
 
 .leaflet-popup-content-wrapper, .leaflet-popup-content {
-  max-width: 350px !important;
-  min-width: 180px;
+  max-width: 520px !important; /* was 420px */
+  min-width: 280px; /* was 220px */
   box-sizing: border-box;
   word-break: break-word;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   white-space: normal;
+  padding: 18px 28px; /* more padding for clarity */
+  font-size: 16px; /* slightly larger for legibility */
+}
+
+@media (min-width: 900px) {
+  .leaflet-popup-content-wrapper, .leaflet-popup-content {
+    max-width: 600px !important;
+    min-width: 320px;
+    padding: 22px 36px;
+    font-size: 17px;
+  }
 }
 
 .leaflet-popup-content *, .leaflet-popup-content strong, .leaflet-popup-content a {
   word-break: break-word !important;
-  overflow-wrap: anywhere !important;
+  overflow-wrap: break-word !important;
   white-space: normal !important;
   box-sizing: border-box;
 }
 
 /* Specialist tooltip styling */
 .leaflet-tooltip.specialist-tooltip {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 8px 12px;
-  font-size: 12px;
-  line-height: 1.4;
-  min-width: 200px;
-  max-width: 320px;
-  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid #bbb;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  padding: 10px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  min-width: 220px;
+  max-width: 380px;
+  backdrop-filter: blur(5px);
   word-break: break-word;
   overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .leaflet-tooltip.specialist-tooltip::before {
@@ -133,6 +141,7 @@ body {
 .leaflet-tooltip.specialist-tooltip * {
   word-break: break-word !important;
   overflow-wrap: break-word !important;
+  white-space: normal !important;
   box-sizing: border-box;
 }
 
@@ -165,8 +174,14 @@ body {
   
   /* Mobile tooltip adjustments */
   .leaflet-tooltip.specialist-tooltip {
-    max-width: 240px;
-    font-size: 11px;
-    padding: 6px 10px;
+    max-width: 260px;
+    font-size: 12px;
+    padding: 7px 12px;
+  }
+  .leaflet-popup-content-wrapper, .leaflet-popup-content {
+    max-width: 98vw !important;
+    min-width: 0;
+    padding: 10px 6px;
+    font-size: 13px;
   }
 } 

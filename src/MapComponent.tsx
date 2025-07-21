@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import L from 'leaflet';
@@ -67,6 +67,12 @@ const CustomZoomControl: React.FC = () => {
 
 // Memoized marker component to prevent unnecessary re-renders
 const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ specialists }) => {
+  // Utility to detect mobile
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           (window.innerWidth <= 900);
+  };
+
   const getWebsiteLink = (website: string) => {
     if (!website) return null;
     
@@ -117,34 +123,46 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
 
   return (
     <>
-      {specialists.map((specialist, index) => (
-        <Marker 
-          key={`${specialist.Latitude}-${specialist.Longitude}-${index}`}
-          position={[specialist.Latitude, specialist.Longitude]}
-        >
-          <Tooltip 
-            direction="top" 
-            offset={[0, -10]}
-            opacity={1}
-            permanent={false}
-            className="specialist-tooltip"
+      {specialists.map((specialist, index) => {
+        // Track popup open state per marker
+        const [popupOpen, setPopupOpen] = useState(false);
+        return (
+          <Marker 
+            key={`${specialist.Latitude}-${specialist.Longitude}-${index}`}
+            position={[specialist.Latitude, specialist.Longitude]}
           >
-            <div dangerouslySetInnerHTML={{ __html: createTooltipContent(specialist) }} />
-          </Tooltip>
-          <Popup>
-            <div>
-              <h3>{specialist.name_first} {specialist.name_last}</h3>
-              <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Institution:</strong> {specialist.work_institution}</p>
-              {specialist.email && <p className="popup-email" style={{wordBreak: 'break-all', whiteSpace: 'normal'}}><strong>Email:</strong> <a href={`mailto:${specialist.email}`}>{specialist.email}</a></p>}
-              {specialist.phone_work && <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Phone:</strong> {specialist.phone_work}</p>}
-              {specialist.work_website && <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Website:</strong> {getWebsiteLink(specialist.work_website)}</p>}
-              <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Address:</strong> {specialist.work_address || `${specialist.City}, ${specialist.Country}`}</p>
-              {specialist.language_spoken && <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Languages:</strong> {formatLanguages(specialist.language_spoken)}</p>}
-              <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Interpreter Services:</strong> {specialist.interpreter_services || 'unknown'}</p>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+            {/* Only show tooltip if not mobile with popup open */}
+            {!(isMobile() && popupOpen) && (
+              <Tooltip 
+                direction="top" 
+                offset={[0, -10]}
+                opacity={1}
+                permanent={false}
+                className="specialist-tooltip"
+              >
+                <div dangerouslySetInnerHTML={{ __html: createTooltipContent(specialist) }} />
+              </Tooltip>
+            )}
+            <Popup
+              eventHandlers={{
+                popupopen: () => setPopupOpen(true),
+                popupclose: () => setPopupOpen(false),
+              }}
+            >
+              <div>
+                <h3>{specialist.name_first} {specialist.name_last}</h3>
+                <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Institution:</strong> {specialist.work_institution}</p>
+                {specialist.email && <p className="popup-email" style={{wordBreak: 'break-all', whiteSpace: 'normal'}}><strong>Email:</strong> <a href={`mailto:${specialist.email}`}>{specialist.email}</a></p>}
+                {specialist.phone_work && <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Phone:</strong> {specialist.phone_work}</p>}
+                {specialist.work_website && <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Website:</strong> {getWebsiteLink(specialist.work_website)}</p>}
+                <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Address:</strong> {specialist.work_address || `${specialist.City}, ${specialist.Country}`}</p>
+                {specialist.language_spoken && <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Languages:</strong> {formatLanguages(specialist.language_spoken)}</p>}
+                <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Interpreter Services:</strong> {specialist.interpreter_services || 'unknown'}</p>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
     </>
   );
 });
