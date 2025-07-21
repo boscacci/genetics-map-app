@@ -134,13 +134,13 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
           <Popup>
             <div>
               <h3>{specialist.name_first} {specialist.name_last}</h3>
-              <p><strong>Institution:</strong> {specialist.work_institution}</p>
+              <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Institution:</strong> {specialist.work_institution}</p>
               {specialist.email && <p className="popup-email" style={{wordBreak: 'break-all', whiteSpace: 'normal'}}><strong>Email:</strong> <a href={`mailto:${specialist.email}`}>{specialist.email}</a></p>}
-              {specialist.phone_work && <p><strong>Phone:</strong> {specialist.phone_work}</p>}
-              {specialist.work_website && <p><strong>Website:</strong> {getWebsiteLink(specialist.work_website)}</p>}
-              <p><strong>Address:</strong> {specialist.work_address || `${specialist.City}, ${specialist.Country}`}</p>
-              {specialist.language_spoken && <p><strong>Languages:</strong> {formatLanguages(specialist.language_spoken)}</p>}
-              <p><strong>Interpreter Services:</strong> {specialist.interpreter_services || 'unknown'}</p>
+              {specialist.phone_work && <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Phone:</strong> {specialist.phone_work}</p>}
+              {specialist.work_website && <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Website:</strong> {getWebsiteLink(specialist.work_website)}</p>}
+              <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Address:</strong> {specialist.work_address || `${specialist.City}, ${specialist.Country}`}</p>
+              {specialist.language_spoken && <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Languages:</strong> {formatLanguages(specialist.language_spoken)}</p>}
+              <p style={{wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal'}}><strong>Interpreter Services:</strong> {specialist.interpreter_services || 'unknown'}</p>
             </div>
           </Popup>
         </Marker>
