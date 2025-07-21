@@ -179,15 +179,19 @@ body {
     padding: 7px 12px;
   }
   .leaflet-popup-content-wrapper, .leaflet-popup-content {
-    max-width: 98vw !important;
-    min-width: 0;
-    padding: 10px 6px;
-    font-size: 13px;
+    max-width: 95vw !important;
+    min-width: 220px;
+    width: 90vw;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  .leaflet-popup-content-wrapper {
     max-height: 60vh;
     overflow-y: auto;
   }
   .leaflet-popup-content {
-    word-break: break-word;
+    overflow-y: visible;
+    word-break: normal;
     overflow-wrap: break-word;
     white-space: normal;
   }
