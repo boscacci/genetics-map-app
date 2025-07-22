@@ -130,6 +130,7 @@ const App: React.FC = () => {
           filteredSpecialists={filteredSpecialists}
           center={mapCenter}
           zoom={mapZoom}
+          disableClustering={true} // Set to false to re-enable clustering
         />
         <FilterComponent
           specialists={specialists}

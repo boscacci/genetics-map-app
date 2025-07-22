@@ -18,6 +18,7 @@ interface MapComponentProps {
   filteredSpecialists: MapPoint[];
   center: [number, number];
   zoom: number;
+  disableClustering?: boolean; // Add this line
 }
 
 // Component to access the map instance
@@ -169,7 +170,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
   );
 });
 
-const MapComponent: React.FC<MapComponentProps> = ({ specialists, filteredSpecialists, center, zoom }) => {
+const MapComponent: React.FC<MapComponentProps> = ({ specialists, filteredSpecialists, center, zoom, disableClustering = false }) => {
   // Memoize the professionals to show based on filtering
   const specialistsToShow = useMemo(() => {
     return filteredSpecialists.length > 0 ? filteredSpecialists : specialists;
@@ -193,9 +194,13 @@ const MapComponent: React.FC<MapComponentProps> = ({ specialists, filteredSpecia
           attribution="©OpenStreetMap contributors ©CartoDB"
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
-        <MarkerClusterGroup>
+        {disableClustering ? (
           <SpecialistMarkers specialists={specialistsToShow} />
-        </MarkerClusterGroup>
+        ) : (
+          <MarkerClusterGroup>
+            <SpecialistMarkers specialists={specialistsToShow} />
+          </MarkerClusterGroup>
+        )}
       </MapContainer>
     </div>
   );
