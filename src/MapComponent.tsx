@@ -190,8 +190,8 @@ const MapComponent: React.FC<MapComponentProps> = ({ specialists, filteredSpecia
         />
         <CustomZoomControl />
         <TileLayer
-          attribution=""
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="©OpenStreetMap contributors ©CartoDB"
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         <MarkerClusterGroup>
           <SpecialistMarkers specialists={specialistsToShow} />
