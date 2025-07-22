@@ -17,7 +17,7 @@ export const parseCSVString = (csvString: string): MapPoint[] => {
   try {
     // Use Papa Parse to handle CSV parsing properly
     const { data, errors } = Papa.parse(csvString, {
-      header: true,
+      header: true, // Use field names
       dynamicTyping: true, // Automatically convert strings to numbers where appropriate
       skipEmptyLines: true
     });
@@ -28,19 +28,24 @@ export const parseCSVString = (csvString: string): MapPoint[] => {
     
     console.log(`Total records parsed: ${data.length}`);
     
-    // Type as any[] first since Papa Parse returns a generic object array
+    // Map each row by field name to MapPoint fields
     const parsedData = data as any[];
-    
-    // Filter specialists with valid coordinates and clean up language strings
-    const specialists = parsedData.filter((item: any) => {
-      return item.Latitude && item.Longitude && 
-             !Number.isNaN(Number(item.Latitude)) && !Number.isNaN(Number(item.Longitude));
-    }).map((item: any) => ({
-      ...item,
-      language_spoken: cleanLanguageString(item.language_spoken || item.Languages || ''),
-      interpreter_services: (typeof item['Interpretation Services'] === 'string')
-        ? (item['Interpretation Services'].toLowerCase() === 'true' ? 'true' : item['Interpretation Services'].toLowerCase() === 'false' ? 'false' : 'unknown')
-        : 'unknown'
+    const specialists = parsedData.filter((row: any) => {
+      return row.Latitude && row.Longitude && !Number.isNaN(Number(row.Latitude)) && !Number.isNaN(Number(row.Longitude));
+    }).map((row: any) => ({
+      name_first: row.name_first,
+      name_last: row.name_last,
+      email: row.email,
+      phone_work: row.phone_work,
+      work_website: row.work_website,
+      work_institution: row.work_institution,
+      work_address: row.work_address,
+      language_spoken: cleanLanguageString(row.language_spoken),
+      Latitude: Number(row.Latitude),
+      Longitude: Number(row.Longitude),
+      City: row.City,
+      Country: row.Country,
+      interpreter_services: row.uses_interpreters || 'unknown',
     }));
     
     // Log specialists without coordinates
@@ -70,7 +75,7 @@ export const parseCSV = async (url: string): Promise<MapPoint[]> => {
     
     // Use Papa Parse to handle CSV parsing properly
     const { data, errors } = Papa.parse(text, {
-      header: true,
+      header: true, // Use field names
       dynamicTyping: true, // Automatically convert strings to numbers where appropriate
       skipEmptyLines: true
     });
@@ -81,19 +86,24 @@ export const parseCSV = async (url: string): Promise<MapPoint[]> => {
     
     console.log(`Total records parsed: ${data.length}`);
     
-    // Type as any[] first since Papa Parse returns a generic object array
+    // Map each row by field name to MapPoint fields
     const parsedData = data as any[];
-    
-    // Filter specialists with valid coordinates and clean up language strings
-    const specialists = parsedData.filter((item: any) => {
-      return item.Latitude && item.Longitude && 
-             !Number.isNaN(Number(item.Latitude)) && !Number.isNaN(Number(item.Longitude));
-    }).map((item: any) => ({
-      ...item,
-      language_spoken: cleanLanguageString(item.language_spoken || ''),
-      interpreter_services: (typeof item['Interpretation Services'] === 'string')
-        ? (item['Interpretation Services'].toLowerCase() === 'true' ? 'true' : item['Interpretation Services'].toLowerCase() === 'false' ? 'false' : 'unknown')
-        : 'unknown'
+    const specialists = parsedData.filter((row: any) => {
+      return row.Latitude && row.Longitude && !Number.isNaN(Number(row.Latitude)) && !Number.isNaN(Number(row.Longitude));
+    }).map((row: any) => ({
+      name_first: row.name_first,
+      name_last: row.name_last,
+      email: row.email,
+      phone_work: row.phone_work,
+      work_website: row.work_website,
+      work_institution: row.work_institution,
+      work_address: row.work_address,
+      language_spoken: cleanLanguageString(row.language_spoken),
+      Latitude: Number(row.Latitude),
+      Longitude: Number(row.Longitude),
+      City: row.City,
+      Country: row.Country,
+      interpreter_services: row.uses_interpreters || 'unknown',
     }));
     
     // Log specialists without coordinates

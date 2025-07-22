@@ -16,7 +16,7 @@ if (!SECRET_KEY) {
 const csvPath = path.resolve(__dirname, '../data.csv');
 const csvContent = fs.readFileSync(csvPath, 'utf8');
 const { data, errors } = Papa.parse(csvContent, {
-  header: true,
+  header: true, // Use field names
   dynamicTyping: true,
   skipEmptyLines: true,
 });
@@ -32,15 +32,23 @@ const cleanLanguageString = (languageString) => {
     .replace(/\s+/g, ' ')
     .trim();
 };
-const parsedData = (data).filter((item) => {
-  return item.Latitude && item.Longitude &&
-    !Number.isNaN(Number(item.Latitude)) && !Number.isNaN(Number(item.Longitude));
-}).map((item) => ({
-  ...item,
-  language_spoken: cleanLanguageString(item.language_spoken || item.Languages || ''),
-  interpreter_services: (typeof item['Interpretation Services'] === 'string')
-    ? (item['Interpretation Services'].toLowerCase() === 'true' ? 'true' : item['Interpretation Services'].toLowerCase() === 'false' ? 'false' : 'unknown')
-    : 'unknown',
+// Map each row by field name to MapPoint fields
+const parsedData = (data).filter((row) => {
+  return row.Latitude && row.Longitude && !Number.isNaN(Number(row.Latitude)) && !Number.isNaN(Number(row.Longitude));
+}).map((row) => ({
+  name_first: row.name_first,
+  name_last: row.name_last,
+  email: row.email,
+  phone_work: row.phone_work,
+  work_website: row.work_website,
+  work_institution: row.work_institution,
+  work_address: row.work_address,
+  language_spoken: cleanLanguageString(row.language_spoken),
+  Latitude: Number(row.Latitude),
+  Longitude: Number(row.Longitude),
+  City: row.City,
+  Country: row.Country,
+  interpreter_services: row.uses_interpreters || 'unknown',
 }));
 
 // Encrypt JSON string

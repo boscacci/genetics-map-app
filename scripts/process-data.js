@@ -45,10 +45,8 @@ const parsedData = (data).filter((item) => {
     !Number.isNaN(Number(item.Latitude)) && !Number.isNaN(Number(item.Longitude));
 }).map((item) => ({
   ...item,
-  language_spoken: cleanLanguageString(item.language_spoken || item.Languages || ''),
-  interpreter_services: (typeof item['Interpretation Services'] === 'string')
-    ? (item['Interpretation Services'].toLowerCase() === 'true' ? 'true' : item['Interpretation Services'].toLowerCase() === 'false' ? 'false' : 'unknown')
-    : 'unknown',
+  language_spoken: cleanLanguageString(item.language_spoken),
+  interpreter_services: typeof item.uses_interpreters === 'string' ? item.uses_interpreters : 'unknown',
 }));
 
 // Encrypt JSON string
