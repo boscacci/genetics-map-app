@@ -2,50 +2,20 @@
 
 A React + TypeScript app for displaying genetic professionals worldwide.
 
-## 🔒 Secure Data by Default
-- Sensitive data is encrypted and only accessible with the correct secret key.
-- The secret key is never stored in the repo or code.
-- Data encryption is automated on build and commit.
+## 🌍 What is this?
+This app provides an interactive map and directory of genetic professionals from around the world. You can browse, search, and explore the data in a user-friendly interface.
 
-## 🚀 Quick Start
-
-```bash
-npm install
-npm run prepare # sets up Husky hooks
-cp .env.example .env # and set your REACT_APP_SECRET_KEY
-npm start
-```
-
-## 🛠️ Build & Deploy
-
-```bash
-npm run build
-```
-- This will automatically encrypt your data (if needed) and build the app.
-- Deploy the `build` directory as a static site (e.g., GitHub Pages).
-
-## 🧪 Development
-- Place your `data.csv` in the project root (it is gitignored).
-- The app will use the encrypted data blob and only show data to users with the correct key in the URL (`?key=YOURSECRET`).
-
-## 🤖 Automation
-- Husky pre-commit/pre-push hooks ensure data is always encrypted and code is linted/tested.
-- No loose scripts—everything is automated.
-
-## 📝 Environment Variables
-- Copy `.env.example` to `.env` and set your `REACT_APP_SECRET_KEY`.
+## ✨ Features
+- Interactive world map of genetic professionals
+- Search and filter by region or specialty
+- Simple CSV-based data import
+- Clean, approachable interface
 
 ## 🧩 Tech Stack
 - React
 - TypeScript
-- CryptoJS
-- Husky
-
-## 📦 Scripts
-- `npm start` – Start dev server
-- `npm run build` – Encrypt data and build app
-- `npm run prepare` – Set up Husky hooks
+- PapaParse (for CSV parsing)
 
 ---
 
-MIT License
+This project was created in Cursor as a way to learn React and TypeScript from scratch. While it may not be perfect, it represents a genuine effort to make genetic professional data more accessible and visually engaging.
