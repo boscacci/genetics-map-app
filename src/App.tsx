@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MapPoint } from './types';
 import MapComponent from './MapComponent';
 import FilterComponent from './FilterComponent';
@@ -85,6 +85,33 @@ const App: React.FC = () => {
     setIsFilterDropdownOpen(isOpen);
   };
 
+  // Determine if clustering should be disabled based on filter state
+  // Clustering is disabled when:
+  // 1. Any filters are applied (country, city, language)
+  // 2. User has zoomed in significantly (zoom >= 8, likely from location search)
+  // This provides better visibility when users have narrowed down their search
+  const shouldDisableClustering = useMemo(() => {
+    // Disable clustering if any filters are applied
+    const hasFilters = filteredSpecialists.length > 0 && filteredSpecialists.length !== specialists.length;
+    
+    // Also disable clustering if we're zoomed in significantly (likely from a location search)
+    const isZoomedIn = mapZoom >= 8;
+    
+    const shouldDisable = hasFilters || isZoomedIn;
+    
+    // Debug logging
+    console.log('Clustering state:', {
+      filteredCount: filteredSpecialists.length,
+      totalCount: specialists.length,
+      hasFilters,
+      isZoomedIn,
+      mapZoom,
+      shouldDisable
+    });
+    
+    return shouldDisable;
+  }, [filteredSpecialists.length, specialists.length, mapZoom]);
+
   if (!authChecked) {
     return (
       <div className="app-container">
@@ -130,7 +157,7 @@ const App: React.FC = () => {
           filteredSpecialists={filteredSpecialists}
           center={mapCenter}
           zoom={mapZoom}
-          disableClustering={true} // Set to false to re-enable clustering
+          disableClustering={shouldDisableClustering}
         />
         <FilterComponent
           specialists={specialists}

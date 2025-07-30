@@ -195,9 +195,9 @@ const MapComponent: React.FC<MapComponentProps> = ({ specialists, filteredSpecia
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         {disableClustering ? (
-          <SpecialistMarkers specialists={specialistsToShow} />
+          <SpecialistMarkers key="no-cluster" specialists={specialistsToShow} />
         ) : (
-          <MarkerClusterGroup>
+          <MarkerClusterGroup key="with-cluster">
             <SpecialistMarkers specialists={specialistsToShow} />
           </MarkerClusterGroup>
         )}
