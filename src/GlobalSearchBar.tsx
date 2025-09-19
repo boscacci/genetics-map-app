@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { MapPoint } from './types';
 import './GlobalSearchBar.css';
 
 interface GlobalSearchBarProps {
@@ -6,6 +7,7 @@ interface GlobalSearchBarProps {
   onChange: (value: string) => void;
   onLocationSearch: (lat: number, lng: number, name: string, zoom: number) => void;
   isFilterDropdownOpen?: boolean;
+  specialists: MapPoint[];
 }
 
 interface GeocodingResult {
@@ -17,13 +19,93 @@ interface GeocodingResult {
   class?: string;
 }
 
-const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({ value, onChange, onLocationSearch, isFilterDropdownOpen = false }) => {
+interface ProfessionalResult {
+  type: 'professional';
+  specialist: MapPoint;
+  display_name: string;
+  subtitle: string;
+}
+
+interface LocationResult {
+  type: 'location';
+  result: GeocodingResult;
+}
+
+type SearchResult = ProfessionalResult | LocationResult;
+
+const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({ value, onChange, onLocationSearch, isFilterDropdownOpen = false, specialists }) => {
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<GeocodingResult[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
 
+  // Search for professionals by name, institution, or city
+  const searchProfessionals = (query: string): ProfessionalResult[] => {
+    if (!query.trim()) return [];
+    
+    const searchTerm = query.toLowerCase();
+    const results: ProfessionalResult[] = [];
+    
+    specialists.forEach(specialist => {
+      const fullName = `${specialist.name_first} ${specialist.name_last}`.toLowerCase();
+      const institution = specialist.work_institution?.toLowerCase() || '';
+      const city = specialist.City?.toLowerCase() || '';
+      const country = specialist.Country?.toLowerCase() || '';
+      
+      // Check if query matches name, institution, city, or country
+      if (fullName.includes(searchTerm) || 
+          institution.includes(searchTerm) || 
+          city.includes(searchTerm) || 
+          country.includes(searchTerm)) {
+        
+        const subtitle = [specialist.work_institution, specialist.City, specialist.Country]
+          .filter(Boolean)
+          .join(', ');
+        
+        results.push({
+          type: 'professional',
+          specialist,
+          display_name: `${specialist.name_first} ${specialist.name_last}`,
+          subtitle
+        });
+      }
+    });
+    
+    // Sort by relevance (exact name matches first, then institution, then city)
+    return results.sort((a, b) => {
+      const aName = a.display_name.toLowerCase();
+      const bName = b.display_name.toLowerCase();
+      const searchLower = searchTerm.toLowerCase();
+      
+      // Exact name matches first
+      if (aName.startsWith(searchLower) && !bName.startsWith(searchLower)) return -1;
+      if (!aName.startsWith(searchLower) && bName.startsWith(searchLower)) return 1;
+      
+      // Then by name similarity
+      return aName.localeCompare(bName);
+    }).slice(0, 5); // Limit to 5 results
+  };
+
   // Geocoding function using Nominatim
-  const searchLocation = async (query: string) => {
+  const searchLocation = async (query: string): Promise<LocationResult[]> => {
+    if (!query.trim()) return [];
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1&extratags=1`
+      );
+      const data = await response.json();
+      return data.map((result: GeocodingResult) => ({
+        type: 'location' as const,
+        result
+      }));
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return [];
+    }
+  };
+
+  // Combined search function
+  const performSearch = async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
       setShowResults(false);
@@ -32,14 +114,19 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({ value, onChange, onLo
 
     setIsSearching(true);
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1&extratags=1`
-      );
-      const data = await response.json();
-      setSearchResults(data);
+      // Search professionals synchronously
+      const professionalResults = searchProfessionals(query);
+      
+      // Search locations asynchronously
+      const locationResults = await searchLocation(query);
+      
+      // Combine results with professionals first
+      const combinedResults = [...professionalResults, ...locationResults];
+      
+      setSearchResults(combinedResults);
       setShowResults(true);
     } catch (error) {
-      console.error('Geocoding error:', error);
+      console.error('Search error:', error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -49,9 +136,20 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({ value, onChange, onLo
   // Handle Enter key press - search for both professionals and locations
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      // Always search for locations on Enter
-      searchLocation(value);
+      performSearch(value);
     }
+  };
+
+  // Handle professional selection
+  const handleProfessionalSelect = (professional: MapPoint) => {
+    const lat = professional.Latitude;
+    const lng = professional.Longitude;
+    const name = `${professional.name_first} ${professional.name_last}`;
+    const zoom = 12; // Zoom in to show the professional's location clearly
+    
+    onLocationSearch(lat, lng, name, zoom);
+    setShowResults(false);
+    onChange(name);
   };
 
   // Handle location selection
@@ -101,6 +199,15 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({ value, onChange, onLo
     onChange(result.display_name);
   };
 
+  // Handle search result selection
+  const handleResultSelect = (searchResult: SearchResult) => {
+    if (searchResult.type === 'professional') {
+      handleProfessionalSelect(searchResult.specialist);
+    } else {
+      handleLocationSelect(searchResult.result);
+    }
+  };
+
   // Close results when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
@@ -119,7 +226,7 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({ value, onChange, onLo
         <input
           type="text"
           className="global-search-input"
-          placeholder="Search locations"
+          placeholder="Search professionals or locations"
           value={value}
           onChange={e => onChange(e.target.value)}
           onKeyPress={handleKeyPress}
@@ -132,16 +239,31 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({ value, onChange, onLo
       
       {showResults && searchResults.length > 0 && (
         <div className={`search-results ${isFilterDropdownOpen ? 'filter-dropdown-open' : ''}`}>
-          {searchResults.map((result, index) => (
+          {searchResults.map((searchResult, index) => (
             <div
               key={index}
-              className="search-result-item"
-              onClick={() => handleLocationSelect(result)}
+              className={`search-result-item ${searchResult.type === 'professional' ? 'professional-result' : 'location-result'}`}
+              onClick={() => handleResultSelect(searchResult)}
             >
-              <div className="result-name">{result.display_name}</div>
-              <div className="result-coords">
-                {parseFloat(result.lat).toFixed(4)}, {parseFloat(result.lon).toFixed(4)}
-              </div>
+              {searchResult.type === 'professional' ? (
+                <>
+                  <div className="result-name">
+                    👨‍⚕️ {searchResult.display_name}
+                  </div>
+                  <div className="result-subtitle">
+                    {searchResult.subtitle}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="result-name">
+                    📍 {searchResult.result.display_name}
+                  </div>
+                  <div className="result-coords">
+                    {parseFloat(searchResult.result.lat).toFixed(4)}, {parseFloat(searchResult.result.lon).toFixed(4)}
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>

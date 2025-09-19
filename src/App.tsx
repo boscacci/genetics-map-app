@@ -150,6 +150,7 @@ const App: React.FC = () => {
             onChange={setGlobalSearch} 
             onLocationSearch={handleLocationSearch}
             isFilterDropdownOpen={isFilterDropdownOpen}
+            specialists={specialists}
           />
         </div>
         <MapComponent
