@@ -13,7 +13,8 @@
     "eject": "react-scripts eject",
     "generate-auth": "node scripts/generate-auth-hash.js",
     "fetch-data": "node scripts/fetch-data.js",
-    "fetch-data-simple": "node scripts/fetch-data-simple.js"
+    "fetch-data-simple": "node scripts/fetch-data-simple.js",
+    "update-secret": "node scripts/update-github-secret.js"
   },
   "keywords": [],
   "author": "",
