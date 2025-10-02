@@ -24,7 +24,7 @@ const App: React.FC = () => {
   const [decryptionKey, setDecryptionKey] = useState<string>('');
 
   // Add the hash of the secret key (from .env.generated)
-  const SECRET_HASH = "1935f546c8a0ee7eda367bbbec71208946c2351108d13cfa6f57a922b84db251";
+  const SECRET_HASH = "ceab1bbbeeb4fba30a0284b5246f4977a4d51bf0fec451c54a421eb7eeb78ccd";
 
   const isMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||

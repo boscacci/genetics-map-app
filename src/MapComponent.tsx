@@ -159,7 +159,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
           <strong>Location:</strong> ${specialist.City}, ${specialist.Country}
         </div>
         ${specialist.language_spoken ? `<div style="color: #555; margin-bottom: 2px;"><strong>Languages:</strong> ${formatLanguages(specialist.language_spoken)}</div>` : ''}
-        <div style="color: #555; margin-top: 2px;"><strong>Interpreter Services:</strong> ${specialist.interpreter_services || 'unknown'}</div>
+        ${specialist.interpreter_services === 'True' ? `<div style="color: #555; margin-top: 2px;"><strong>Interpreter Services:</strong> Available</div>` : ''}
       </div>
     `;
   };
@@ -252,10 +252,12 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                       </div>
                     )}
                     
-                    <div className="detail-item">
-                      <span className="detail-label">🔄 Interpreter Services:</span>
-                      <span className="detail-value">{specialist.interpreter_services || 'unknown'}</span>
-                    </div>
+                    {specialist.interpreter_services === 'True' && (
+                      <div className="detail-item">
+                        <span className="detail-label">🔄 Interpreter Services:</span>
+                        <span className="detail-value">Available</span>
+                      </div>
+                    )}
                   </div>
                   
                   <button 
@@ -275,6 +277,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
       {/* Contact Info Modals */}
       {specialists.map((specialist, index) => (
         showContactModal[index] && (
+
           <div 
             key={`modal-${index}`} 
             className="contact-modal-overlay"
