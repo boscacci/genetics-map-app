@@ -12,4 +12,5 @@ export interface MapPoint {
   City: string;
   Country: string;
   interpreter_services: string;
+  specialties: string;
 } 

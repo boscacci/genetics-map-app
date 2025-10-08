@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Select from 'react-select';
 import { MapPoint } from './types';
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 import './FilterComponent.css';
 
 interface FilterComponentProps {
@@ -20,6 +25,126 @@ const cleanLanguageString = (languageString: string): string => {
     .trim(); // Remove leading/trailing whitespace
 };
 
+// Helper function to clean specialty strings
+const cleanSpecialtyString = (specialtyString: string): string => {
+  if (!specialtyString) return '';
+  
+  return specialtyString
+    .replace(/[.,;!?()\[\]{}"'`]/g, '') // Remove common punctuation marks
+    .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
+    .trim(); // Remove leading/trailing whitespace
+};
+
+// Helper function to normalize specialty names to consolidate similar categories
+const normalizeSpecialty = (specialty: string): string => {
+  const normalized = cleanSpecialtyString(specialty).toLowerCase();
+  
+  // Skip malformed entries that are just fragments
+  if (normalized.length < 3 || 
+      normalized.startsWith('&') || 
+      normalized.endsWith(')') ||
+      normalized.includes('(cancer') ||
+      normalized.includes('reproductive & pediatrics)')) {
+    return ''; // Return empty string to filter out these malformed entries
+  }
+  
+  // Cancer-related specialties
+  if (normalized.includes('cancer') || normalized.includes('oncology')) {
+    return 'Cancer Genetics';
+  }
+  
+  // Prenatal-related specialties
+  if (normalized.includes('prenatal') || normalized.includes('perinatal') || 
+      normalized.includes('preconception') || normalized.includes('premarital')) {
+    return 'Prenatal Genetics';
+  }
+  
+  // Pediatric-related specialties
+  if (normalized.includes('pediatric') || normalized.includes('paediatric') || 
+      normalized.includes('pediatric neurology')) {
+    return 'Pediatric Genetics';
+  }
+  
+  // Neurogenetics-related specialties
+  if (normalized.includes('neurogenetic') || normalized.includes('neurodegenerative') || 
+      normalized.includes('neuromuscular')) {
+    return 'Neurogenetics';
+  }
+  
+  // Reproductive-related specialties
+  if (normalized.includes('reproductive')) {
+    return 'Reproductive Genetics';
+  }
+  
+  // General genetics
+  if (normalized.includes('general') && !normalized.includes('adult')) {
+    return 'General Genetics';
+  }
+  
+  // Clinical genetics
+  if (normalized.includes('clinical genetic')) {
+    return 'Clinical Genetics';
+  }
+  
+  // Laboratory genetics
+  if (normalized.includes('laboratory') || normalized.includes('lab')) {
+    return 'Laboratory Genetics';
+  }
+  
+  // Ophthalmic genetics
+  if (normalized.includes('ophthalmic') || normalized.includes('eye')) {
+    return 'Ophthalmic Genetics';
+  }
+  
+  // Rare diseases
+  if (normalized.includes('rare disease')) {
+    return 'Rare Diseases';
+  }
+  
+  // Research
+  if (normalized.includes('research')) {
+    return 'Research';
+  }
+  
+  // Genomic medicine
+  if (normalized.includes('genomic medicine')) {
+    return 'Genomic Medicine';
+  }
+  
+  // Molecular genetics
+  if (normalized.includes('molecular genetic')) {
+    return 'Molecular Genetics';
+  }
+  
+  // Human genetics
+  if (normalized.includes('human genetic')) {
+    return 'Human Genetics';
+  }
+  
+  // Cardiology
+  if (normalized.includes('cardiology') || normalized.includes('cardiac')) {
+    return 'Cardiology';
+  }
+  
+  // Newborn screening
+  if (normalized.includes('newborn screening')) {
+    return 'Newborn Screening';
+  }
+  
+  // DTC (Direct-to-Consumer) genetic counseling
+  if (normalized.includes('dtc')) {
+    return 'DTC Genetic Counseling';
+  }
+  
+  // PGT (Preimplantation Genetic Testing)
+  if (normalized.includes('pgt')) {
+    return 'PGT';
+  }
+  
+  // Return the original specialty if no normalization rule matches
+  return cleanSpecialtyString(specialty);
+};
+
 // Helper function to get unique values from an array
 const getUniqueValues = (arr: (string | undefined)[]): string[] => {
   const cleaned = arr
@@ -27,6 +152,43 @@ const getUniqueValues = (arr: (string | undefined)[]): string[] => {
     .map(item => cleanLanguageString(item!))
     .filter(Boolean);
   return [...new Set(cleaned)].sort();
+};
+
+// Helper function to get unique specialties from an array
+const getUniqueSpecialties = (arr: (string | undefined)[]): string[] => {
+  const specialties = new Set<string>();
+  
+  arr.forEach(item => {
+    if (item && item.trim()) {
+      // Split by comma and normalize each specialty
+      const specialtyList = item.split(',').map(s => normalizeSpecialty(s)).filter(Boolean);
+      specialtyList.forEach(specialty => {
+        if (specialty.trim()) { // Only add non-empty specialties
+          specialties.add(specialty);
+        }
+      });
+    }
+  });
+  
+  return [...specialties].sort();
+};
+
+// Helper function to get unique provider names
+const getUniqueProviderNames = (specialists: MapPoint[]): SelectOption[] => {
+  const names = new Set<string>();
+  
+  specialists.forEach(specialist => {
+    if (specialist.name_first && specialist.name_last) {
+      const fullName = `${specialist.name_first} ${specialist.name_last}`.trim();
+      if (fullName) {
+        names.add(fullName);
+      }
+    }
+  });
+  
+  return Array.from(names)
+    .sort()
+    .map(name => ({ value: name, label: name }));
 };
 
 // Helper function to convert array to select options
@@ -38,6 +200,8 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
+  const [selectedProviderNames, setSelectedProviderNames] = useState<SelectOption[]>([]);
   const [position, setPosition] = useState({ x: 28, y: 28 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -146,6 +310,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     .map(lang => cleanLanguageString(lang))
     .filter(Boolean);
   const availableLanguages = [...new Set(allLanguages)].sort();
+  const availableSpecialties = getUniqueSpecialties(specialists.map(s => s.specialties));
 
   // Debug logging
   console.log('FilterComponent Debug:', {
@@ -175,7 +340,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   // Apply filters when selections change
   useEffect(() => {
     applyFilters();
-  }, [selectedCountries, selectedCities, selectedLanguages]);
+  }, [selectedCountries, selectedCities, selectedLanguages, selectedSpecialties, selectedProviderNames]);
 
   const applyFilters = () => {
     let filtered = [...specialists];
@@ -211,6 +376,36 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
             sLang.toLowerCase().includes(lang.toLowerCase())
           )
         );
+      });
+    }
+
+    // Filter by specialties
+    if (selectedSpecialties.length > 0) {
+      filtered = filtered.filter(s => {
+        if (!s.specialties) return false;
+        
+        // Parse the specialties and normalize them
+        const specialistSpecialties = s.specialties
+          .split(',')
+          .map(specialty => normalizeSpecialty(specialty))
+          .filter(Boolean);
+        
+        // Check if any of the selected specialties matches this specialist's normalized specialties
+        return selectedSpecialties.some(selectedSpecialty => 
+          specialistSpecialties.includes(selectedSpecialty)
+        );
+      });
+    }
+
+    // Filter by provider names
+    if (selectedProviderNames.length > 0) {
+      const selectedNames = selectedProviderNames.map(option => option.value);
+      filtered = filtered.filter(s => {
+        if (s.name_first && s.name_last) {
+          const fullName = `${s.name_first} ${s.name_last}`.trim();
+          return selectedNames.includes(fullName);
+        }
+        return false;
       });
     }
 
@@ -331,6 +526,15 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   const handleLanguageChange = (selectedOptions: any) => {
     const values = selectedOptions ? selectedOptions.map((option: any) => option.value) : [];
     setSelectedLanguages(values);
+  };
+
+  const handleSpecialtyChange = (selectedOptions: any) => {
+    const values = selectedOptions ? selectedOptions.map((option: any) => option.value) : [];
+    setSelectedSpecialties(values);
+  };
+
+  const handleProviderNameChange = (selectedOptions: SelectOption[] | null) => {
+    setSelectedProviderNames(selectedOptions || []);
   };
 
   // Handle dropdown state for z-index management
@@ -500,6 +704,54 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                     zIndex: 999999,
                     position: 'fixed'
                   }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 999999
+                  })
+                }}
+              />
+            </div>
+            <div className="filter-group">
+              <label>Specialties</label>
+              <Select
+                isMulti
+                options={toSelectOptions(availableSpecialties)}
+                onChange={handleSpecialtyChange}
+                placeholder="Specialties..."
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isSearchable
+                isClearable
+                menuPlacement="auto"
+                menuPortalTarget={document.body}
+                onMenuOpen={handleDropdownOpen}
+                onMenuClose={handleDropdownClose}
+                styles={{
+                  menu: (base) => ({
+                    ...base,
+                    zIndex: 999999,
+                    position: 'fixed'
+                  }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 999999
+                  })
+                }}
+              />
+            </div>
+            <div className="filter-group">
+              <label>Provider Name</label>
+              <Select
+                isMulti
+                options={getUniqueProviderNames(specialists)}
+                onChange={handleProviderNameChange}
+                placeholder="Provider names..."
+                value={selectedProviderNames}
+                isSearchable
+                className="react-select-container"
+                classNamePrefix="react-select"
+                menuPortalTarget={document.body}
+                styles={{
                   menuPortal: (base) => ({
                     ...base,
                     zIndex: 999999

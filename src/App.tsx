@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { MapPoint } from './types';
 import MapComponent from './MapComponent';
 import FilterComponent from './FilterComponent';
-import GlobalSearchBar from './GlobalSearchBar';
 import { loadSecureData, publicData } from './secureData';
 import { ENCRYPTED_SPECIALISTS_DATA } from './secureDataBlob';
 import './App.css';
@@ -12,7 +11,6 @@ import { sha256Hex } from './utils';
 
 const App: React.FC = () => {
   const [specialists, setSpecialists] = useState<MapPoint[]>([]);
-  const [globalSearch, setGlobalSearch] = useState('');
   const [filteredSpecialists, setFilteredSpecialists] = useState<MapPoint[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,11 +68,6 @@ const App: React.FC = () => {
       }
     }
   }, [isAuthenticated, decryptionKey]);
-
-  const handleLocationSearch = (lat: number, lng: number, name: string, zoom: number) => {
-    setMapCenter([lat, lng]);
-    setMapZoom(zoom);
-  };
 
   const handleFilterMapNavigation = (lat: number, lng: number, zoom: number) => {
     setMapCenter([lat, lng]);
@@ -144,15 +137,6 @@ const App: React.FC = () => {
   return (
     <div className="app-container">
       <div className="map-container">
-        <div className={`search-overlay ${isFilterDropdownOpen ? 'filter-dropdown-open' : ''}`}>
-          <GlobalSearchBar 
-            value={globalSearch} 
-            onChange={setGlobalSearch} 
-            onLocationSearch={handleLocationSearch}
-            isFilterDropdownOpen={isFilterDropdownOpen}
-            specialists={specialists}
-          />
-        </div>
         <MapComponent
           specialists={specialists}
           filteredSpecialists={filteredSpecialists}

@@ -86,6 +86,23 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
   const [showContactModal, setShowContactModal] = useState<{ [key: number]: boolean }>({});
   const popupRefs = useRef<{ [key: number]: L.Popup | null }>({});
 
+  // Function to close all popups except the specified one
+  const closeAllPopupsExcept = (exceptIndex: number) => {
+    Object.keys(popupRefs.current).forEach(key => {
+      const index = parseInt(key);
+      if (index !== exceptIndex && popupRefs.current[index]) {
+        popupRefs.current[index].close();
+      }
+    });
+  };
+
+  // Effect to ensure only one popup is open at a time
+  useEffect(() => {
+    if (openPopupIndex !== null) {
+      closeAllPopupsExcept(openPopupIndex);
+    }
+  }, [openPopupIndex]);
+
   const openContactModal = (index: number, event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
@@ -148,18 +165,22 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
 
   const createTooltipContent = (specialist: MapPoint) => {
     return `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; line-height: 1.4;">
-        <div style="font-weight: 600; color: #2c3e50; margin-bottom: 4px; font-size: 13px;">
-          ${specialist.name_first} ${specialist.name_last}
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 200px; max-width: 250px;">
+        <div style="margin-bottom: 8px;">
+          <div style="margin: 0 0 3px 0; font-size: 14px; font-weight: 600; color: #2c3e50; line-height: 1.3;">
+            ${specialist.name_first} ${specialist.name_last}
+          </div>
+          <div style="font-size: 12px; color: #6c757d; font-weight: 500; margin-bottom: 4px;">
+            ${specialist.work_institution}
+          </div>
+          <div style="font-size: 11px; color: #6c757d;">
+            📍 ${specialist.City}, ${specialist.Country}
+          </div>
         </div>
-        <div style="color: #555; margin-bottom: 2px;">
-          <strong>Institution:</strong> ${specialist.work_institution}
+        
+        <div style="padding: 6px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; font-size: 11px; font-weight: 500; text-align: center; margin-top: 6px;">
+          Click to contact
         </div>
-        <div style="color: #555; margin-bottom: 2px;">
-          <strong>Location:</strong> ${specialist.City}, ${specialist.Country}
-        </div>
-        ${specialist.language_spoken ? `<div style="color: #555; margin-bottom: 2px;"><strong>Languages:</strong> ${formatLanguages(specialist.language_spoken)}</div>` : ''}
-        ${specialist.interpreter_services === 'True' ? `<div style="color: #555; margin-top: 2px;"><strong>Interpreter Services:</strong> Available</div>` : ''}
       </div>
     `;
   };
@@ -177,6 +198,12 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
             <Marker 
               key={`${specialist.Latitude}-${lng}-${originalIndex}-${markerIndex}`}
               position={[specialist.Latitude, lng]}
+              eventHandlers={{
+                click: () => {
+                  // Close all other popups when clicking a marker
+                  closeAllPopupsExcept(originalIndex);
+                }
+              }}
             >
               {/* Only show tooltip if not mobile with popup open */}
               {!(isMobile() && openPopupIndex === originalIndex) && (
@@ -197,7 +224,11 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                   }
                 }}
                 eventHandlers={{
-                  popupopen: () => setOpenPopupIndex(originalIndex),
+                  popupopen: () => {
+                    // Close all other popups when this one opens
+                    closeAllPopupsExcept(originalIndex);
+                    setOpenPopupIndex(originalIndex);
+                  },
                   popupclose: () => {
                     setOpenPopupIndex(null);
                     // Close contact modal when popup closes

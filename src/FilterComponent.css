@@ -13,17 +13,24 @@
 .filter-container {
   background-color: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.10);
-  padding: 12px 20px 8px 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  padding: 16px 24px 12px 24px;
   margin: 0 auto;
   display: flex;
   flex-direction: row;
   align-items: flex-end;
-  min-height: 64px;
-  gap: 18px;
+  min-height: 68px;
+  gap: 20px;
   width: 100%;
   max-width: 1100px;
   overflow: visible !important;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.filter-container:hover {
+  box-shadow: 0 6px 32px rgba(0,0,0,0.15);
+  transform: translateY(-1px);
 }
 
 .filter-header {
@@ -55,6 +62,7 @@
   font-size: 14px;
 }
 
+
 /* React Select Styling */
 .react-select-container {
   width: 100%;
@@ -78,6 +86,8 @@
 .react-select__control--is-focused {
   border-color: #3498db !important;
   box-shadow: 0 0 0 1px #3498db !important;
+  background-color: #fff !important;
+  transition: all 0.2s ease !important;
 }
 
 .react-select__menu {
@@ -299,11 +309,20 @@
 /* Grid layout for filters */
 .filter-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   grid-template-rows: auto;
   gap: 12px;
   width: 100%;
   margin-top: 4px;
+}
+
+/* Medium screens - 2 columns */
+@media (max-width: 1200px) and (min-width: 901px) {
+  .filter-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 10px;
+  }
 }
 
 .filter-group {
@@ -313,12 +332,13 @@
 
 .filter-group label {
   display: block;
-  margin-bottom: 6px;
-  font-size: 12px;
-  color: #333;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: #555;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.8px;
+  line-height: 1.2;
 }
 
 /* React Select Styling */
@@ -346,6 +366,8 @@
 .react-select__control--is-focused {
   border-color: #3498db !important;
   box-shadow: 0 0 0 1px #3498db !important;
+  background-color: #fff !important;
+  transition: all 0.2s ease !important;
 }
 
 .react-select__menu {
@@ -461,17 +483,23 @@
   
   /* Mobile grid layout */
   .filter-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto auto;
-    gap: 10px;
+    gap: 8px;
+  }
+  
+  /* Make Provider Name span full width on mobile (now it's the last child) */
+  .filter-group:last-child {
+    grid-column: 1 / -1;
   }
   
   /* Mobile-specific React-Select improvements */
   .react-select__control {
-    min-height: 36px !important; /* Better touch target */
-    font-size: 14px !important;
-    padding: 0 4px !important;
+    min-height: 40px !important; /* Better touch target */
+    font-size: 16px !important; /* Prevent zoom on iOS */
+    padding: 0 8px !important;
   }
+  
   
   .react-select__option {
     padding: 10px 8px !important; /* Larger touch targets */
