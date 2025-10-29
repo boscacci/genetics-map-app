@@ -8,7 +8,7 @@ PRE_PUSH_HOOK="$HOOKS_DIR/pre-push"
 
 mkdir -p "$HOOKS_DIR"
 
-# Install pre-commit hook to encrypt data.csv
+# Install pre-commit hook to encrypt data.csv and verify sync
 cat > "$PRE_COMMIT_HOOK" <<'HOOK'
 #!/bin/sh
 
@@ -26,6 +26,31 @@ if git diff --cached --name-only | grep -q "^data.csv$"; then
   # Stage the updated encrypted blob
   git add src/secureDataBlob.ts
   echo "[pre-commit] Encrypted data staged for commit"
+fi
+
+# Check if .secret_env changed - update hash in App.tsx
+if git diff --cached --name-only | grep -q "^.secret_env$"; then
+  echo "[pre-commit] .secret_env changed - updating hash in App.tsx"
+  
+  node hash-secret.js && node scripts/update-app-hash.js
+  status=$?
+  if [ $status -ne 0 ]; then
+    echo "[pre-commit] Hash update failed (exit $status); aborting commit."
+    exit $status
+  fi
+  
+  git add src/App.tsx .env.generated
+  echo "[pre-commit] Updated hash staged for commit"
+fi
+
+# Always verify sync before commit
+echo "[pre-commit] Verifying all systems in sync..."
+node scripts/verify-sync.js
+status=$?
+if [ $status -ne 0 ]; then
+  echo "[pre-commit] Verification failed (exit $status); aborting commit."
+  echo "Run: npm run full-sync"
+  exit $status
 fi
 
 exit 0
@@ -51,7 +76,28 @@ HOOK
 
 chmod +x "$PRE_PUSH_HOOK"
 
+# Install post-merge hook to warn about sync
+POST_MERGE_HOOK="$HOOKS_DIR/post-merge"
+cat > "$POST_MERGE_HOOK" <<'HOOK'
+#!/bin/sh
+
+echo "[post-merge] Verifying system sync after merge..."
+node scripts/verify-sync.js 2>/dev/null
+status=$?
+if [ $status -ne 0 ]; then
+  echo ""
+  echo "⚠️  WARNING: System out of sync after merge!"
+  echo "   Run: npm run full-sync"
+  echo ""
+fi
+
+exit 0
+HOOK
+
+chmod +x "$POST_MERGE_HOOK"
+
 echo "Installed pre-commit hook at $PRE_COMMIT_HOOK"
 echo "Installed pre-push hook at $PRE_PUSH_HOOK"
+echo "Installed post-merge hook at $POST_MERGE_HOOK"
 
 

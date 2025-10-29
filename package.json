@@ -14,7 +14,9 @@
     "sync-secrets": "node scripts/sync-secrets.js",
     "setup:hooks": "bash scripts/setup-git-hooks.sh",
     "encrypt-data": "node scripts/process-data.js",
-    "prepare-local": "npm run encrypt-data && node hash-secret.js && node scripts/update-app-hash.js"
+    "prepare-local": "npm run encrypt-data && node hash-secret.js && node scripts/update-app-hash.js",
+    "verify": "node scripts/verify-sync.js",
+    "full-sync": "npm run prepare-local && npm run verify && npm run sync-secrets"
   },
   "keywords": [],
   "author": "",
