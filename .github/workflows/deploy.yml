@@ -10,7 +10,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      # Only the passphrase secret is needed; encrypted data is already in repo
+      # Secret key needed to generate authentication hash
       REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
     steps:
       - name: Checkout repository
