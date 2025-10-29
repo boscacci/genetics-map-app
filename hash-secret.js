@@ -1,10 +1,18 @@
 const fs = require('fs');
 const crypto = require('crypto');
-require('dotenv').config({ path: '.secret_env' });
+const path = require('path');
+const dotenv = require('dotenv');
 
-const secret = process.env.REACT_APP_SECRET_KEY;
+// Load from .secret_env if present (optional)
+const envPath = path.resolve(__dirname, '.secret_env');
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+}
+
+// Prefer new secret name, then legacy
+const secret = process.env.REACT_APP_SECRET_PASSPHRASE || process.env.REACT_APP_SECRET_KEY;
 if (!secret) {
-  console.error('REACT_APP_SECRET_KEY not found in .secret_env');
+  console.error('Missing secret: set REACT_APP_SECRET_PASSPHRASE or REACT_APP_SECRET_KEY as an environment secret or in .secret_env');
   process.exit(1);
 }
 

@@ -14,7 +14,8 @@
     "generate-auth": "node scripts/generate-auth-hash.js",
     "fetch-data": "node scripts/fetch-data.js",
     "fetch-data-simple": "node scripts/fetch-data-simple.js",
-    "update-secret": "node scripts/update-github-secret.js"
+    "update-secret": "node scripts/update-github-secret.js",
+    "prepare-and-update": "node scripts/process-data.js && node hash-secret.js && node scripts/update-github-secret.js"
   },
   "keywords": [],
   "author": "",
