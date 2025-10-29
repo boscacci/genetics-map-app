@@ -10,11 +10,9 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      # Provide both new and legacy names so either set of secrets works
+      # Single sources of truth from repository secrets
       REACT_APP_SECRET_PASSPHRASE: ${{ secrets.REACT_APP_SECRET_PASSPHRASE }}
-      REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
       DATA_CSV_CONTENT: ${{ secrets.DATA_CSV_CONTENT }}
-      DATA_CSV: ${{ secrets.DATA_CSV }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

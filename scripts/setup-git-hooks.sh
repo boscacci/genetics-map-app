@@ -10,13 +10,12 @@ mkdir -p "$HOOKS_DIR"
 cat > "$PRE_PUSH_HOOK" <<'HOOK'
 #!/bin/sh
 
-echo "[pre-push] Updating GitHub secret from .secret_env via scripts/update-github-secret.js"
+echo "[pre-push] Syncing GitHub secrets from .secret_env and data.csv via scripts/sync-secrets.js"
 
-# Run the updater; if it fails, abort the push
-node scripts/update-github-secret.js
+node scripts/sync-secrets.js
 status=$?
 if [ $status -ne 0 ]; then
-  echo "[pre-push] Secret update failed (exit $status); aborting push."
+  echo "[pre-push] Secret sync failed (exit $status); aborting push."
   exit $status
 fi
 
@@ -26,4 +25,5 @@ HOOK
 chmod +x "$PRE_PUSH_HOOK"
 
 echo "Installed pre-push hook at $PRE_PUSH_HOOK"
+
 

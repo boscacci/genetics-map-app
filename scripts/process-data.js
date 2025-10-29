@@ -10,10 +10,10 @@ if (fs.existsSync(envPath)) {
   dotenv.config({ path: envPath });
 }
 
-// Prefer new secret name, then legacy, then attempt to read from optional .secret_env load
-const SECRET_KEY = process.env.REACT_APP_SECRET_PASSPHRASE || process.env.REACT_APP_SECRET_KEY;
+// Single secret name; optional .secret_env already loaded for local dev
+const SECRET_KEY = process.env.REACT_APP_SECRET_PASSPHRASE;
 if (!SECRET_KEY) {
-  throw new Error('Missing secret: set REACT_APP_SECRET_PASSPHRASE or REACT_APP_SECRET_KEY as a GitHub secret or provide .secret_env');
+  throw new Error('Missing secret: set REACT_APP_SECRET_PASSPHRASE as a GitHub secret or provide it in .secret_env');
 }
 
 // Read and parse CSV
@@ -21,11 +21,11 @@ const csvPath = path.resolve(__dirname, '../data.csv');
 let csvContent;
 if (fs.existsSync(csvPath)) {
   csvContent = fs.readFileSync(csvPath, 'utf8');
-} else if (process.env.DATA_CSV_CONTENT || process.env.DATA_CSV) {
-  csvContent = process.env.DATA_CSV_CONTENT || process.env.DATA_CSV;
+} else if (process.env.DATA_CSV_CONTENT) {
+  csvContent = process.env.DATA_CSV_CONTENT;
   console.log('Loaded CSV data from DATA_CSV environment variable.');
 } else {
-  throw new Error('No data.csv file found and DATA_CSV environment variable is not set.');
+  throw new Error('No data.csv file found and DATA_CSV_CONTENT environment variable is not set.');
 }
 const { data, errors } = Papa.parse(csvContent, {
   header: true,

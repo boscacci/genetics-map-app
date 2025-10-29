@@ -9,10 +9,10 @@ if (fs.existsSync(envPath)) {
   dotenv.config({ path: envPath });
 }
 
-// Prefer new secret name, then legacy
-const secret = process.env.REACT_APP_SECRET_PASSPHRASE || process.env.REACT_APP_SECRET_KEY;
+// Single secret name
+const secret = process.env.REACT_APP_SECRET_PASSPHRASE;
 if (!secret) {
-  console.error('Missing secret: set REACT_APP_SECRET_PASSPHRASE or REACT_APP_SECRET_KEY as an environment secret or in .secret_env');
+  console.error('Missing secret: set REACT_APP_SECRET_PASSPHRASE as an environment secret or in .secret_env');
   process.exit(1);
 }
 
