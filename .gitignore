@@ -35,3 +35,7 @@ yarn-error.log*
 # Data files with moni_data prefix
 moni_data* 
 data.csv:Zone.Identifier
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
