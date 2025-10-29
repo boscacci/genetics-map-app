@@ -5,16 +5,16 @@
   "homepage": "https://boscacci.github.io/genetics-map-app",
   "main": "index.js",
   "scripts": {
-    "prestart": "node hash-secret.js",
+    "prestart": "node hash-secret.js && node scripts/update-app-hash.js",
     "start": "dotenv -e .env.generated -- react-scripts start",
-    "prebuild": "node hash-secret.js",
+    "prebuild": "node hash-secret.js && node scripts/update-app-hash.js",
     "build": "dotenv -e .env.generated -- react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "sync-secrets": "node scripts/sync-secrets.js",
     "setup:hooks": "bash scripts/setup-git-hooks.sh",
     "encrypt-data": "node scripts/process-data.js",
-    "prepare-local": "npm run encrypt-data && node hash-secret.js"
+    "prepare-local": "npm run encrypt-data && node hash-secret.js && node scripts/update-app-hash.js"
   },
   "keywords": [],
   "author": "",
