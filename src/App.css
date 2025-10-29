@@ -457,7 +457,8 @@
 .specialist-counter {
   position: absolute;
   bottom: 20px;
-  left: 20px;
+  left: 20px; /* move to bottom-left to avoid zoom controls */
+  right: auto;
   z-index: 1000;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
@@ -500,6 +501,58 @@
 .counter-total {
   color: #666;
   font-weight: 400;
+}
+
+/* Navigation buttons for filtered results */
+.counter-nav-btn {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 4px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.counter-nav-btn:hover {
+  background: #f8f9fa;
+  border-color: #999;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.counter-nav-btn:active {
+  background: #e9ecef;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.counter-nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.counter-nav-btn:disabled:hover {
+  background: white;
+  border-color: #ddd;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transform: none;
+}
+
+/* Enhanced counter layout */
+.specialist-counter .counter-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* Hide counter on mobile */

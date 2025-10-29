@@ -37,15 +37,8 @@ const MapController: React.FC<{
 }> = ({ filteredSpecialists, center, zoom }) => {
   const map = useMap();
 
-  useEffect(() => {
-    if (filteredSpecialists.length === 1) {
-      const specialist = filteredSpecialists[0];
-      map.setView(
-        [specialist.Latitude, normalizeLongitude(specialist.Longitude)],
-        8
-      );
-    }
-  }, [filteredSpecialists, map]);
+  // Do not auto-zoom when a single specialist remains after filtering; keep the
+  // current zoom/center unless the parent explicitly requests navigation.
 
   useEffect(() => {
     map.setView([center[0], normalizeLongitude(center[1])], zoom);
@@ -106,7 +99,6 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
   const openContactModal = (index: number, event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    console.log('Contact button clicked, opening modal for index:', index);
     setShowContactModal(prev => ({
       ...prev,
       [index]: true
@@ -163,6 +155,15 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
       .join(', ');
   };
 
+  // Normalize institution for display; handle blank or 'nan' strings
+  const displayInstitution = (institution?: string) => {
+    const value = (institution ?? '').toString().trim();
+    if (!value || value.toLowerCase() === 'nan') {
+      return 'Institution Unknown';
+    }
+    return value;
+  };
+
   const createTooltipContent = (specialist: MapPoint) => {
     return `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 200px; max-width: 250px;">
@@ -171,7 +172,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
             ${specialist.name_first} ${specialist.name_last}
           </div>
           <div style="font-size: 12px; color: #6c757d; font-weight: 500; margin-bottom: 4px;">
-            ${specialist.work_institution}
+            ${displayInstitution(specialist.work_institution)}
           </div>
           <div style="font-size: 11px; color: #6c757d;">
             📍 ${specialist.City}, ${specialist.Country}
@@ -254,20 +255,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                 >
                   <div className="popup-header">
                     <h3 className="popup-name">{specialist.name_first} {specialist.name_last}</h3>
-                    <div className="popup-institution">{specialist.work_institution}</div>
-                    <button 
-                      className="popup-close-btn"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const popup = popupRefs.current[originalIndex];
-                        if (popup) {
-                          popup.close();
-                        }
-                      }}
-                    >
-                      ×
-                    </button>
+                    <div className="popup-institution">{displayInstitution(specialist.work_institution)}</div>
                   </div>
                   
                   <div className="popup-details">
@@ -331,8 +319,15 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
               <div className="contact-modal-content">
                 <div className="contact-item">
                   <span className="contact-icon">🏢</span>
-                  <span className="contact-text">{specialist.work_institution}</span>
+                  <span className="contact-text">{displayInstitution(specialist.work_institution)}</span>
                 </div>
+                
+                {specialist.specialties && (
+                  <div className="contact-item">
+                    <span className="contact-icon">🔬</span>
+                    <span className="contact-text">{specialist.specialties}</span>
+                  </div>
+                )}
                 
                 {specialist.email && (
                   <div className="contact-item">

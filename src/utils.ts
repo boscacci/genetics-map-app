@@ -2,6 +2,24 @@ import { MapPoint } from './types';
 import Papa from 'papaparse';
 import CryptoJS from 'crypto-js';
 
+// Interface for CSV row data
+interface CSVRow {
+  name_first: string;
+  name_last: string;
+  email: string;
+  phone_work: string;
+  work_website: string;
+  work_institution: string;
+  work_address: string;
+  language_spoken: string;
+  Latitude: number | string;
+  Longitude: number | string;
+  City: string;
+  Country: string;
+  uses_interpreters?: string;
+  specialties?: string;
+}
+
 // Function to clean up language strings by removing punctuation and normalizing whitespace
 export const cleanLanguageString = (languageString: string): string => {
   if (!languageString) return '';
@@ -26,13 +44,11 @@ export const parseCSVString = (csvString: string): MapPoint[] => {
       console.error('CSV parsing errors:', errors);
     }
     
-    console.log(`Total records parsed: ${data.length}`);
-    
     // Map each row by field name to MapPoint fields
-    const parsedData = data as any[];
-    const specialists = parsedData.filter((row: any) => {
+    const parsedData = data as CSVRow[];
+    const specialists = parsedData.filter((row: CSVRow) => {
       return row.Latitude && row.Longitude && !Number.isNaN(Number(row.Latitude)) && !Number.isNaN(Number(row.Longitude));
-    }).map((row: any) => ({
+    }).map((row: CSVRow) => ({
       name_first: row.name_first,
       name_last: row.name_last,
       email: row.email,
@@ -46,20 +62,14 @@ export const parseCSVString = (csvString: string): MapPoint[] => {
       City: row.City,
       Country: row.Country,
       interpreter_services: row.uses_interpreters || 'unknown',
+      specialties: row.specialties || '',
     }));
     
-    // Log specialists without coordinates
-    const specialistsWithoutCoords = parsedData.filter((item: any) => {
+    // Filter out specialists without coordinates
+    const specialistsWithoutCoords = parsedData.filter((item: CSVRow) => {
       return !item.Latitude || !item.Longitude || 
              Number.isNaN(Number(item.Latitude)) || Number.isNaN(Number(item.Longitude));
     });
-    
-    console.log(`Total specialists with coordinates: ${specialists.length}`);
-    console.log(`Total specialists without coordinates: ${specialistsWithoutCoords.length}`);
-    
-    // Let's log the first few specialists with coordinates to see what they look like
-    console.log("First few specialists with coordinates:", specialists.slice(0, 3));
-    console.log("First few specialists without coordinates:", specialistsWithoutCoords.slice(0, 3));
     
     return specialists as MapPoint[];
   } catch (error) {
@@ -84,13 +94,11 @@ export const parseCSV = async (url: string): Promise<MapPoint[]> => {
       console.error('CSV parsing errors:', errors);
     }
     
-    console.log(`Total records parsed: ${data.length}`);
-    
     // Map each row by field name to MapPoint fields
-    const parsedData = data as any[];
-    const specialists = parsedData.filter((row: any) => {
+    const parsedData = data as CSVRow[];
+    const specialists = parsedData.filter((row: CSVRow) => {
       return row.Latitude && row.Longitude && !Number.isNaN(Number(row.Latitude)) && !Number.isNaN(Number(row.Longitude));
-    }).map((row: any) => ({
+    }).map((row: CSVRow) => ({
       name_first: row.name_first,
       name_last: row.name_last,
       email: row.email,
@@ -104,20 +112,14 @@ export const parseCSV = async (url: string): Promise<MapPoint[]> => {
       City: row.City,
       Country: row.Country,
       interpreter_services: row.uses_interpreters || 'unknown',
+      specialties: row.specialties || '',
     }));
     
-    // Log specialists without coordinates
-    const specialistsWithoutCoords = parsedData.filter((item: any) => {
+    // Filter out specialists without coordinates
+    const specialistsWithoutCoords = parsedData.filter((item: CSVRow) => {
       return !item.Latitude || !item.Longitude || 
              Number.isNaN(Number(item.Latitude)) || Number.isNaN(Number(item.Longitude));
     });
-    
-    console.log(`Total specialists with coordinates: ${specialists.length}`);
-    console.log(`Total specialists without coordinates: ${specialistsWithoutCoords.length}`);
-    
-    // Let's log the first few specialists with coordinates to see what they look like
-    console.log("First few specialists with coordinates:", specialists.slice(0, 3));
-    console.log("First few specialists without coordinates:", specialistsWithoutCoords.slice(0, 3));
     
     return specialists as MapPoint[];
   } catch (error) {

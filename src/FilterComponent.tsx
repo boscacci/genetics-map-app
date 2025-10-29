@@ -35,114 +35,107 @@ const cleanSpecialtyString = (specialtyString: string): string => {
     .trim(); // Remove leading/trailing whitespace
 };
 
-// Helper function to normalize specialty names to consolidate similar categories
+// Helper function to normalize specialty names into <=10 buckets
 const normalizeSpecialty = (specialty: string): string => {
   const normalized = cleanSpecialtyString(specialty).toLowerCase();
-  
-  // Skip malformed entries that are just fragments
-  if (normalized.length < 3 || 
-      normalized.startsWith('&') || 
-      normalized.endsWith(')') ||
-      normalized.includes('(cancer') ||
-      normalized.includes('reproductive & pediatrics)')) {
-    return ''; // Return empty string to filter out these malformed entries
+
+  // Treat very short or obviously malformed fragments as Other rather than dropping
+  if (normalized.length < 3 || normalized === 'na' || normalized === 'n/a') {
+    return 'Other';
   }
-  
-  // Cancer-related specialties
+
+  // 1) Cancer Genetics
   if (normalized.includes('cancer') || normalized.includes('oncology')) {
     return 'Cancer Genetics';
   }
-  
-  // Prenatal-related specialties
-  if (normalized.includes('prenatal') || normalized.includes('perinatal') || 
-      normalized.includes('preconception') || normalized.includes('premarital')) {
-    return 'Prenatal Genetics';
+
+  // 2) Prenatal & Reproductive Genetics (includes PGT, premarital, preconception)
+  if (
+    normalized.includes('prenatal') ||
+    normalized.includes('perinatal') ||
+    normalized.includes('preconception') ||
+    normalized.includes('premarital') ||
+    normalized.includes('reproductive') ||
+    normalized.includes('pgt')
+  ) {
+    return 'Prenatal & Reproductive Genetics';
   }
-  
-  // Pediatric-related specialties
-  if (normalized.includes('pediatric') || normalized.includes('paediatric') || 
-      normalized.includes('pediatric neurology')) {
+
+  // 3) Pediatric Genetics (includes newborn screening, pediatric neurology)
+  if (
+    normalized.includes('pediatric') ||
+    normalized.includes('paediatric') ||
+    normalized.includes('newborn screening') ||
+    normalized.includes('pediatric neurology') ||
+    normalized.includes('paediatric neurology') ||
+    normalized.includes('pediatrics') ||
+    normalized.includes('paediatrics')
+  ) {
     return 'Pediatric Genetics';
   }
-  
-  // Neurogenetics-related specialties
-  if (normalized.includes('neurogenetic') || normalized.includes('neurodegenerative') || 
-      normalized.includes('neuromuscular')) {
+
+  // 4) Neurogenetics
+  if (
+    normalized.includes('neurogenetic') ||
+    normalized.includes('neurodegenerative') ||
+    normalized.includes('neuromuscular') ||
+    normalized.includes('neuro')
+  ) {
     return 'Neurogenetics';
   }
-  
-  // Reproductive-related specialties
-  if (normalized.includes('reproductive')) {
-    return 'Reproductive Genetics';
+
+  // 5) General/Clinical Genetics (includes clinical, human, genomic medicine, medical geneticist, counseling)
+  if (
+    normalized.includes('clinical genetic') ||
+    normalized === 'clinical genetics' ||
+    normalized.includes('general genetics') ||
+    normalized === 'general' ||
+    normalized.includes('human genetic') ||
+    normalized.includes('genomic medicine') ||
+    normalized.includes('medical genetic') ||
+    normalized.includes('genetic counseling') ||
+    normalized.includes('genetic counsell') ||
+    normalized.includes('all clinical') ||
+    normalized.includes('clinical and metabolic genetics') ||
+    normalized.includes('multi speciality') ||
+    normalized.includes('adult') // captures mixed entries like "General Adult and Pediatrics"
+  ) {
+    return 'General/Clinical Genetics';
   }
-  
-  // General genetics
-  if (normalized.includes('general') && !normalized.includes('adult')) {
-    return 'General Genetics';
+
+  // 6) Laboratory/Diagnostic Genetics (includes molecular, lab, DTC)
+  if (
+    normalized.includes('laboratory') ||
+    normalized.includes('lab') ||
+    normalized.includes('molecular genetic') ||
+    normalized === 'laboratory' ||
+    normalized.includes('dtc')
+  ) {
+    return 'Laboratory/Diagnostic Genetics';
   }
-  
-  // Clinical genetics
-  if (normalized.includes('clinical genetic')) {
-    return 'Clinical Genetics';
+
+  // 7) Cardiology Genetics
+  if (normalized.includes('cardiology') || normalized.includes('cardiac')) {
+    return 'Cardiology Genetics';
   }
-  
-  // Laboratory genetics
-  if (normalized.includes('laboratory') || normalized.includes('lab')) {
-    return 'Laboratory Genetics';
-  }
-  
-  // Ophthalmic genetics
+
+  // 8) Ophthalmic Genetics
   if (normalized.includes('ophthalmic') || normalized.includes('eye')) {
     return 'Ophthalmic Genetics';
   }
-  
-  // Rare diseases
-  if (normalized.includes('rare disease')) {
-    return 'Rare Diseases';
+
+  // 9) Rare Disease/Undiagnosed
+  if (normalized.includes('rare disease') || normalized.includes('undiagnosed')) {
+    return 'Rare Disease/Undiagnosed';
   }
-  
-  // Research
+
+  // 10) Research-oriented or uncategorized -> Other (fold research/genomic umbrella into Other to keep <=10)
   if (normalized.includes('research')) {
-    return 'Research';
+    return 'Other';
   }
-  
-  // Genomic medicine
-  if (normalized.includes('genomic medicine')) {
-    return 'Genomic Medicine';
-  }
-  
-  // Molecular genetics
-  if (normalized.includes('molecular genetic')) {
-    return 'Molecular Genetics';
-  }
-  
-  // Human genetics
-  if (normalized.includes('human genetic')) {
-    return 'Human Genetics';
-  }
-  
-  // Cardiology
-  if (normalized.includes('cardiology') || normalized.includes('cardiac')) {
-    return 'Cardiology';
-  }
-  
-  // Newborn screening
-  if (normalized.includes('newborn screening')) {
-    return 'Newborn Screening';
-  }
-  
-  // DTC (Direct-to-Consumer) genetic counseling
-  if (normalized.includes('dtc')) {
-    return 'DTC Genetic Counseling';
-  }
-  
-  // PGT (Preimplantation Genetic Testing)
-  if (normalized.includes('pgt')) {
-    return 'PGT';
-  }
-  
-  // Return the original specialty if no normalization rule matches
-  return cleanSpecialtyString(specialty);
+
+  // Default bucket
+  return 'Other';
 };
 
 // Helper function to get unique values from an array
@@ -173,22 +166,16 @@ const getUniqueSpecialties = (arr: (string | undefined)[]): string[] => {
   return [...specialties].sort();
 };
 
-// Helper function to get unique provider names
-const getUniqueProviderNames = (specialists: MapPoint[]): SelectOption[] => {
+// Helper to build provider name options from a list of specialists
+const buildProviderNameOptions = (specialists: MapPoint[]): SelectOption[] => {
   const names = new Set<string>();
-  
   specialists.forEach(specialist => {
     if (specialist.name_first && specialist.name_last) {
       const fullName = `${specialist.name_first} ${specialist.name_last}`.trim();
-      if (fullName) {
-        names.add(fullName);
-      }
+      if (fullName) names.add(fullName);
     }
   });
-  
-  return Array.from(names)
-    .sort()
-    .map(name => ({ value: name, label: name }));
+  return Array.from(names).sort().map(name => ({ value: name, label: name }));
 };
 
 // Helper function to convert array to select options
@@ -300,42 +287,136 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     }
   }, [isDragging, dragOffset, isMinimized, allowDrag]);
 
-  // Extract unique values for filters
-  const countries = getUniqueValues(specialists.map(s => s.Country));
-  const cities = getUniqueValues(specialists.map(s => s.City));
-  const allLanguages = specialists
+  // Helper function to get specialists that would remain after applying a filter
+  const getRemainingSpecialists = (additionalFilter: (s: MapPoint) => boolean) => {
+    let filtered = [...specialists];
+
+    // Apply existing filters
+    if (selectedCountries.length > 0) {
+      filtered = filtered.filter(s => s.Country && selectedCountries.includes(s.Country));
+    }
+    if (selectedCities.length > 0) {
+      filtered = filtered.filter(s => s.City && selectedCities.includes(s.City));
+    }
+    if (selectedLanguages.length > 0) {
+      filtered = filtered.filter(s => {
+        if (!s.language_spoken) return false;
+        const specialistLanguages = s.language_spoken
+          .split(/,|;|\sand\s|\s+/)
+          .map(lang => cleanLanguageString(lang))
+          .filter(Boolean);
+        return selectedLanguages.some(lang => 
+          specialistLanguages.some(sLang => 
+            sLang.toLowerCase().includes(lang.toLowerCase())
+          )
+        );
+      });
+    }
+    if (selectedSpecialties.length > 0) {
+      filtered = filtered.filter(s => {
+        if (!s.specialties) return false;
+        const specialistSpecialties = s.specialties
+          .split(',')
+          .map(specialty => normalizeSpecialty(specialty))
+          .filter(Boolean);
+        return selectedSpecialties.some(selectedSpecialty => 
+          specialistSpecialties.includes(selectedSpecialty)
+        );
+      });
+    }
+    if (selectedProviderNames.length > 0) {
+      const selectedNames = selectedProviderNames.map(option => option.value);
+      filtered = filtered.filter(s => {
+        if (s.name_first && s.name_last) {
+          const fullName = `${s.name_first} ${s.name_last}`.trim();
+          return selectedNames.includes(fullName);
+        }
+        return false;
+      });
+    }
+
+    // Apply the additional filter
+    return filtered.filter(additionalFilter);
+  };
+
+  // Get available options based on current filters
+  const availableCountries = getRemainingSpecialists(() => true)
+    .map(s => s.Country)
+    .filter(Boolean);
+  const availableCities = getRemainingSpecialists(() => true)
+    .map(s => s.City)
+    .filter(Boolean);
+  const availableLanguages = getRemainingSpecialists(() => true)
     .map(s => s.language_spoken)
     .filter(Boolean)
     .flatMap(lang => lang!.split(/,|;|\sand\s|\s+/))
     .map(lang => cleanLanguageString(lang))
     .filter(Boolean);
-  const availableLanguages = [...new Set(allLanguages)].sort();
-  const availableSpecialties = getUniqueSpecialties(specialists.map(s => s.specialties));
+  const availableSpecialties = getRemainingSpecialists(() => true)
+    .map(s => s.specialties)
+    .filter(Boolean);
+  const availableNameOptions: SelectOption[] = buildProviderNameOptions(
+    getRemainingSpecialists(() => true)
+  );
 
-  // Debug logging
-  console.log('FilterComponent Debug:', {
-    specialistsCount: specialists.length,
-    countriesCount: countries.length,
-    citiesCount: cities.length,
-    languagesCount: availableLanguages.length,
-    sampleCountries: countries.slice(0, 5),
-    sampleCities: cities.slice(0, 5),
-    sampleLanguages: availableLanguages.slice(0, 5)
-  });
+  // Extract unique values for filters
+  const countries = [...new Set(availableCountries)].sort();
+  const cities = [...new Set(availableCities)].sort();
+  const languages = [...new Set(availableLanguages)].sort();
+  const specialties = getUniqueSpecialties(availableSpecialties);
+
+  // Dev-only: log raw and normalized specialty counts to console for bucketing analysis
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (process.env.NODE_ENV === 'production') return;
+    if (!specialists || specialists.length === 0) return;
+
+    const rawCounts = new Map<string, number>();
+    const normalizedCounts = new Map<string, number>();
+
+    specialists.forEach(s => {
+      if (!s.specialties) return;
+      // Raw tokens split on commas
+      s.specialties.split(',').forEach(token => {
+        const raw = cleanSpecialtyString(token);
+        if (!raw) return;
+        rawCounts.set(raw, (rawCounts.get(raw) || 0) + 1);
+      });
+      // Normalized tokens using existing rules
+      s.specialties.split(',').forEach(token => {
+        const norm = normalizeSpecialty(token);
+        if (!norm) return;
+        normalizedCounts.set(norm, (normalizedCounts.get(norm) || 0) + 1);
+      });
+    });
+
+    const toSortedArray = (m: Map<string, number>) =>
+      Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
+
+    // Present in console for quick review
+    // eslint-disable-next-line no-console
+    console.groupCollapsed('[Dev] Specialty counts');
+    // eslint-disable-next-line no-console
+    console.log('Raw specialties (tokenized by comma):');
+    // eslint-disable-next-line no-console
+    console.table(
+      toSortedArray(rawCounts).map(([name, count]) => ({ name, count }))
+    );
+    // eslint-disable-next-line no-console
+    console.log('Normalized specialties:');
+    // eslint-disable-next-line no-console
+    console.table(
+      toSortedArray(normalizedCounts).map(([name, count]) => ({ name, count }))
+    );
+    // eslint-disable-next-line no-console
+    console.groupEnd();
+  }, [specialists]);
+
 
   // Fallback options if no data is available
   const fallbackCountries = countries.length > 0 ? countries : ['United States', 'Canada', 'United Kingdom'];
   const fallbackCities = cities.length > 0 ? cities : ['New York', 'Los Angeles', 'Chicago'];
-  const fallbackLanguages = availableLanguages.length > 0 ? availableLanguages : ['English', 'Spanish', 'French'];
-
-  // Filter cities based on selected countries
-  const availableCities = selectedCountries.length > 0
-    ? getUniqueValues(
-        specialists
-          .filter(s => selectedCountries.includes(s.Country))
-          .map(s => s.City)
-      )
-    : fallbackCities;
+  const fallbackLanguages = languages.length > 0 ? languages : ['English', 'Spanish', 'French'];
 
   // Apply filters when selections change
   useEffect(() => {
@@ -413,14 +494,13 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     onFilterChange(filtered);
 
     // Handle map navigation based on filters
-    if (onMapNavigation && filtered.length > 0) {
-      // If geography filter is applied, navigate to that area
-      if (selectedCountries.length > 0 || selectedCities.length > 0) {
+    if (onMapNavigation) {
+      if (filtered.length > 0) {
+        // Always navigate to show filtered results
         navigateToFilteredArea(filtered);
-      }
-      // If only language filter is applied, navigate to relevant area
-      else if (selectedLanguages.length > 0 && selectedCountries.length === 0 && selectedCities.length === 0) {
-        navigateToFilteredArea(filtered);
+      } else {
+        // No results found - zoom out to show all specialists
+        onMapNavigation(15, 30, 3); // Global view
       }
     }
   };
@@ -513,23 +593,23 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     onMapNavigation(centerLat, centerLng, zoom);
   };
 
-  const handleCountryChange = (selectedOptions: any) => {
-    const values = selectedOptions ? selectedOptions.map((option: any) => option.value) : [];
+  const handleCountryChange = (selectedOptions: SelectOption[] | null) => {
+    const values = selectedOptions ? selectedOptions.map((option: SelectOption) => option.value) : [];
     setSelectedCountries(values);
   };
 
-  const handleCityChange = (selectedOptions: any) => {
-    const values = selectedOptions ? selectedOptions.map((option: any) => option.value) : [];
+  const handleCityChange = (selectedOptions: SelectOption[] | null) => {
+    const values = selectedOptions ? selectedOptions.map((option: SelectOption) => option.value) : [];
     setSelectedCities(values);
   };
 
-  const handleLanguageChange = (selectedOptions: any) => {
-    const values = selectedOptions ? selectedOptions.map((option: any) => option.value) : [];
+  const handleLanguageChange = (selectedOptions: SelectOption[] | null) => {
+    const values = selectedOptions ? selectedOptions.map((option: SelectOption) => option.value) : [];
     setSelectedLanguages(values);
   };
 
-  const handleSpecialtyChange = (selectedOptions: any) => {
-    const values = selectedOptions ? selectedOptions.map((option: any) => option.value) : [];
+  const handleSpecialtyChange = (selectedOptions: SelectOption[] | null) => {
+    const values = selectedOptions ? selectedOptions.map((option: SelectOption) => option.value) : [];
     setSelectedSpecialties(values);
   };
 
@@ -550,6 +630,14 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
 
   const toggleMinimize = () => {
     setIsMinimized(!isMinimized);
+  };
+
+  const clearAllFilters = () => {
+    setSelectedCountries([]);
+    setSelectedCities([]);
+    setSelectedLanguages([]);
+    setSelectedSpecialties([]);
+    setSelectedProviderNames([]);
   };
 
   // Show drag handle only on desktop, minimize button on mobile
@@ -631,8 +719,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
               <label>Country</label>
               <Select
                 isMulti
-                options={toSelectOptions(fallbackCountries)}
+                options={toSelectOptions(countries)}
                 onChange={handleCountryChange}
+                value={selectedCountries.map(v => ({ value: v, label: v }))}
                 placeholder="Countries..."
                 className="react-select-container"
                 classNamePrefix="react-select"
@@ -659,8 +748,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
               <label>City</label>
               <Select
                 isMulti
-                options={toSelectOptions(availableCities)}
+                options={toSelectOptions(cities)}
                 onChange={handleCityChange}
+                value={selectedCities.map(v => ({ value: v, label: v }))}
                 placeholder="Cities..."
                 className="react-select-container"
                 classNamePrefix="react-select"
@@ -687,8 +777,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
               <label>Language</label>
               <Select
                 isMulti
-                options={toSelectOptions(fallbackLanguages)}
+                options={toSelectOptions(languages)}
                 onChange={handleLanguageChange}
+                value={selectedLanguages.map(v => ({ value: v, label: v }))}
                 placeholder="Languages..."
                 className="react-select-container"
                 classNamePrefix="react-select"
@@ -715,8 +806,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
               <label>Specialties</label>
               <Select
                 isMulti
-                options={toSelectOptions(availableSpecialties)}
+                options={toSelectOptions(specialties)}
                 onChange={handleSpecialtyChange}
+                value={selectedSpecialties.map(v => ({ value: v, label: v }))}
                 placeholder="Specialties..."
                 className="react-select-container"
                 classNamePrefix="react-select"
@@ -740,12 +832,12 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
               />
             </div>
             <div className="filter-group">
-              <label>Provider Name</label>
+              <label>Name</label>
               <Select
                 isMulti
-                options={getUniqueProviderNames(specialists)}
+                options={availableNameOptions}
                 onChange={handleProviderNameChange}
-                placeholder="Provider names..."
+                placeholder="Names..."
                 value={selectedProviderNames}
                 isSearchable
                 className="react-select-container"
@@ -760,6 +852,14 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
               />
             </div>
           </div>
+          <button 
+            className="filter-clear-all-btn"
+            onClick={clearAllFilters}
+            title="Clear all filters"
+            aria-label="Clear all filters"
+          >
+            Clear
+          </button>
         </div>
       </div>
     </>

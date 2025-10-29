@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { MapPoint } from './types';
 import MapComponent from './MapComponent';
 import FilterComponent from './FilterComponent';
@@ -20,6 +20,7 @@ const App: React.FC = () => {
   const [authChecked, setAuthChecked] = useState<boolean>(false);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState<boolean>(false);
   const [decryptionKey, setDecryptionKey] = useState<string>('');
+  const [activeFilteredIndex, setActiveFilteredIndex] = useState<number>(0);
 
   // Add the hash of the secret key (from .env.generated)
   const SECRET_HASH = "ceab1bbbeeb4fba30a0284b5246f4977a4d51bf0fec451c54a421eb7eeb78ccd";
@@ -63,7 +64,8 @@ const App: React.FC = () => {
         setSpecialists(secureData);
         setLoading(false);
       } catch (err) {
-        setError('Failed to load secure data.');
+        console.error('Error loading secure data:', err);
+        setError('Failed to load secure data. Please check your key and try again.');
         setLoading(false);
       }
     }
@@ -73,6 +75,47 @@ const App: React.FC = () => {
     setMapCenter([lat, lng]);
     setMapZoom(zoom);
   };
+
+  // When filters change, update list and reset active index
+  const handleFilterChange = (filtered: MapPoint[]) => {
+    setFilteredSpecialists(filtered);
+    setActiveFilteredIndex(0);
+  };
+
+  // Navigate to previous/next filtered specialist without changing filters
+  const navigateFiltered = useCallback((direction: 'prev' | 'next') => {
+    if (!filteredSpecialists || filteredSpecialists.length === 0) return;
+    const count = filteredSpecialists.length;
+    const nextIndex = direction === 'next'
+      ? (activeFilteredIndex + 1) % count
+      : (activeFilteredIndex - 1 + count) % count;
+    setActiveFilteredIndex(nextIndex);
+
+    const target = filteredSpecialists[nextIndex];
+    if (target && typeof target.Latitude === 'number' && typeof target.Longitude === 'number') {
+      // Pan/zoom to the selected specialist at a reasonable detail level
+      setMapCenter([target.Latitude, target.Longitude]);
+      setMapZoom(Math.max(mapZoom, 8));
+    }
+  }, [filteredSpecialists, activeFilteredIndex, mapZoom]);
+
+  // Keyboard navigation support
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (filteredSpecialists.length <= 1) return;
+      
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        navigateFiltered('prev');
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        navigateFiltered('next');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filteredSpecialists, navigateFiltered]);
 
   const handleFilterDropdownStateChange = (isOpen: boolean) => {
     setIsFilterDropdownOpen(isOpen);
@@ -92,15 +135,6 @@ const App: React.FC = () => {
     
     const shouldDisable = hasFilters || isZoomedIn;
     
-    // Debug logging
-    console.log('Clustering state:', {
-      filteredCount: filteredSpecialists.length,
-      totalCount: specialists.length,
-      hasFilters,
-      isZoomedIn,
-      mapZoom,
-      shouldDisable
-    });
     
     return shouldDisable;
   }, [filteredSpecialists.length, specialists.length, mapZoom]);
@@ -146,7 +180,7 @@ const App: React.FC = () => {
         />
         <FilterComponent
           specialists={specialists}
-          onFilterChange={setFilteredSpecialists}
+          onFilterChange={handleFilterChange}
           onMapNavigation={handleFilterMapNavigation}
           onDropdownStateChange={handleFilterDropdownStateChange}
         />
@@ -155,8 +189,26 @@ const App: React.FC = () => {
             <span className="counter-text">
               {filteredSpecialists.length > 0 && filteredSpecialists.length !== specialists.length ? (
                 <>
-                  <span className="counter-label">Showing:</span> {filteredSpecialists.length}
-                  <span className="counter-total"> of {specialists.length}</span>
+                  <button
+                    className="counter-nav-btn"
+                    onClick={() => navigateFiltered('prev')}
+                    title="Previous (←)"
+                    disabled={filteredSpecialists.length <= 1}
+                    aria-label="Previous specialist"
+                  >
+                    ◀
+                  </button>
+                  <span className="counter-label">Showing:</span> {activeFilteredIndex + 1}
+                  <span className="counter-total"> of {filteredSpecialists.length}</span>
+                  <button
+                    className="counter-nav-btn"
+                    onClick={() => navigateFiltered('next')}
+                    title="Next (→)"
+                    disabled={filteredSpecialists.length <= 1}
+                    aria-label="Next specialist"
+                  >
+                    ▶
+                  </button>
                 </>
               ) : (
                 <>

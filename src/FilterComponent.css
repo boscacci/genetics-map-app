@@ -12,15 +12,15 @@
 
 .filter-container {
   background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-  padding: 16px 24px 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 8px 16px 8px 16px;
   margin: 0 auto;
   display: flex;
   flex-direction: row;
   align-items: flex-end;
-  min-height: 68px;
-  gap: 20px;
+  min-height: 48px;
+  gap: 12px;
   width: 100%;
   max-width: 1100px;
   overflow: visible !important;
@@ -29,7 +29,7 @@
 }
 
 .filter-container:hover {
-  box-shadow: 0 6px 32px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
   transform: translateY(-1px);
 }
 
@@ -75,8 +75,12 @@
 .react-select__control {
   border: 1px solid #ddd !important;
   border-radius: 4px !important;
-  min-height: 38px !important;
+  min-height: 28px !important; /* Compact base height */
+  height: auto !important; /* Grow with content */
   box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 12px !important; /* Consistent font size */
 }
 
 .react-select__control:hover {
@@ -84,10 +88,10 @@
 }
 
 .react-select__control--is-focused {
-  border-color: #3498db !important;
-  box-shadow: 0 0 0 1px #3498db !important;
+  border-color: #7fb6e6 !important;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.18) !important;
   background-color: #fff !important;
-  transition: all 0.2s ease !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
 }
 
 .react-select__menu {
@@ -154,35 +158,98 @@
   color: white !important;
 }
 
+
 .react-select__multi-value {
-  background-color: #e3f2fd !important;
-  border-radius: 4px !important;
-  margin: 2px !important;
+  background-color: #f4f6f8 !important;
+  border-radius: 10px !important; /* soft pill */
+  margin: 2px 2px !important; /* tight vertical spacing so control height stays tidy */
+  max-width: calc(100% - 4px) !important;
+  overflow: hidden !important; /* keep content inside pill */
+  border: 1px solid #e1e6eb !important;
+  box-shadow: none !important; /* avoid “popping out” look */
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
 }
 
+
 .react-select__multi-value__label {
-  color: #1565c0 !important;
-  font-size: 13px !important;
-  padding: 2px 6px !important;
+  color: #334155 !important;
+  font-size: 12px !important;
+  padding: 3px 8px !important; /* slightly tighter to reduce control height */
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 160px !important; /* keep chips compact */
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  display: inline-block !important;
+  min-width: 0 !important;
+  flex: 0 1 auto !important;
+  width: auto !important;
+  box-sizing: border-box !important;
 }
 
 .react-select__multi-value__remove {
-  color: #1565c0 !important;
-  padding: 2px 4px !important;
+  color: #64748b !important;
+  padding: 0 6px !important;
+  cursor: pointer !important;
+  border-radius: 0 10px 10px 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
 }
 
 .react-select__multi-value__remove:hover {
-  background-color: #bbdefb !important;
-  color: #0d47a1 !important;
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
 }
 
 .react-select__placeholder {
   color: #999 !important;
-  font-size: 14px !important;
+  font-size: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  height: auto !important; /* avoid stretching that misaligns text */
+  line-height: 1.3 !important; /* visually center within control */
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .react-select__input-container {
-  font-size: 14px !important;
+  font-size: 12px !important; /* Match control font size */
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.react-select__indicators {
+  height: 16px !important; /* Much smaller indicators */
+  padding: 1px 2px !important; /* Minimal padding */
+  align-items: center !important;
+}
+
+.react-select__indicator {
+  padding: 1px !important; /* Minimal indicator padding */
+}
+
+.react-select__indicator svg {
+  height: 12px !important; /* Much smaller icon */
+  width: 12px !important;
+}
+
+/* Hide all right-side indicators (caret/clear/separator) for a clean input look */
+.react-select__indicators,
+.react-select__indicator,
+.react-select__dropdown-indicator,
+.react-select__clear-indicator,
+.react-select__indicator-separator {
+  display: none !important;
 }
 
 .active-filters {
@@ -212,14 +279,14 @@
   position: absolute;
   z-index: 2000;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-  padding: 16px 20px;
+  border-radius: 10px; /* Slightly smaller radius */
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12); /* Lighter shadow */
+  padding: 12px 16px 52px 16px; /* Extra bottom padding for Clear button */
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-width: 600px;
-  max-width: 800px;
+  gap: 8px; /* Reduced gap */
+  min-width: 500px; /* Reduced from 600px */
+  max-width: 700px; /* Reduced from 800px */
   border: 1px solid #e0e0e0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   overflow: visible;
@@ -244,6 +311,50 @@
 
 .filter-drag-handle:hover {
   color: #555 !important;
+}
+
+.filter-clear-all-btn {
+  position: absolute;
+  bottom: 10px; /* pin to bottom-right below grid */
+  right: 16px;
+  background: #ffffff;
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.6);
+  border-radius: 999px; /* pill shape */
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 84px; /* compact */
+  user-select: none;
+}
+
+.filter-clear-all-btn:hover {
+  background: #e74c3c;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.25);
+}
+
+.filter-clear-all-btn:active {
+  transform: translateY(0.5px);
+}
+
+.filter-clear-all-btn .icon {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: currentColor;
+  mask: radial-gradient(circle 5px at 50% 50%, transparent 6px, #000 7px);
+  -webkit-mask: radial-gradient(circle 5px at 50% 50%, transparent 6px, #000 7px);
 }
 
 /* Minimize button */
@@ -311,9 +422,9 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   grid-template-rows: auto;
-  gap: 12px;
+  gap: 8px; /* Reduced from 12px */
   width: 100%;
-  margin-top: 4px;
+  margin-top: 2px; /* Reduced from 4px */
 }
 
 /* Medium screens - 2 columns */
@@ -328,16 +439,17 @@
 .filter-group {
   min-width: 0;
   margin-bottom: 0;
+  overflow: visible !important; /* Allow chips to expand beyond column if needed */
 }
 
 .filter-group label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 11px;
+  margin-bottom: 4px; /* Reduced from 8px */
+  font-size: 10px; /* Smaller label font */
   color: #555;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.6px; /* Reduced letter spacing */
   line-height: 1.2;
 }
 
@@ -348,15 +460,34 @@
   overflow: visible !important;
   position: relative;
   z-index: 1;
+  min-width: 0 !important; /* Allow shrinking below content size */
 }
 
 .react-select__control {
   border: 1px solid #ddd !important;
-  border-radius: 8px !important;
-  min-height: 40px !important;
+  border-radius: 4px !important; /* Smaller radius */
+  min-height: 28px !important; /* Base height */
+  height: auto !important; /* Grow with chips */
+  max-height: none !important; /* No cap */
   box-shadow: none !important;
-  font-size: 14px !important;
+  font-size: 12px !important; /* Smaller font */
   background-color: #fafafa !important;
+  padding: 0 4px !important; /* Minimal vertical padding */
+  line-height: 1.3 !important; /* Tighter line height */
+  overflow: visible !important; /* Allow chips to expand and be clickable */
+}
+
+.react-select__value-container {
+  padding: 2px 6px !important; /* Consistent vertical breathing room */
+  flex-wrap: wrap !important;
+  gap: 2px !important; /* Smaller gap */
+  min-height: 28px !important; /* Base height */
+  height: auto !important; /* Allow height to grow with chips */
+  align-items: center !important; /* Center placeholder/empty */
+  overflow: visible !important; /* Allow chips to expand fully */
+  max-width: 100% !important;
+  width: 100% !important; /* Take full width of control */
+  display: flex !important;
 }
 
 .react-select__control:hover {
@@ -400,21 +531,46 @@
   color: white !important;
 }
 
+
 .react-select__multi-value {
-  background-color: #e3f2fd !important;
-  border-radius: 3px !important;
-  margin: 1px !important;
+  background-color: #f4f6f8 !important;
+  border-radius: 12px !important;
+  margin: 2px !important;
+  max-width: calc(100% - 4px) !important;
+  overflow: hidden !important;
+  border: 1px solid #e1e6eb !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
 }
 
+
 .react-select__multi-value__label {
-  color: #1565c0 !important;
-  font-size: 11px !important;
-  padding: 1px 4px !important;
+  color: #334155 !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 160px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  display: inline-block !important;
+  min-width: 0 !important;
+  flex: 0 1 auto !important;
+  width: auto !important;
+  box-sizing: border-box !important;
 }
 
 .react-select__multi-value__remove {
   color: #1565c0 !important;
-  padding: 1px 3px !important;
+  padding: 4px 6px !important;
+  cursor: pointer !important;
+  border-radius: 0 4px 4px 0 !important;
 }
 
 .react-select__multi-value__remove:hover {
@@ -424,11 +580,19 @@
 
 .react-select__placeholder {
   color: #999 !important;
-  font-size: 12px !important;
+  font-size: 12px !important; /* Slightly larger for readability */
+  margin: 0 !important;
+  padding: 0 !important; /* No padding */
+  line-height: 1.3 !important; /* Tighter line height */
+  display: flex !important;
+  align-items: center !important;
+  height: auto !important;
 }
 
 .react-select__input-container {
-  font-size: 12px !important;
+  font-size: 13px !important; /* Match control font size */
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 @media (max-width: 900px) {
@@ -446,6 +610,13 @@
     max-width: 100%;
     overflow: visible;
   }
+  
+  .filter-group label {
+    font-size: 9px !important; /* Smaller labels for mobile */
+    margin-bottom: 2px !important; /* Reduced margin */
+    letter-spacing: 0.4px !important; /* Tighter letter spacing */
+    font-weight: 600 !important; /* Slightly bolder for readability */
+  }
   .react-select-container {
     width: 100%;
     max-width: 100%;
@@ -455,18 +626,18 @@
   /* Mobile positioning - top of screen with better viewport handling */
   .topright-filter-container {
     position: fixed !important;
-    top: 80px !important;
+    top: 70px !important; /* Moved up slightly */
     bottom: auto !important;
-    left: 10px !important;
-    right: 10px !important;
+    left: 8px !important; /* Tighter margins */
+    right: 8px !important;
     min-width: auto !important;
     max-width: none !important;
     max-height: none !important; /* Remove height constraint to allow dropdowns */
     overflow: visible !important; /* Allow dropdowns to overflow */
-    padding: 8px 8px 8px 8px;
-    border-radius: 10px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
-    gap: 6px;
+    padding: 6px 6px 48px 6px; /* Reserve bottom space for Clear button */
+    border-radius: 8px; /* Smaller radius */
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1); /* Lighter shadow */
+    gap: 4px; /* Reduced gap */
     background: #fff;
     border: 1px solid #e0e0e0;
     z-index: 2000 !important;
@@ -485,7 +656,7 @@
   .filter-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto auto;
-    gap: 8px;
+    gap: 4px; /* Further reduced for mobile */
   }
   
   /* Make Provider Name span full width on mobile (now it's the last child) */
@@ -495,23 +666,24 @@
   
   /* Mobile-specific React-Select improvements */
   .react-select__control {
-    min-height: 40px !important; /* Better touch target */
-    font-size: 16px !important; /* Prevent zoom on iOS */
-    padding: 0 8px !important;
+    min-height: 32px !important; /* More compact for mobile */
+    font-size: 13px !important; /* Smaller font, still prevents zoom */
+    padding: 0 4px !important; /* Reduced padding */
+    border-radius: 4px !important; /* Smaller radius */
   }
   
   
   .react-select__option {
-    padding: 10px 8px !important; /* Larger touch targets */
-    font-size: 14px !important; /* Prevent zoom on iOS */
+    padding: 8px 6px !important; /* Slightly smaller but still touch-friendly */
+    font-size: 13px !important; /* Smaller font, still prevents zoom */
   }
   
   .react-select__menu {
-    max-height: 150px !important; /* Shorter menu for mobile */
+    max-height: 120px !important; /* Shorter menu for mobile */
     z-index: 999999 !important; /* Extremely high z-index to ensure it's on top */
-    margin-bottom: 12px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+    margin-bottom: 8px !important; /* Reduced margin */
+    border-radius: 6px !important; /* Smaller radius */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important; /* Lighter shadow */
     background: white !important; /* Ensure opaque background */
     backdrop-filter: none !important; /* Remove backdrop blur to ensure full opacity */
     position: absolute !important;
@@ -522,16 +694,77 @@
   }
   
   .react-select__multi-value {
-    margin: 2px !important; /* More spacing for touch */
+    margin: 1px !important; /* Tighter spacing for mobile */
+    width: calc(50% - 2px) !important; /* Uniform width - exactly two per row */
+    min-width: calc(50% - 2px) !important; /* Ensure uniform sizing */
+    max-width: calc(50% - 2px) !important; /* Constrain to uniform size */
+    overflow: hidden !important;
+    border-radius: 3px !important; /* Smaller radius */
+    flex: 0 0 calc(50% - 2px) !important; /* Fixed uniform width */
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+  
+  .react-select__multi-value__label {
+    font-size: 10px !important; /* Smaller mobile font */
+    padding: 2px 4px !important; /* Consistent padding */
+    white-space: nowrap !important; /* Prevent wrapping for uniform look */
+    overflow: hidden !important; /* Hide overflow */
+    max-width: 100% !important; /* Constrain to chip width */
+    text-overflow: ellipsis !important; /* Show ellipsis for long text */
+    word-wrap: normal !important;
+    word-break: normal !important;
+    line-height: 1.2 !important; /* Tighter line height */
+    text-align: center !important; /* Center align text for uniform look */
+    display: block !important;
+    flex: 1 !important; /* Take available space */
+    box-sizing: border-box !important;
+    min-width: 0 !important; /* Allow text truncation */
   }
   
   .react-select__multi-value__remove {
-    padding: 4px 6px !important; /* Larger touch target */
+    padding: 3px 4px !important; /* Smaller but still touch-friendly */
+    cursor: pointer !important;
+    font-size: 10px !important; /* Smaller remove button */
   }
   
   /* Prevent zoom on input focus */
   .react-select__input-container input {
     font-size: 16px !important;
+  }
+  
+  /* Mobile-specific value container improvements */
+  .react-select__value-container {
+    padding: 0 4px !important; /* Minimal padding for mobile */
+    gap: 2px !important; /* Smaller gap */
+    min-height: 28px !important; /* Consistent minimum height for mobile */
+    height: 28px !important; /* Fixed height for mobile */
+    display: flex !important;
+    flex-wrap: wrap !important; /* Allow chips to wrap */
+    align-items: center !important; /* Center align for consistency */
+  }
+  
+  /* Mobile placeholder improvements */
+  .react-select__placeholder {
+    font-size: 10px !important; /* Smaller placeholder for mobile */
+    padding: 0 !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* Mobile indicators improvements */
+  .react-select__indicators {
+    height: 18px !important; /* Smaller indicators for mobile */
+    padding: 1px 2px !important;
+  }
+  
+  .react-select__indicator {
+    padding: 1px !important;
+  }
+  
+  .react-select__indicator svg {
+    height: 12px !important; /* Smaller icon for mobile */
+    width: 12px !important;
   }
   
   /* Better touch targets for mobile */
@@ -540,6 +773,7 @@
     display: flex !important;
     align-items: center !important;
   }
+  .filter-clear-all-btn { bottom: 10px; right: 12px; padding: 8px 12px; }
   
   .filter-minimize-btn {
     min-height: 44px !important;
@@ -581,6 +815,38 @@
     transform: none !important; /* Prevent any transforms */
   }
 } 
+
+/* Desktop-specific improvements for larger screens */
+@media (min-width: 1200px) {
+  .filter-grid { gap: 12px !important; }
+  .react-select__control {
+    min-height: 36px !important;
+    font-size: 14px !important;
+    padding: 0 8px !important;
+  }
+  .react-select__placeholder { font-size: 13px !important; }
+  .react-select__input-container { font-size: 14px !important; }
+  .filter-clear-all-btn { padding: 6px 12px !important; font-size: 12px !important; min-width: 84px !important; }
+  .react-select__multi-value {
+    margin: 2px !important; /* More spacing on desktop */
+    min-width: 80px !important; /* Larger minimum width */
+    max-width: 200px !important; /* Allow wider chips on desktop */
+    width: auto !important; /* Natural width on desktop */
+    flex: 0 1 auto !important; /* Flexible sizing */
+  }
+  
+  .react-select__multi-value__label {
+    font-size: 12px !important; /* Larger font on desktop */
+    padding: 4px 8px !important; /* More padding on desktop */
+    white-space: nowrap !important;
+    text-align: left !important; /* Left align on desktop */
+  }
+  
+  .react-select__multi-value__remove {
+    padding: 4px 6px !important; /* Larger touch target on desktop */
+    font-size: 12px !important;
+  }
+}
 
 /* Additional mobile-specific improvements */
 @media (max-width: 900px) and (max-height: 700px) {
