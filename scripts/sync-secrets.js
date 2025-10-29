@@ -6,7 +6,6 @@ const { execSync } = require('child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
 const secretEnvPath = path.resolve(repoRoot, '.secret_env');
-const dataCsvPath = path.resolve(repoRoot, 'data.csv');
 
 function exitWith(message) {
   console.error(message);
@@ -14,14 +13,11 @@ function exitWith(message) {
 }
 
 if (!fs.existsSync(secretEnvPath)) exitWith('Error: .secret_env file not found');
-if (!fs.existsSync(dataCsvPath)) exitWith('Error: data.csv file not found');
 
 const envContent = fs.readFileSync(secretEnvPath, 'utf8');
 const match = envContent.match(/REACT_APP_SECRET_KEY=(.+)/);
 if (!match) exitWith('Error: REACT_APP_SECRET_KEY not found in .secret_env');
 const passphrase = match[1].trim();
-const csvContent = fs.readFileSync(dataCsvPath, 'utf8');
-const csvBase64 = Buffer.from(csvContent).toString('base64');
 
 try {
   execSync('gh --version', { stdio: 'ignore' });
@@ -42,8 +38,7 @@ function setSecret(name, value) {
 }
 
 setSecret('REACT_APP_SECRET_KEY', passphrase);
-setSecret('DATA_CSV_BASE64', csvBase64);
 
-console.log('All secrets synced (CSV stored as base64).');
+console.log('Secret synced successfully.');
 
 

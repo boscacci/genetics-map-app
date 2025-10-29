@@ -16,7 +16,8 @@
     "fetch-data-simple": "node scripts/fetch-data-simple.js",
     "sync-secrets": "node scripts/sync-secrets.js",
     "setup:hooks": "bash scripts/setup-git-hooks.sh",
-    "prepare-and-sync": "node scripts/process-data.js && node hash-secret.js && node scripts/sync-secrets.js"
+    "prepare-local": "node scripts/process-data.js && node hash-secret.js",
+    "prepare-and-sync": "npm run prepare-local && npm run sync-secrets"
   },
   "keywords": [],
   "author": "",

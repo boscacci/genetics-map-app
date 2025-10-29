@@ -10,9 +10,8 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      # Single sources of truth from repository secrets
+      # Only the passphrase secret is needed; encrypted data is already in repo
       REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
-      DATA_CSV_BASE64: ${{ secrets.DATA_CSV_BASE64 }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,21 +24,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Decode data.csv from base64 secret
-        run: |
-          echo "DATA_CSV_BASE64 length: ${#DATA_CSV_BASE64}"
-          if [ -n "${DATA_CSV_BASE64}" ]; then
-            echo "$DATA_CSV_BASE64" | base64 -d > data.csv
-            echo "✅ Decoded data.csv from DATA_CSV_BASE64 secret ($(wc -l < data.csv) lines)"
-          else
-            echo "❌ ERROR: DATA_CSV_BASE64 secret is empty"
-            exit 1
-          fi
-
-      - name: Generate encrypted data and hash
-        run: |
-          node scripts/process-data.js
-          node hash-secret.js
+      - name: Generate secret hash for App.tsx
+        run: node hash-secret.js
 
       - name: Update secret hash in App.tsx
         run: |
