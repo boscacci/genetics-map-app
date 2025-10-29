@@ -24,9 +24,9 @@ This project uses a secure approach to manage the secret passphrase:
 When you push changes to the main branch, the GitHub Action workflow automatically updates the `REACT_APP_SECRET_KEY` secret in your GitHub repository from the local `.secret_env` file.
 
 ### Manual Secret Updates
-You can also manually update the GitHub secret by running:
+You can manually sync the GitHub secrets by running:
 ```bash
-npm run update-secret
+npm run sync-secrets
 ```
 
 This requires:
