@@ -25,6 +25,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Ensure data.csv from secret if missing
+        run: |
+          echo "DATA_CSV_CONTENT length: ${#DATA_CSV_CONTENT}"
+          if [ ! -f data.csv ] && [ -n "${DATA_CSV_CONTENT}" ]; then
+            printf "%s" "$DATA_CSV_CONTENT" > data.csv
+            echo "Restored data.csv from DATA_CSV_CONTENT secret."
+          else
+            echo "data.csv exists: $( [ -f data.csv ] && echo yes || echo no )"
+          fi
+
       - name: Generate encrypted data and hash
         run: |
           node scripts/process-data.js
