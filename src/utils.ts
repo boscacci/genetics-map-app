@@ -18,6 +18,8 @@ interface CSVRow {
   Country: string;
   uses_interpreters?: string;
   specialties?: string;
+  specialty?: string; // fallback: accept singular form
+  speciality?: string; // fallback: accept British spelling
 }
 
 // Function to clean up language strings by removing punctuation and normalizing whitespace
@@ -62,7 +64,7 @@ export const parseCSVString = (csvString: string): MapPoint[] => {
       City: row.City,
       Country: row.Country,
       interpreter_services: row.uses_interpreters || 'unknown',
-      specialties: row.specialties || '',
+      specialties: (row.specialties || row.specialty || row.speciality || '') as string,
     }));
     
     // Filter out specialists without coordinates
@@ -112,7 +114,7 @@ export const parseCSV = async (url: string): Promise<MapPoint[]> => {
       City: row.City,
       Country: row.Country,
       interpreter_services: row.uses_interpreters || 'unknown',
-      specialties: row.specialties || '',
+      specialties: (row.specialties || row.specialty || row.speciality || '') as string,
     }));
     
     // Filter out specialists without coordinates
