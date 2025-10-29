@@ -33,7 +33,7 @@ try {
 
 function setSecret(name, value) {
   console.log(`Updating GitHub repository secret ${name}...`);
-  execSync(`gh secret set ${name}`, { stdio: 'inherit', input: Buffer.from(value) });
+  execSync(`gh secret set ${name} --body "${value.replace(/"/g, '\\"')}"`);
   console.log(`✅ Updated ${name}`);
 }
 
