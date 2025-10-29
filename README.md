@@ -26,15 +26,15 @@ This app uses a key-based authentication system to protect the genetic counselor
 
 **Local Development:**
 ```
-http://localhost:3000?key=***REMOVED***
+http://localhost:3000?key=YOUR_SECRET_KEY
 ```
 
 **GitHub Pages (Production):**
 ```
-https://boscacci.github.io/genetics-map-app?key=***REMOVED***
+https://boscacci.github.io/genetics-map-app?key=YOUR_SECRET_KEY
 ```
 
-The key in the URL is hashed with SHA-256 and compared against a stored hash. If it matches, the key is used to decrypt the AES-encrypted data blob.
+Replace `YOUR_SECRET_KEY` with the actual key from your `.secret_env` file. The key in the URL is hashed with SHA-256 and compared against a stored hash. If it matches, the key is used to decrypt the AES-encrypted data blob.
 
 ## 🔄 Development Workflow
 
@@ -84,7 +84,7 @@ npm run prepare-local
 
 The `.secret_env` file contains your authentication key:
 ```
-REACT_APP_SECRET_KEY=***REMOVED***
+REACT_APP_SECRET_KEY=your-secret-passphrase-here
 ```
 
 This file is:
