@@ -11,9 +11,9 @@ if (fs.existsSync(envPath)) {
 }
 
 // Single secret name; optional .secret_env already loaded for local dev
-const SECRET_KEY = process.env.REACT_APP_SECRET_PASSPHRASE;
+const SECRET_KEY = process.env.REACT_APP_SECRET_KEY;
 if (!SECRET_KEY) {
-  throw new Error('Missing secret: set REACT_APP_SECRET_PASSPHRASE as a GitHub secret or provide it in .secret_env');
+  throw new Error('Missing secret: set REACT_APP_SECRET_KEY as a GitHub secret or provide it in .secret_env');
 }
 
 // Read and parse CSV

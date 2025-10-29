@@ -10,9 +10,9 @@ if (fs.existsSync(envPath)) {
 }
 
 // Single secret name
-const secret = process.env.REACT_APP_SECRET_PASSPHRASE;
+const secret = process.env.REACT_APP_SECRET_KEY;
 if (!secret) {
-  console.error('Missing secret: set REACT_APP_SECRET_PASSPHRASE as an environment secret or in .secret_env');
+  console.error('Missing secret: set REACT_APP_SECRET_KEY as an environment secret or in .secret_env');
   process.exit(1);
 }
 

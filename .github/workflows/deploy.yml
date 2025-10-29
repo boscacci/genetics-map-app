@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Single sources of truth from repository secrets
-      REACT_APP_SECRET_PASSPHRASE: ${{ secrets.REACT_APP_SECRET_PASSPHRASE }}
+      REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
       DATA_CSV_CONTENT: ${{ secrets.DATA_CSV_CONTENT }}
     steps:
       - name: Checkout repository

@@ -17,8 +17,8 @@ if (!fs.existsSync(secretEnvPath)) exitWith('Error: .secret_env file not found')
 if (!fs.existsSync(dataCsvPath)) exitWith('Error: data.csv file not found');
 
 const envContent = fs.readFileSync(secretEnvPath, 'utf8');
-const match = envContent.match(/REACT_APP_SECRET_PASSPHRASE=(.+)/);
-if (!match) exitWith('Error: REACT_APP_SECRET_PASSPHRASE not found in .secret_env');
+const match = envContent.match(/REACT_APP_SECRET_KEY=(.+)/);
+if (!match) exitWith('Error: REACT_APP_SECRET_KEY not found in .secret_env');
 const passphrase = match[1].trim();
 const csvContent = fs.readFileSync(dataCsvPath, 'utf8');
 
@@ -40,7 +40,7 @@ function setSecret(name, value) {
   console.log(`✅ Updated ${name}`);
 }
 
-setSecret('REACT_APP_SECRET_PASSPHRASE', passphrase);
+setSecret('REACT_APP_SECRET_KEY', passphrase);
 setSecret('DATA_CSV_CONTENT', csvContent);
 
 console.log('All secrets synced.');
