@@ -21,11 +21,11 @@ const csvPath = path.resolve(__dirname, '../data.csv');
 let csvContent;
 if (fs.existsSync(csvPath)) {
   csvContent = fs.readFileSync(csvPath, 'utf8');
-} else if (process.env.DATA_CSV_CONTENT) {
-  csvContent = process.env.DATA_CSV_CONTENT;
-  console.log('Loaded CSV data from DATA_CSV environment variable.');
+} else if (process.env.DATA_CSV_BASE64) {
+  csvContent = Buffer.from(process.env.DATA_CSV_BASE64, 'base64').toString('utf8');
+  console.log('Loaded CSV data from DATA_CSV_BASE64 environment variable.');
 } else {
-  throw new Error('No data.csv file found and DATA_CSV_CONTENT environment variable is not set.');
+  throw new Error('No data.csv file found and DATA_CSV_BASE64 environment variable is not set.');
 }
 const { data, errors } = Papa.parse(csvContent, {
   header: true,

@@ -12,7 +12,7 @@ jobs:
     env:
       # Single sources of truth from repository secrets
       REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
-      DATA_CSV_CONTENT: ${{ secrets.DATA_CSV_CONTENT }}
+      DATA_CSV_BASE64: ${{ secrets.DATA_CSV_BASE64 }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,14 +25,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Ensure data.csv from secret if missing
+      - name: Decode data.csv from base64 secret
         run: |
-          echo "DATA_CSV_CONTENT length: ${#DATA_CSV_CONTENT}"
-          if [ ! -f data.csv ] && [ -n "${DATA_CSV_CONTENT}" ]; then
-            printf "%s" "$DATA_CSV_CONTENT" > data.csv
-            echo "Restored data.csv from DATA_CSV_CONTENT secret."
+          echo "DATA_CSV_BASE64 length: ${#DATA_CSV_BASE64}"
+          if [ -n "${DATA_CSV_BASE64}" ]; then
+            echo "$DATA_CSV_BASE64" | base64 -d > data.csv
+            echo "✅ Decoded data.csv from DATA_CSV_BASE64 secret ($(wc -l < data.csv) lines)"
           else
-            echo "data.csv exists: $( [ -f data.csv ] && echo yes || echo no )"
+            echo "❌ ERROR: DATA_CSV_BASE64 secret is empty"
+            exit 1
           fi
 
       - name: Generate encrypted data and hash

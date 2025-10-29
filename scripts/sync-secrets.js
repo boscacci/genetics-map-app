@@ -21,6 +21,7 @@ const match = envContent.match(/REACT_APP_SECRET_KEY=(.+)/);
 if (!match) exitWith('Error: REACT_APP_SECRET_KEY not found in .secret_env');
 const passphrase = match[1].trim();
 const csvContent = fs.readFileSync(dataCsvPath, 'utf8');
+const csvBase64 = Buffer.from(csvContent).toString('base64');
 
 try {
   execSync('gh --version', { stdio: 'ignore' });
@@ -41,8 +42,8 @@ function setSecret(name, value) {
 }
 
 setSecret('REACT_APP_SECRET_KEY', passphrase);
-setSecret('DATA_CSV_CONTENT', csvContent);
+setSecret('DATA_CSV_BASE64', csvBase64);
 
-console.log('All secrets synced.');
+console.log('All secrets synced (CSV stored as base64).');
 
 
