@@ -1,465 +1,213 @@
-# Google Sheets Automation Plan
+# Genetics Map: Migration Plan
 
-**Status:** Planning Phase  
-**Target Start:** TBD (tomorrow or next week)  
-**Last Updated:** October 31, 2025
-
----
-
-## Executive Summary
-
-Transform the manual Excel → Jupyter → Google Docs → App workflow into a fully automated pipeline where an administrator edits a production Google Sheet, and GitHub Actions automatically cleans, geocodes, and deploys data twice daily.
+**Last Updated:** February 3, 2026  
+**Status:** Planning Phase
 
 ---
 
-## Current System Architecture
+## What We're Building
 
-### Data Flow (Manual Process)
-
-```
-1. Administrator provides Excel file (data_YYYY-MM-DD.xlsx)
-   ↓
-2. Manual: Run process_excel_data.ipynb locally
-   ↓ Outputs: data_for_geocoding.csv
-3. Manual: Upload to Google Sheets
-   ↓
-4. Manual: Run scripts/geocoding.gs in Google Apps Script
-   ↓ Adds columns: Latitude, Longitude, City, Country
-5. Manual: Download as data.csv
-   ↓
-6. Manual: Git commit triggers pre-commit hook
-   ↓ Hook runs: node scripts/process-data.js
-   ↓ Generates: src/secureDataBlob.ts (AES encrypted)
-7. Manual: Git push triggers pre-push hook
-   ↓ Hook runs: node scripts/sync-secrets.js
-   ↓ Syncs REACT_APP_SECRET_KEY to GitHub Secrets
-8. GitHub Actions (.github/workflows/deploy.yml)
-   ↓ Generates SECRET_HASH from REACT_APP_SECRET_KEY
-   ↓ Updates App.tsx with hash
-   ↓ Builds React app
-   ↓ Deploys to GitHub Pages
-```
-
-### Current Encryption Mechanism
-
-**Purpose:** Protect genetic counselor data from unauthorized access
-
-**Components:**
-
-1. **Secret Key** (`REACT_APP_SECRET_KEY`)
-   - Stored in `.secret_env` file (gitignored)
-   - Automatically synced to GitHub Secrets via pre-push hook
-   - Used for both encryption and authentication
-
-2. **Data Encryption** (Build-time)
-   - Script: `scripts/process-data.js`
-   - Input: `data.csv` (gitignored, contains geocoded data)
-   - Process:
-     - Parse CSV with PapaParse
-     - Filter rows with valid Latitude/Longitude
-     - Clean data (handle NaN, anonymous contributors)
-     - Encrypt JSON string with CryptoJS AES
-   - Output: `src/secureDataBlob.ts` containing `ENCRYPTED_SPECIALISTS_DATA`
-   - This encrypted blob is committed to git and deployed
-
-3. **Authentication Hash** (Build-time)
-   - Script: `hash-secret.js` + `scripts/update-app-hash.js`
-   - Process:
-     - SHA-256 hash of `REACT_APP_SECRET_KEY`
-     - Injected into `src/App.tsx` as `SECRET_HASH` constant
-   - Purpose: Verify URL key without exposing the secret
-
-4. **Client-Side Flow** (Runtime)
-   - User accesses: `https://boscacci.github.io/genetics-map-app?key=YOUR_SECRET_KEY`
-   - App hashes the URL key parameter with SHA-256
-   - Compares hash to hardcoded `SECRET_HASH` in `App.tsx`
-   - If match → uses original key to decrypt `ENCRYPTED_SPECIALISTS_DATA`
-   - If no match → shows error, no data loaded
-
-**Security Model:**
-- Encrypted data blob is public (in deployed app)
-- Hash of secret is public (in deployed app)
-- Original secret key is private (never in git or deployed code)
-- Only users with correct key can decrypt data
-- Key passed via URL parameter (could use localStorage for persistence)
-
-### Current File Structure
-
-```
-genetics-map/
-├── .secret_env                     # Secret key (gitignored)
-├── data.csv                        # Geocoded data (gitignored)
-├── process_excel_data.ipynb        # Data cleaning notebook
-├── data_*.xlsx                    # Source Excel files (gitignored)
-├── hash-secret.js                  # Generate SHA-256 hash
-├── scripts/
-│   ├── process-data.js            # Encrypt CSV → secureDataBlob.ts
-│   ├── geocoding.gs               # Google Apps Script for geocoding
-│   ├── setup-git-hooks.sh         # Install pre-commit/pre-push hooks
-│   ├── sync-secrets.js            # Sync .secret_env to GitHub Secrets
-│   ├── update-app-hash.js         # Inject hash into App.tsx
-│   └── verify-sync.js             # Check system consistency
-├── src/
-│   ├── App.tsx                     # Main app (contains SECRET_HASH)
-│   ├── secureDataBlob.ts          # Encrypted data (auto-generated)
-│   ├── secureData.ts              # Decryption loader
-│   └── utils.ts                    # CryptoJS decrypt + SHA-256 functions
-└── .github/workflows/
-    └── deploy.yml                  # Deploy to GitHub Pages
-```
+A system where a **non-technical administrator can safely update provider data** in a Google Sheet, and the website automatically updates twice daily—no manual downloads, spreadsheet processing, or code changes required.
 
 ---
 
-## Proposed Automated System
+## Current vs. Future State
 
-### New Data Flow (Automated)
+### Today (Manual Process - Takes ~2 Hours)
 
-```
-1. Administrator edits Google Sheet directly (production data)
-   ↓
-2. GitHub Actions (scheduled: 6am & 6pm UTC)
-   ↓ Downloads data via Google Sheets API
-   ↓
-3. Python: scripts/clean_data.py
-   ↓ Applies all cleaning logic from Jupyter notebook
-   ↓ Outputs: temp_cleaned.csv
-   ↓
-4. Python: scripts/geocode_data.py
-   ↓ Geocodes via Google Geocoding API
-   ↓ Outputs: data.csv
-   ↓
-5. Node: scripts/process-data.js (existing)
-   ↓ Encrypts to src/secureDataBlob.ts
-   ↓
-6. Git: Auto-commit to backup branch (history preservation)
-   ↓
-7. Git: Auto-commit to main branch
-   ↓
-8. GitHub Actions: Build and deploy (existing workflow)
-   ↓
-9. Email notifications sent on success/failure
-```
+1. Someone sends an Excel file with provider updates
+2. Developer runs data cleaning scripts locally
+3. Developer uploads to Google Sheets
+4. Developer runs geocoding script (adds map coordinates)
+5. Developer downloads results
+6. Developer commits to GitHub
+7. Website rebuilds and deploys
 
-### Architecture Components
+**Problems:**
+- Requires a developer for every update
+- Prone to mistakes
+- Slow turnaround (hours to days)
 
-#### 1. Google Sheet Setup
-- **Owner:** Project owner
-- **Editor:** Administrator(s)
-- **Structure:** Same columns as current Excel + geocoded columns
-- **Access:** Service account email added as viewer
-- **Sheet ID:** Stored in GitHub Secrets as `GOOGLE_SHEETS_ID`
+### Future (Automated - Takes Minutes)
 
-#### 2. Data Cleaning Script (`scripts/clean_data.py`)
+1. Administrator edits Google Sheet directly
+2. System automatically cleans, validates, and geocodes data (twice daily)
+3. Website updates automatically
 
-Port all logic from `process_excel_data.ipynb`:
-
-**Inputs:**
-- Google Sheet ID (from environment variable)
-- Service account credentials (from GitHub Secret)
-
-**Processing:**
-- Connect to Google Sheets API via `gspread` library
-- Download sheet data as DataFrame
-- Apply column mapping (verbose names → snake_case)
-- Clean emails (validate, take first valid)
-- Clean websites (normalize URLs, handle edge cases)
-- Clean phone numbers (remove invalid entries)
-- Clean languages (normalize separators, detect interpreters)
-- Add `uses_interpreters` boolean column
-- Validate and report issues
-
-**Output:**
-- `temp_cleaned.csv` in workspace
-- Validation report (logged + included in notifications)
-
-**Key Functions:**
-```python
-def clean_email(val): ...
-def clean_website_stats(val): ...
-def clean_phone(val): ...
-def uses_interpreters_func(val): ...
-def clean_languages(val): ...
-```
-
-#### 3. Geocoding Script (`scripts/geocode_data.py`)
-
-Port logic from `scripts/geocoding.gs`:
-
-**Inputs:**
-- `temp_cleaned.csv` from cleaning step
-- Google Geocoding API key (from GitHub Secret)
-
-**Processing:**
-- Use `googlemaps` Python library
-- Smart geocoding with multiple attempts:
-  1. Full address (institution + work_address)
-  2. Work address only
-  3. Institution name only
-- Extract: Latitude, Longitude, City, Country
-- Skip rows already geocoded (incremental updates)
-- Rate limiting (respect API quotas)
-- City extraction fallback from address field
-- Comprehensive logging
-
-**Output:**
-- `data.csv` with added columns: Latitude, Longitude, City, Country
-- Geocoding report (success/failure counts)
-
-**Key Functions:**
-```python
-def smart_geocode(geocoder, institution, address): ...
-def extract_city_from_address(address): ...
-def is_valid_city(city): ...
-```
-
-#### 4. GitHub Actions Workflow (`.github/workflows/scheduled-update.yml`)
-
-**Triggers:**
-- Schedule: `cron: "0 6,18 * * *"` (6am & 6pm UTC = 2am & 2pm EDT/1am & 1pm EST)
-- Manual: `workflow_dispatch` for testing
-
-**Jobs:**
-
-```yaml
-jobs:
-  update-data:
-    runs-on: ubuntu-latest
-    steps:
-      - Checkout repo
-      - Set up Python 3.11
-      - Install Python dependencies (requirements.txt)
-      - Set up Node.js 20
-      - Install Node dependencies (package.json)
-      
-      # Backup current data
-      - Create backup branch: data-backup-YYYY-MM-DD-HHMMSS
-      - Commit current data.csv and secureDataBlob.ts to backup branch
-      
-      # Run data pipeline
-      - Run: python scripts/clean_data.py
-      - Run: python scripts/geocode_data.py
-      - Run: node scripts/process-data.js (encrypt)
-      - Run: node hash-secret.js (hash secret)
-      - Run: node scripts/update-app-hash.js (update App.tsx)
-      
-      # Check for changes
-      - If no changes: Exit (send success email, no deployment)
-      - If changes detected:
-          - Commit data.csv and src/secureDataBlob.ts to main
-          - Push to main
-          - Trigger deploy workflow
-      
-      # Notifications
-      - On success: Email summary (rows processed, changes made)
-      - On failure: Email error details + logs
-```
-
-**Environment Variables:**
-```yaml
-env:
-  GOOGLE_SHEETS_ID: ${{ secrets.GOOGLE_SHEETS_ID }}
-  GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
-  GOOGLE_GEOCODING_API_KEY: ${{ secrets.GOOGLE_GEOCODING_API_KEY }}
-  REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
-  NOTIFICATION_EMAIL_TO: ${{ secrets.NOTIFICATION_EMAIL_TO }}
-```
-
-#### 5. Email Notifications
-
-**Implementation:** GitHub Actions built-in email action
-
-**Notification Types:**
-
-1. **Success Email**
-   - Subject: `✅ Genetics Map: Data updated successfully`
-   - Body: Timestamp, rows processed, rows geocoded, link to commit
-
-2. **Failure Email**
-   - Subject: `❌ Genetics Map: Data update failed`
-   - Body: Timestamp, error message, link to GitHub Actions logs
+**Benefits:**
+- No developer needed for routine updates
+- Faster updates (minutes, not days)
+- Built-in validation catches errors before they go live
+- Change history preserved automatically
 
 ---
 
-## Implementation Steps
+## Key Requirements (February 2026)
 
-### Phase 0: Preparation (Before Starting)
+### 1. Multi-Language Support
+The website interface should support multiple languages (filters, buttons, error messages).
 
-- [ ] Fetch latest `geocoding.gs` from Google Apps Script editor
-- [ ] Save to repo for reference
-- [ ] Review current Google Sheet structure (column names, data format)
+### 2. Safe Data Entry
+Non-technical staff must be able to add providers without breaking the site:
+- Use a **two-tab workflow**: "Working Copy" for edits, "Production" for live data
+- Admins edit freely in Working Copy, then copy to Production when ready to publish
+- Manual deployment trigger via GitHub Actions (with training for Monisha)
+- Required fields enforced with sheet validation
 
-### Phase 1: Google Cloud Setup
+### 3. Credential Documents
+Need a place to store proof of each provider's credentials:
+- Create a private Google Drive folder for credential PDFs
+- Add a column in the sheet linking to each provider's credential document
+- These links are admin-only (never shown publicly)
 
-- [ ] Create Google Cloud project: `genetics-map-automation`
-- [ ] Enable APIs:
-  - [ ] Google Sheets API
-  - [ ] Google Geocoding API
-- [ ] Create service account: `genetics-map-bot@...`
-- [ ] Generate JSON key for service account
-- [ ] Grant permissions:
-  - [ ] Sheets API: Read access
-  - [ ] Geocoding API: Usage enabled
-- [ ] Share production Google Sheet with service account email (viewer access)
-- [ ] Test API access locally
-
-### Phase 2: Python Scripts Development
-
-- [ ] Create `scripts/clean_data.py`
-  - [ ] Port email cleaning logic
-  - [ ] Port website cleaning logic
-  - [ ] Port phone cleaning logic
-  - [ ] Port language cleaning logic
-  - [ ] Add Google Sheets API integration
-  - [ ] Add validation reporting
-  - [ ] Test with real data locally
-
-- [ ] Create `scripts/geocode_data.py`
-  - [ ] Port smart geocoding logic
-  - [ ] Add Google Geocoding API integration
-  - [ ] Implement rate limiting
-  - [ ] Add incremental update logic (skip existing)
-  - [ ] Add progress logging
-  - [ ] Test with sample data locally
-
-- [ ] Create `requirements.txt`
-  ```txt
-  pandas>=2.0.0
-  googlemaps>=4.10.0
-  gspread>=5.0.0
-  google-auth>=2.0.0
-  validators>=0.20.0
-  openpyxl>=3.0.0  # For Excel support (if needed)
-  ```
-
-### Phase 3: GitHub Actions Configuration
-
-- [ ] Create `.github/workflows/scheduled-update.yml`
-  - [ ] Set up Python environment
-  - [ ] Set up Node.js environment
-  - [ ] Add backup branch creation logic
-  - [ ] Add data pipeline steps
-  - [ ] Add commit and push logic
-  - [ ] Add change detection
-  - [ ] Add email notification steps
-
-- [ ] Add GitHub Secrets (Settings → Secrets and variables → Actions):
-  - [ ] `GOOGLE_SHEETS_ID` - The Google Sheet ID
-  - [ ] `GOOGLE_SERVICE_ACCOUNT_KEY` - JSON key (entire file content)
-  - [ ] `GOOGLE_GEOCODING_API_KEY` - API key for geocoding
-  - [ ] `REACT_APP_SECRET_KEY` - Existing secret (already set)
-  - [ ] `NOTIFICATION_EMAIL_TO` - Comma-separated list of administrator emails
-
-### Phase 4: Testing
-
-- [ ] Test cleaning script locally:
-  ```bash
-  python scripts/clean_data.py
-  ```
-
-- [ ] Test geocoding script locally:
-  ```bash
-  python scripts/geocode_data.py
-  ```
-
-- [ ] Test full pipeline locally:
-  ```bash
-  python scripts/clean_data.py && \
-  python scripts/geocode_data.py && \
-  npm run encrypt-data
-  ```
-
-- [ ] Test GitHub Actions workflow (manual trigger)
-- [ ] Verify backup branch created
-- [ ] Verify email notifications work
-- [ ] Verify deployed site updates correctly
-
-### Phase 5: Full Deployment
-
-- [ ] Enable scheduled workflow (6am & 6pm UTC)
-- [ ] Document new workflow for administrators
-- [ ] Update README.md
-- [ ] Monitor API usage closely (must stay under $5/month)
+### 4. Cost Ownership Transfer
+Transfer all operational costs to **Einstein Montefiore Hospital** or **Monisha**:
+- Squarespace hosting
+- Domain names
+- Any API costs
+- Document who owns logins, payment methods, and receives invoices
 
 ---
 
-## Required GitHub Secrets
+## Migration Plan: 6 Simple Phases
 
-| Secret Name | Description | Where to Get It |
-|------------|-------------|-----------------|
-| `GOOGLE_SHEETS_ID` | Google Sheet ID from URL | `https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit` |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` | Service account JSON key | Google Cloud Console → IAM & Admin → Service Accounts |
-| `GOOGLE_GEOCODING_API_KEY` | Geocoding API key | Google Cloud Console → APIs & Services → Credentials |
-| `REACT_APP_SECRET_KEY` | Encryption/auth secret | Existing `.secret_env` file (already synced) |
-| `NOTIFICATION_EMAIL_TO` | Email recipients | Comma-separated administrator emails |
+### Phase 1: Set Up Google Cloud (Week 1)
+**What:** Connect our system to Google's services  
+**Tasks:**
+- Create Google Cloud account
+- Enable Google Sheets API (for reading data)
+- Enable Geocoding API (for adding map coordinates)
+- Set up two-tab structure: "Working Copy" and "Production"
+- Share the production Google Sheet with our automation account
+
+### Phase 2: Automate Data Processing (Weeks 2-3)
+**What:** Replace manual Excel/Jupyter workflow with automated scripts  
+**Tasks:**
+- Build script to read from Production tab in Google Sheets
+- Build script to clean and validate data automatically
+- Build script to geocode new addresses automatically
+- Add sheet validation rules (required fields, email/URL formats)
+- Test with real data locally
+
+### Phase 3: Set Up GitHub Actions (Week 4)
+**What:** Make the system run automatically AND on-demand  
+**Tasks:**
+- Configure GitHub Actions for manual triggering (button in GitHub)
+- Configure scheduled runs (6am and 6pm UTC, optional)
+- Set up email notifications for success/failure
+- Create automatic backups before each update
+- Test the full automated pipeline
+
+### Phase 4: Train Monisha on Manual Deployment (Week 5)
+**What:** Enable Monisha to trigger deployments herself  
+**Tasks:**
+- Walk through GitHub login and navigation
+- Show how to trigger manual deployment (click "Run workflow")
+- Explain how to read deployment status and error messages
+- Practice with test data
+- Create quick-reference guide with screenshots
+
+### Phase 5: Testing & Refinement (Week 6)
+**What:** Make sure everything works reliably  
+**Tasks:**
+- Test two-tab workflow (Working Copy → Production)
+- Test various scenarios (new providers, edits, deletions)
+- Verify error handling (what happens if bad data is submitted)
+- Confirm email notifications work
+- Document common troubleshooting scenarios
+
+### Phase 6: Go Live & Cost Transfer (Weeks 7-8)
+**What:** Switch to the new system and finalize handoff  
+**Tasks:**
+- Enable scheduled automation (if desired) or keep manual-only
+- Create comprehensive admin guide
+- Monitor closely for first 2 weeks
+- Transfer Squarespace and domain costs to Einstein/Monisha
+- Final handoff meeting with Monisha
+
+**Total Timeline:** 8 weeks
 
 ---
 
-## Risk Management
+## How Administrators Will Use the New System
 
-### Potential Issues & Mitigations
+### The Two-Tab Workflow
 
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| **API quota exceeded** | Geocoding fails | Monitor usage, implement exponential backoff, use caching |
-| **Invalid data format** | Pipeline fails | Validation checks, detailed error emails, easy rollback via git |
-| **Service account auth fails** | Cannot read Sheet | Alerts via email, fallback to manual process |
-| **GitHub Actions down** | No updates | Manual workflow still available, system continues working |
-| **Bad data deployed** | App shows errors | Backup branches allow quick rollback, validation before deploy |
-| **Email notifications fail** | Unaware of failures | Always check GitHub Actions logs, consider Slack webhook |
-| **Geocoding API costs** | Unexpected charges | Set billing alerts in Google Cloud, monitor usage dashboard |
+**Working Copy Tab** = Your drafts and edits (safe zone)  
+**Production Tab** = Live data that gets deployed to the website
 
-### Rollback Procedures
+### Adding or Editing Providers
 
-**Scenario 1: Bad data deployed**
-```bash
-# Find last good commit
-git log --oneline -- src/secureDataBlob.ts
+1. Open the Google Sheet
+2. Go to the **Working Copy** tab
+3. Make your changes:
+   - Add new rows for new providers
+   - Edit existing rows to update information
+   - Delete rows if needed
+4. Review your changes (check for typos, required fields)
+5. When satisfied, **select all rows in Working Copy**
+6. Copy and paste to **Production** tab (overwrite the old data)
+7. Trigger deployment:
+   - **Option A (Manual):** Go to GitHub Actions → Click "Run workflow"
+   - **Option B (Scheduled):** Wait for next scheduled run (6am or 6pm UTC)
+8. Website updates within ~10 minutes
 
-# Revert to previous version
-git revert <commit-hash>
-git push origin main
+### Why This Is Safe
 
-# Or restore from backup branch
-git checkout data-backup-YYYY-MM-DD-HHMMSS -- data.csv src/secureDataBlob.ts
-git commit -m "Restore from backup"
-git push origin main
-```
+- Changes in Working Copy don't affect the live site
+- You can make multiple edits and review before publishing
+- If something breaks, just restore Production from a backup
+- Sheet validation prevents common errors (bad emails, missing required fields)
 
-**Scenario 2: Pipeline completely broken**
-```bash
-# Temporarily disable scheduled workflow
-# Go to: .github/workflows/scheduled-update.yml
-# Comment out the schedule trigger
-# Fall back to manual process until fixed
-```
+### What Happens If Something Goes Wrong
 
-**Scenario 3: Geocoding API issues**
-```python
-# Modify geocode_data.py to skip geocoding
-# Just copy existing lat/lng from previous data
-# Deploy without new geocoding until API restored
-```
+- System sends email notification with error details
+- Bad data is NOT deployed (fails safely)
+- Previous good version stays live
+- Developer can restore from automatic backup if needed
 
 ---
 
-## Cost Estimates
+## Cost Summary
 
-### Google Cloud (Monthly)
+### Current Costs
+- **GitHub Pages** (App Hosting): **Free**
+- **GitHub Actions** (Automated Deployment): **Free** (under 2,000 min/month)
+- **Google Sheets + Google AppScript** (Manual Geocoding): **Free, but manual**
 
-- **Google Sheets API:** Free (within generous quotas)
-- **Google Geocoding API:**
-  - Cost: $5 per 1,000 requests
-  - **CRITICAL:** Must implement incremental geocoding (skip rows with valid lat/lng)
-  - With incremental updates: Only geocode new/changed addresses
-  - Target: < 1,000 requests/month = **< $5/month**
-  - **Strategy:** Cache existing geocoded data, only process new entries
+### New Costs (After Automation)
+- **Google Cloud Platform** (Geocoding API): **~$0.05-$0.25/month** (only ~10-20 new addresses/month at $0.005 per lookup)
+- **Google Sheets API** (Data Reading): **Free**
+- **GitHub Actions** (Automated Deployment): **Free** (under 2,000 min/month)
+- Everything else: **Free**
 
-### GitHub Actions (Monthly)
-- Free tier: 2,000 minutes/month
-- Estimated usage: ~10 min/run × 60 runs = 600 min/month
-- Cost: **$0/month**
+### Costs to Transfer to Einstein/Monisha
+- **Squarespace** (Web Presence/Domain): Need to identify current plan/cost
+- **Domain Registration** (if separate): If applicable
+- **Google Cloud Platform** (Geocoding API): ~$0.05-$0.25/month
+- Any email services (if applicable)
 
-### Total Target Cost: **< $5/month**
+**Total ongoing cost: Less than $1/month** (mostly negligible GCP charges)
+
+---
+
+## Security & Privacy Notes
+
+- Provider data is **encrypted** before deploying to the website
+- Only people with the secret key can view the data
+- Credential documents stored in **private Google Drive** (admin access only)
+- System validates data before publishing (catches email/URL errors)
+- Automatic backups before every update
+- Easy rollback if bad data is published
+
+---
+
+## Next Steps
+
+1. **Decision:** Approve this 8-week migration plan
+2. **Action:** Set up Google Cloud account (Week 1)
+3. **Action:** Identify all services to transfer to Einstein/Monisha
+4. **Action:** Set up two-tab structure in Google Sheet (Working Copy + Production)
+5. **Schedule:** Plan Monisha's training session (Week 5)
 
 **End of Document**
-

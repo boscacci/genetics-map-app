@@ -104,6 +104,10 @@ When you push to `main`:
 
 No sensitive data (CSV or secret key) is exposed - only the encrypted blob and hash are in the deployed app.
 
+## 🗺️ Architecture diagram
+
+See `docs/architecture.md` for a graphical view of the full pipeline (Excel/Sheets ingestion → cleaning/geocoding → encryption → CI build → GitHub Pages) and the runtime auth/decryption flow.
+
 ---
 
 This project was created in Cursor as a way to learn React and TypeScript from scratch. While it may not be perfect, it represents a genuine effort to make genetic professional data more accessible and visually engaging.
