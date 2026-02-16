@@ -1,0 +1,64 @@
+name: Sync and Deploy
+
+# Promote Working Copy → Production, export to CSV, encrypt, build, deploy.
+# Sheet is the primary source of truth.
+
+on:
+  schedule:
+    # Every 4 hours
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create GCP credentials
+        run: |
+          mkdir -p .gcp-credentials
+          # GCP_SA_KEY should be base64-encoded JSON: base64 -w0 genetics-map-sa-key.json | pbcopy
+          echo '${{ secrets.GCP_SA_KEY }}' | base64 -d > .gcp-credentials/genetics-map-sa-key.json
+          echo '${{ secrets.SHEET_ID }}' > .gcp-credentials/sheet-id.txt
+
+      - name: Promote Working Copy → Production
+        run: npm run promote
+
+      - name: Backup Production (2d / 1w / 3w safeguards)
+        run: node scripts/backup-production.js
+
+      - name: Export Production to CSV
+        run: node scripts/export-production-to-csv.js
+
+      - name: Encrypt data
+        run: npm run encrypt-data
+
+      - name: Generate secret hash for App.tsx
+        run: node scripts/hash-secret.js
+
+      - name: Update secret hash in App.tsx
+        run: |
+          HASH=$(grep REACT_APP_SECRET_HASH .env.generated | cut -d'=' -f2)
+          sed -i "s|const SECRET_HASH = \"[a-f0-9]*\";|const SECRET_HASH = \"$HASH\";|" src/App.tsx
+
+      - name: Build app
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: gh-pages

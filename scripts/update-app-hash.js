@@ -8,7 +8,7 @@ const appTsxPath = path.resolve(__dirname, '../src/App.tsx');
 
 // Read the generated hash
 if (!fs.existsSync(envGeneratedPath)) {
-  console.error('Error: .env.generated not found. Run "node hash-secret.js" first.');
+  console.error('Error: .env.generated not found. Run "node scripts/hash-secret.js" first.');
   process.exit(1);
 }
 
