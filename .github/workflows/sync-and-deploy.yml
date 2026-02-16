@@ -108,7 +108,7 @@ jobs:
     steps:
       - name: Capture workflow logs
         run: |
-          gh run view ${{ github.run_id }} --log 2>&1 | tail -1000 > failure-log.txt
+          gh run view ${{ github.run_id }} --repo ${{ github.repository }} --log 2>&1 | tail -1000 > failure-log.txt
         env:
           GH_TOKEN: ${{ github.token }}
 
