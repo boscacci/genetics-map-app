@@ -29,21 +29,40 @@ jobs:
       - name: Create GCP credentials
         run: |
           mkdir -p .gcp-credentials
-          # GCP_SA_KEY should be base64-encoded JSON: base64 -w0 genetics-map-sa-key.json | pbcopy
           echo '${{ secrets.GCP_SA_KEY }}' | base64 -d > .gcp-credentials/genetics-map-sa-key.json
           echo '${{ secrets.SHEET_ID }}' > .gcp-credentials/sheet-id.txt
+          if [ -n "${{ secrets.GEOCODING_API_KEY }}" ]; then
+            echo '${{ secrets.GEOCODING_API_KEY }}' > .gcp-credentials/geocoding-api-key.txt
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Geocode Working Copy (fill missing lat/lng)
+        if: ${{ secrets.GEOCODING_API_KEY != '' }}
+        run: python scripts/geocode_working_copy.py
 
       - name: Promote Working Copy → Production
         run: npm run promote
 
-      - name: Backup Production (2d / 1w / 3w safeguards)
+      - name: Backup Production (separate sheets in Drive folder)
+        if: ${{ secrets.BACKUP_FOLDER_ID != '' }}
         run: node scripts/backup-production.js
+        env:
+          BACKUP_FOLDER_ID: ${{ secrets.BACKUP_FOLDER_ID }}
 
-      - name: Export Production to CSV
-        run: node scripts/export-production-to-csv.js
+      - name: Clean and validate Production (pandas, writes back to Sheet)
+        run: python scripts/clean_and_validate.py --output-stdout > /tmp/cleaned.csv
 
-      - name: Encrypt data
-        run: npm run encrypt-data
+      - name: Encrypt data (from Production via clean script output)
+        run: |
+          export DATA_CSV_BASE64=$(base64 -w0 /tmp/cleaned.csv)
+          npm run encrypt-data
 
       - name: Generate secret hash for App.tsx
         run: node scripts/hash-secret.js
@@ -62,3 +81,54 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
           publish_branch: gh-pages
+
+  notify-success:
+    needs: sync-and-deploy
+    if: success() && secrets.SMTP_USERNAME != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          secure: false
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "✅ Genetics Map: Sync and Deploy succeeded"
+          body: |
+            Sync and Deploy completed successfully.
+
+            Repository: ${{ github.repository }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          to: boscacci.data@gmail.com
+          from: Genetics Map Bot <${{ secrets.SMTP_USERNAME }}>
+
+  notify-failure:
+    needs: sync-and-deploy
+    if: failure() && secrets.SMTP_USERNAME != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Capture workflow logs
+        run: |
+          gh run view ${{ github.run_id }} --log 2>&1 | tail -1000 > failure-log.txt
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          secure: false
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "❌ Genetics Map: Sync and Deploy failed"
+          body: |
+            Sync and Deploy workflow failed.
+
+            Repository: ${{ github.repository }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Last 1000 lines of workflow log are attached.
+          to: boscacci.data@gmail.com
+          from: Genetics Map Bot <${{ secrets.SMTP_USERNAME }}>
+          attachments: failure-log.txt
