@@ -318,8 +318,8 @@ def main():
         print("Error: Sheet ID not found at", SHEET_ID_PATH, file=sys.stderr)
         sys.exit(1)
     if not fix_cities_only and not API_KEY_PATH.exists():
-        print("Error: Geocoding API key not found at", API_KEY_PATH, file=sys.stderr)
-        sys.exit(1)
+        print("Skipping geocoding (no API key at", API_KEY_PATH, ")", file=sys.stderr)
+        return
     api_key = API_KEY_PATH.read_text().strip() if not fix_cities_only else ""
     spreadsheet_id = SHEET_ID_PATH.read_text().strip()
 
@@ -332,7 +332,7 @@ def main():
     print("Reading Working Copy...", flush=True)
     result = sheets.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id,
-        range="'Working Copy'!A:N",
+        range="'Working Copy'!A:O",
     ).execute()
     rows = result.get("values", [])
     if len(rows) < 2:
@@ -356,7 +356,7 @@ def main():
         print("Writing to Working Copy...", flush=True)
         sheets.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
-            range="'Working Copy'!A1:N",
+            range="'Working Copy'!A1:O",
             valueInputOption="USER_ENTERED",
             body={"values": out_rows},
         ).execute()
@@ -419,7 +419,7 @@ def main():
     print("Writing to Working Copy...")
     sheets.spreadsheets().values().update(
         spreadsheetId=spreadsheet_id,
-        range="'Working Copy'!A1:N",
+        range="'Working Copy'!A1:O",
         valueInputOption="USER_ENTERED",
         body={"values": out_rows},
     ).execute()

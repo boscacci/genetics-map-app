@@ -44,14 +44,12 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Geocode Working Copy (fill missing lat/lng)
-        if: ${{ secrets.GEOCODING_API_KEY != '' }}
         run: python scripts/geocode_working_copy.py
 
       - name: Promote Working Copy → Production
         run: npm run promote
 
       - name: Backup Production (separate sheets in Drive folder)
-        if: ${{ secrets.BACKUP_FOLDER_ID != '' }}
         run: node scripts/backup-production.js
         env:
           BACKUP_FOLDER_ID: ${{ secrets.BACKUP_FOLDER_ID }}
@@ -84,7 +82,7 @@ jobs:
 
   notify-success:
     needs: sync-and-deploy
-    if: success() && secrets.SMTP_USERNAME != ''
+    if: success()
     runs-on: ubuntu-latest
     steps:
       - uses: dawidd6/action-send-mail@v3
@@ -105,7 +103,7 @@ jobs:
 
   notify-failure:
     needs: sync-and-deploy
-    if: failure() && secrets.SMTP_USERNAME != ''
+    if: failure()
     runs-on: ubuntu-latest
     steps:
       - name: Capture workflow logs
