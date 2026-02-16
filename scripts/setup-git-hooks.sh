@@ -12,9 +12,9 @@ mkdir -p "$HOOKS_DIR"
 cat > "$PRE_COMMIT_HOOK" <<'HOOK'
 #!/bin/sh
 
-# Check if data.csv is staged for commit
-if git diff --cached --name-only | grep -q "^data.csv$"; then
-  echo "[pre-commit] data.csv changed - encrypting to src/secureDataBlob.ts"
+# Check if data/data.csv is staged for commit
+if git diff --cached --name-only | grep -q "^data/data.csv$"; then
+  echo "[pre-commit] data/data.csv changed - encrypting to src/secureDataBlob.ts"
   
   node scripts/process-data.js
   status=$?
@@ -32,7 +32,7 @@ fi
 if git diff --cached --name-only | grep -q "^.secret_env$"; then
   echo "[pre-commit] .secret_env changed - updating hash in App.tsx"
   
-  node hash-secret.js && node scripts/update-app-hash.js
+  node scripts/hash-secret.js && node scripts/update-app-hash.js
   status=$?
   if [ $status -ne 0 ]; then
     echo "[pre-commit] Hash update failed (exit $status); aborting commit."

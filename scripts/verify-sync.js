@@ -37,7 +37,7 @@ if (fs.existsSync(envGeneratedPath)) {
     process.exit(1);
   }
 } else {
-  console.error('❌ .env.generated not found - run: node hash-secret.js');
+  console.error('❌ .env.generated not found - run: node scripts/hash-secret.js');
   process.exit(1);
 }
 

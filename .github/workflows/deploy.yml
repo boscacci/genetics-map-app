@@ -25,7 +25,7 @@ jobs:
         run: npm ci
 
       - name: Generate secret hash for App.tsx
-        run: node hash-secret.js
+        run: node scripts/hash-secret.js
 
       - name: Update secret hash in App.tsx
         run: |

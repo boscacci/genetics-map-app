@@ -18,6 +18,17 @@ This app provides an interactive map and directory of genetic professionals from
 - PapaParse (for CSV parsing)
 - CryptoJS (for AES encryption)
 
+## 📁 Project Structure
+
+```
+├── data/           # CSV inputs (data.csv), Excel exports
+├── docs/            # Planning and architecture (_AUTOMATION_PLAN.md)
+├── notebooks/       # Jupyter notebooks for data processing
+├── scripts/         # Build scripts (process-data, hash-secret, etc.)
+├── src/             # React app source
+└── public/          # Static assets
+```
+
 ## 🔐 Authentication & Security
 
 This app uses a key-based authentication system to protect the genetic counselor data:
@@ -46,14 +57,14 @@ npm run setup:hooks
 ```
 
 This installs:
-- **Pre-commit hook**: Automatically encrypts `data.csv` into `src/secureDataBlob.ts` when you commit changes
+- **Pre-commit hook**: Automatically encrypts `data/data.csv` into `src/secureDataBlob.ts` when you commit changes
 - **Pre-push hook**: Automatically syncs `.secret_env` key to GitHub Secrets
 
 ### Working with Data
 
-1. Edit `data.csv` locally (this file is gitignored)
+1. Edit `data/data.csv` locally (this file is gitignored)
 2. Commit your changes - the pre-commit hook automatically:
-   - Encrypts `data.csv` using the key from `.secret_env`
+   - Encrypts `data/data.csv` using the key from `.secret_env`
    - Generates `src/secureDataBlob.ts` with the encrypted data
    - Stages the encrypted blob for commit
 3. Push to GitHub - the pre-push hook automatically:
