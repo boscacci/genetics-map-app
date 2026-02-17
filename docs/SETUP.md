@@ -29,7 +29,12 @@ The service account cannot create new files (GCP default). Create the sheet with
 
 ## Part 2: GitHub Actions
 
-The **Sync and Deploy** workflow runs every 4 hours (cron) and on manual trigger. No local Node or CSV—the Sheet is the sole source.
+Two workflows use the Sheet as the sole source (no local Node or CSV):
+
+| Workflow | Trigger | What it does |
+|----------|---------|--------------|
+| **Promote Only** | Manual only | Geocode, promote, clean, backup. Updates Production tab without deploying. |
+| **Sync and Deploy** | Every 4h (cron) + manual | Same steps plus encrypt, build, deploy. Publishes to live site. |
 
 ### Required secrets
 
@@ -65,7 +70,7 @@ Create 3 blank sheets in a Drive folder: "Genetics Map Backup (2 days ago)", "Ge
 
 ## Verify
 
-1. **Actions** → **Sync and Deploy** → **Run workflow**
+1. **Actions** → **Promote Only** or **Sync and Deploy** → **Run workflow**
 2. Watch the run. Common failures:
 
    | Failing step | Likely cause |
@@ -82,4 +87,4 @@ Create 3 blank sheets in a Drive folder: "Genetics Map Backup (2 days ago)", "Ge
 
 ## Schedule
 
-Runs at **00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC** (every 4 hours). `workflow_dispatch` runs immediately.
+**Sync and Deploy** runs at 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC (every 4 hours). Both workflows support manual trigger via `workflow_dispatch`.

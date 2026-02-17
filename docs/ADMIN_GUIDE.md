@@ -8,8 +8,8 @@ No technical experience needed. Edit the Google Sheet, then click one button to 
 ## Quick Start (3 Steps)
 
 1. **Edit** the Google Sheet → Working Copy tab
-2. **Promote** (Sheet macro: Genetics Map → Promote to Production, or trigger Sync and Deploy)
-3. **Publish** → GitHub → Actions → Sync and Deploy → Run workflow
+2. **Promote** (Sheet macro, **Promote Only** workflow, or **Sync and Deploy**)
+3. **Publish** → GitHub → Actions → **Sync and Deploy** → Run workflow (when ready to go live)
 
 ---
 
@@ -19,7 +19,7 @@ The Genetics Map shows genetic counselors and specialists around the world. You 
 
 **Two places you'll use:**
 - **Google Sheet** — add, edit, remove providers
-- **GitHub Actions** — click Run workflow to publish
+- **GitHub Actions** — run **Promote Only** (stage changes) or **Sync and Deploy** (publish to live site)
 
 ---
 
@@ -34,13 +34,19 @@ The Genetics Map shows genetic counselors and specialists around the world. You 
 
 ## Step 2: Promote Working Copy to Production
 
-**Option A (in the Sheet):** Extensions → Apps Script → Run `promoteWorkingCopyToProduction`, or menu **Genetics Map** → **Promote to Production**
+Promoting updates the Production tab (geocoded, cleaned) to match what would appear on the live app.
 
-**Option B:** Run Sync and Deploy (Step 3) — it promotes automatically.
+**Option A (in the Sheet):** Extensions → Apps Script → Run `promoteWorkingCopyToProduction`, or menu **Genetics Map** → **Promote to Production** — updates Production only; no geocoding.
+
+**Option B (GitHub Actions — recommended):** Run **Promote Only** — Geocode, promote, clean, backup. Updates Production without publishing. Use to stage and review before going live.
+
+**Option C:** Run **Sync and Deploy** (Step 3) — does the same as Promote Only, then encrypts, builds, and deploys to the live site.
 
 ---
 
 ## Step 3: Publish to the Live Map
+
+When Production looks good and you want to go live:
 
 1. Go to **GitHub.com** → Genetics Map repository
 2. Click the **Actions** tab
@@ -48,6 +54,11 @@ The Genetics Map shows genetic counselors and specialists around the world. You 
 4. Click **Run workflow**
 5. Wait 2–5 minutes. Green check = success; red X = failure
 6. Map updates in ~5–10 minutes
+
+| Workflow | What it does |
+|----------|--------------|
+| **Promote Only** | Geocode, promote, clean, backup. Updates Production tab; no website change. |
+| **Sync and Deploy** | Same steps plus encrypt, build, deploy. Publishes to live site. |
 
 ---
 
@@ -71,15 +82,15 @@ The Genetics Map shows genetic counselors and specialists around the world. You 
 
 ## If Something Fails
 
-### Workflow (Sync and Deploy)
+### Workflow (Promote Only or Sync and Deploy)
 
 | Symptom | Fix |
 |---------|-----|
 | Red X on workflow | Click run → read error. Common: wrong SHEET_ID, sheet not shared with service account |
 | Promote fails | Working Copy has data; sheet shared with genetics-map-automation@... as Editor |
 | Clean fails | Run promote first (Production empty) |
-| Encrypt/Build fails | `REACT_APP_SECRET_KEY` missing in GitHub Secrets |
-| Edits not on map | Promote ran? Publish ran? Both needed |
+| Encrypt/Build fails (Sync and Deploy only) | `REACT_APP_SECRET_KEY` missing in GitHub Secrets |
+| Edits not on map | Promote ran? Publish (Sync and Deploy) ran? Both needed |
 
 ### Data issues
 
@@ -101,6 +112,6 @@ If bad data was published: Restore Production from one of the 3 backup sheets in
 | Action | How |
 |--------|-----|
 | Edit | Working Copy tab only |
-| Promote | Genetics Map → Promote, or run Sync and Deploy |
-| Publish | GitHub → Actions → Sync and Deploy → Run workflow |
+| Promote (stage) | Genetics Map → Promote, or GitHub → Actions → **Promote Only** → Run workflow |
+| Publish (go live) | GitHub → Actions → **Sync and Deploy** → Run workflow |
 | Phone with + | Type `'` first |

@@ -10,20 +10,22 @@ Pipeline overview, secrets, backup, and cost transfer checklist.
 Google Sheet (Working Copy + Production)
     ↓ Geocode (fill missing lat/lng)
     ↓ Promote (WC → Production, name/phone cleanup)
-    ↓ Backup (3 Drive sheets: 2d, 1w, 3w)
     ↓ Clean & validate (pandas, writes back to Production)
+    ↓ Backup (3 Drive sheets: 2d, 1w, 3w)
     ↓ Encrypt (AES → secureDataBlob.ts)
     ↓ Build (React)
     ↓ Deploy (GitHub Pages)
 → Live map
 ```
 
+**Workflows:** **Promote Only** runs steps 1–4 (Geocode through Backup); Production is updated but no deploy. **Sync and Deploy** runs the full pipeline and publishes to the live site (scheduled every 4h or manual).
+
 | Step | Script | Input | Output |
 |------|--------|-------|--------|
 | Geocode | `geocode_working_copy.py` | Working Copy | lat/lng/city/country to WC |
 | Promote | `promote-to-production.js` | WC, Production | Production |
-| Backup | `backup-production.js` | Production | 3 Drive sheets |
 | Clean | `clean_and_validate.py` | Production | Production + CSV |
+| Backup | `backup-production.js` | Production | 3 Drive sheets |
 | Encrypt | `process-data.js` | CSV | secureDataBlob.ts |
 | Build | react-scripts | source + blob | build/ |
 | Deploy | gh-pages | build/ | GitHub Pages |
@@ -83,4 +85,5 @@ Columns: name_first, name_last, email, phone_work, work_website, work_institutio
 ### Handoff notes
 
 - Two-week monitoring and email support post-launch
-- Quick deploy: GitHub → Actions → Sync and Deploy → Run workflow
+- Promote Only: stage changes without publishing
+- Sync and Deploy: publish to live site

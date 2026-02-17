@@ -10,7 +10,7 @@
 ## 🔴 REMAINING WORK
 
 ### Completed (Phases 1–4, most of 5)
-- Pipeline: Geocode → Promote → Backup → Clean → Encrypt → Build → Deploy ✅
+- Pipeline: Geocode → Promote → Clean → Backup → Encrypt → Build → Deploy ✅
 - Admin guide, troubleshooting, system architecture, cost transfer docs ✅
 - Bugs fixed: nan→Anonymous; name search (type 2+ chars); NYC alias; country #strip ✅
 - Email notifications on failure only ✅
@@ -145,7 +145,7 @@ Transfer all operational costs to **Einstein Montefiore Hospital** or **Monisha*
 - **Credential Documents (Key Req 3):** ✅ `credential_link` column in sheet; Drive folder for credential PDFs. Excluded from public CSV.
 - Test with real data ✅ (via Sync and Deploy run)
 
-**Sync workflow:** Geocode → Promote → Backup → **Clean & validate** → Encrypt (DATA_CSV_BASE64) → Build → Deploy.
+**Sync workflow:** Geocode → Promote → **Clean & validate** → Backup → Encrypt (DATA_CSV_BASE64) → Build → Deploy.
 
 ### Phase 3: Set Up GitHub Actions (Week 4) ✅ COMPLETE
 **What:** Make the system run automatically AND on-demand *(Deliverables: GitHub Actions deployment, automated backup, email notifications)*  
@@ -287,8 +287,8 @@ GitHub Action `sync-and-deploy` runs every 4 hours (0:00, 4:00, 8:00, 12:00, 16:
 
 1. **Geocode** Working Copy (skips when no API key) — fills missing lat/lng
 2. Promote Working Copy → Production (in the sheet, with name/phone cleanup)
-3. **Backup** Production to 3 separate Drive files (2d / 1w / 3w staggered)
-4. Clean and validate (pandas, reads/writes Production via Sheets API)
+3. Clean and validate (pandas, reads/writes Production via Sheets API)
+4. **Backup** Production to 3 separate Drive files (2d / 1w / 3w staggered)
 5. Encrypt and build the React app
 6. Deploy to GitHub Pages
 

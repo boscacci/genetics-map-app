@@ -1,19 +1,14 @@
-name: Sync and Deploy
+name: Promote Only
 
-# Promote Working Copy → Production, export to CSV, encrypt, build, deploy.
-# Sheet is the primary source of truth.
+# Geocode, promote, backup, clean. Updates Production tab without deploying to live site.
+# Use to stage and review changes before publishing.
 
 on:
-  schedule:
-    # Every 4 hours
-    - cron: '0 */4 * * *'
   workflow_dispatch:
 
 jobs:
-  sync-and-deploy:
+  promote-only:
     runs-on: ubuntu-latest
-    env:
-      REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,38 +45,15 @@ jobs:
         run: npm run promote
 
       - name: Clean and validate Production (pandas, writes back to Sheet)
-        run: python scripts/clean_and_validate.py --output-stdout > /tmp/cleaned.csv
+        run: python scripts/clean_and_validate.py
 
       - name: Backup Production (separate sheets in Drive folder)
         run: node scripts/backup-production.js
         env:
           BACKUP_FOLDER_ID: ${{ secrets.BACKUP_FOLDER_ID }}
 
-      - name: Encrypt data (from Production via clean script output)
-        run: |
-          export DATA_CSV_BASE64=$(base64 -w0 /tmp/cleaned.csv)
-          npm run encrypt-data
-
-      - name: Generate secret hash for App.tsx
-        run: node scripts/hash-secret.js
-
-      - name: Update secret hash in App.tsx
-        run: |
-          HASH=$(grep REACT_APP_SECRET_HASH .env.generated | cut -d'=' -f2)
-          sed -i "s|const SECRET_HASH = \"[a-f0-9]*\";|const SECRET_HASH = \"$HASH\";|" src/App.tsx
-
-      - name: Build app
-        run: npm run build
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build
-          publish_branch: gh-pages
-
   notify-failure:
-    needs: sync-and-deploy
+    needs: promote-only
     if: failure()
     runs-on: ubuntu-latest
     steps:
@@ -98,9 +70,9 @@ jobs:
           secure: false
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "❌ Genetics Map: Sync and Deploy failed"
+          subject: "❌ Genetics Map: Promote Only failed"
           body: |
-            Sync and Deploy workflow failed.
+            Promote Only workflow failed.
 
             Repository: ${{ github.repository }}
             Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
