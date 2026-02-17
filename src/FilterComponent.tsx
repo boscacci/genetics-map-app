@@ -166,18 +166,6 @@ const getUniqueSpecialties = (arr: (string | undefined)[]): string[] => {
   return [...specialties].sort();
 };
 
-// Helper to build provider name options from a list of specialists
-const buildProviderNameOptions = (specialists: MapPoint[]): SelectOption[] => {
-  const names = new Set<string>();
-  specialists.forEach(specialist => {
-    if (specialist.name_first && specialist.name_last) {
-      const fullName = `${specialist.name_first} ${specialist.name_last}`.trim();
-      if (fullName) names.add(fullName);
-    }
-  });
-  return Array.from(names).sort().map(name => ({ value: name, label: name }));
-};
-
 // Helper function to convert array to select options
 const toSelectOptions = (values: string[]) => {
   return values.map(value => ({ value, label: value }));
@@ -188,7 +176,8 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
-  const [selectedProviderNames, setSelectedProviderNames] = useState<SelectOption[]>([]);
+  const [nameSearchQuery, setNameSearchQuery] = useState<string>('');
+  const [nameInputValue, setNameInputValue] = useState<string>('');
   const [position, setPosition] = useState({ x: 28, y: 28 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -324,12 +313,12 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
         );
       });
     }
-    if (selectedProviderNames.length > 0) {
-      const selectedNames = selectedProviderNames.map(option => option.value);
+    if (nameSearchQuery.trim()) {
+      const q = nameSearchQuery.trim().toLowerCase();
       filtered = filtered.filter(s => {
-        if (s.name_first && s.name_last) {
-          const fullName = `${s.name_first} ${s.name_last}`.trim();
-          return selectedNames.includes(fullName);
+        if (s.name_first || s.name_last) {
+          const fullName = `${s.name_first || ''} ${s.name_last || ''}`.trim().toLowerCase();
+          return fullName.includes(q);
         }
         return false;
       });
@@ -355,10 +344,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   const availableSpecialties = getRemainingSpecialists(() => true)
     .map(s => s.specialties)
     .filter(Boolean);
-  const availableNameOptions: SelectOption[] = buildProviderNameOptions(
-    getRemainingSpecialists(() => true)
-  );
-
   // Extract unique values for filters
   const countries = [...new Set(availableCountries)].sort();
   const cities = [...new Set(availableCities)].sort();
@@ -421,7 +406,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   // Apply filters when selections change
   useEffect(() => {
     applyFilters();
-  }, [selectedCountries, selectedCities, selectedLanguages, selectedSpecialties, selectedProviderNames]);
+  }, [selectedCountries, selectedCities, selectedLanguages, selectedSpecialties, nameSearchQuery]);
 
   const applyFilters = () => {
     let filtered = [...specialists];
@@ -478,13 +463,13 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
       });
     }
 
-    // Filter by provider names
-    if (selectedProviderNames.length > 0) {
-      const selectedNames = selectedProviderNames.map(option => option.value);
+    // Filter by name search (applied on Enter)
+    if (nameSearchQuery.trim()) {
+      const q = nameSearchQuery.trim().toLowerCase();
       filtered = filtered.filter(s => {
-        if (s.name_first && s.name_last) {
-          const fullName = `${s.name_first} ${s.name_last}`.trim();
-          return selectedNames.includes(fullName);
+        if (s.name_first || s.name_last) {
+          const fullName = `${s.name_first || ''} ${s.name_last || ''}`.trim().toLowerCase();
+          return fullName.includes(q);
         }
         return false;
       });
@@ -613,8 +598,12 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     setSelectedSpecialties(values);
   };
 
-  const handleProviderNameChange = (selectedOptions: SelectOption[] | null) => {
-    setSelectedProviderNames(selectedOptions || []);
+  const handleNameSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const v = (e.target as HTMLInputElement).value;
+      setNameSearchQuery(v);
+    }
   };
 
   // Handle dropdown state for z-index management
@@ -637,7 +626,8 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     setSelectedCities([]);
     setSelectedLanguages([]);
     setSelectedSpecialties([]);
-    setSelectedProviderNames([]);
+    setNameSearchQuery('');
+    setNameInputValue('');
   };
 
   // Show drag handle only on desktop, minimize button on mobile
@@ -833,27 +823,14 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
             </div>
             <div className="filter-group">
               <label>Name</label>
-              <Select
-                isMulti
-                options={availableNameOptions}
-                onChange={handleProviderNameChange}
-                placeholder="Type 2+ chars to search..."
-                value={selectedProviderNames}
-                isSearchable
-                filterOption={(option, inputValue) => {
-                  if (!inputValue || inputValue.trim().length < 2) return false;
-                  return option.label.toLowerCase().includes(inputValue.toLowerCase().trim());
-                }}
-                noOptionsMessage={() => 'Type at least 2 characters to search'}
-                className="react-select-container"
-                classNamePrefix="react-select"
-                menuPortalTarget={document.body}
-                styles={{
-                  menuPortal: (base) => ({
-                    ...base,
-                    zIndex: 999999
-                  })
-                }}
+              <input
+                type="text"
+                className="filter-input"
+                placeholder="Search by name, press Enter"
+                value={nameInputValue}
+                onChange={(e) => setNameInputValue(e.target.value)}
+                onKeyDown={handleNameSearchKeyDown}
+                aria-label="Search by provider name"
               />
             </div>
           </div>
