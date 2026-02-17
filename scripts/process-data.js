@@ -16,14 +16,14 @@ if (!SECRET_KEY) {
   throw new Error('Missing secret: set REACT_APP_SECRET_KEY as a GitHub secret or provide it in .secret_env');
 }
 
-// Read and parse CSV
+// Read and parse CSV. In CI, DATA_CSV_BASE64 is always set—use it and ignore local data.csv.
 const csvPath = path.resolve(__dirname, '../data/data.csv');
 let csvContent;
-if (fs.existsSync(csvPath)) {
-  csvContent = fs.readFileSync(csvPath, 'utf8');
-} else if (process.env.DATA_CSV_BASE64) {
+if (process.env.DATA_CSV_BASE64) {
   csvContent = Buffer.from(process.env.DATA_CSV_BASE64, 'base64').toString('utf8');
   console.log('Loaded CSV data from DATA_CSV_BASE64 environment variable.');
+} else if (fs.existsSync(csvPath)) {
+  csvContent = fs.readFileSync(csvPath, 'utf8');
 } else {
   throw new Error('No data/data.csv file found and DATA_CSV_BASE64 environment variable is not set.');
 }
