@@ -19,10 +19,10 @@
     "full-sync": "npm run prepare-local && npm run verify && npm run sync-secrets",
     "test:gcp": "node scripts/test-gcp-apis.js",
     "setup:sheet": "node scripts/configure-existing-sheet.js",
-    "backfill:working-copy": "node scripts/backfill-working-copy.js",
     "promote": "node scripts/promote-to-production.js",
     "export:production": "node scripts/export-production-to-csv.js",
-    "backup:production": "node scripts/backup-production.js"
+    "backup:production": "node scripts/backup-production.js",
+    "clean:data": "python scripts/clean_and_validate.py"
   },
   "keywords": [],
   "author": "",

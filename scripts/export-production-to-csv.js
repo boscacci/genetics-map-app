@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 /**
- * Export Production tab from Google Sheet to CSV.
- * Used by the sync-and-deploy workflow: Sheet is source of truth.
+ * Export Production tab from Google Sheet to CSV (optional, for manual inspection).
+ * NOT used in the sync workflow—deploy reads directly from Sheet via clean_and_validate.py.
  *
  * Reads Production → writes data/data.csv
- * Accepts credentials from env (GCP_SA_KEY, SHEET_ID) for CI, or local files.
- *
- * Run: node scripts/export-production-to-csv.js
+ * Run: node scripts/export-production-to-csv.js (or npm run export:production)
  */
 
 const fs = require('fs');
@@ -18,7 +16,8 @@ const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-m
 const SHEET_ID_PATH = path.resolve(__dirname, '../.gcp-credentials/sheet-id.txt');
 const CSV_OUTPUT_PATH = path.resolve(__dirname, '../data/data.csv');
 
-const HEADERS = [
+// Exclude credential_link (admin-only) from export
+const PUBLIC_HEADERS = [
   'name_first', 'name_last', 'email', 'phone_work', 'work_website', 'work_institution',
   'work_address', 'language_spoken', 'uses_interpreters', 'specialties',
   'Latitude', 'Longitude', 'City', 'Country'
@@ -47,7 +46,7 @@ async function main() {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'Production'!A:N",
+    range: "'Production'!A:O",
   });
   const rows = res.data.values || [];
 
@@ -61,13 +60,13 @@ async function main() {
 
   const data = dataRows.map((row) => {
     const obj = {};
-    HEADERS.forEach((h, i) => {
+    PUBLIC_HEADERS.forEach((h, i) => {
       obj[h] = row[i] ?? '';
     });
     return obj;
   });
 
-  const csv = Papa.unparse(data, { header: true, columns: HEADERS });
+  const csv = Papa.unparse(data, { header: true, columns: PUBLIC_HEADERS });
 
   fs.mkdirSync(path.dirname(CSV_OUTPUT_PATH), { recursive: true });
   fs.writeFileSync(CSV_OUTPUT_PATH, csv, 'utf8');

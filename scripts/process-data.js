@@ -44,11 +44,15 @@ const cleanLanguageString = (languageString) => {
     .replace(/\s+/g, ' ')
     .trim();
 };
-// Helper function to convert NaN to empty string
+const PLACEHOLDER_NAMES = new Set(['nan', 'n/a', 'na', 'null', 'undefined', '-', '--', '']);
+
+// Helper function to convert NaN/placeholders to empty string
 const cleanValue = (value) => {
   if (value === null || value === undefined || (typeof value === 'number' && Number.isNaN(value))) {
     return '';
   }
+  const s = String(value).trim().toLowerCase();
+  if (PLACEHOLDER_NAMES.has(s)) return '';
   return value;
 };
 
@@ -56,11 +60,9 @@ const parsedData = (data).filter((item) => {
   return item.Latitude && item.Longitude &&
     !Number.isNaN(Number(item.Latitude)) && !Number.isNaN(Number(item.Longitude));
 }).map((item) => {
-  // Handle First Name field specifically
+  // Handle First Name field specifically (cleanValue treats nan/n/a/etc as '')
   let firstName = cleanValue(item.name_first);
   let lastName = cleanValue(item.name_last);
-  
-  // If First Name is empty/NaN, set to "Anonymous Contributor" and clear last name
   if (!firstName || firstName === '') {
     firstName = 'Anonymous Contributor';
     lastName = '';

@@ -80,27 +80,6 @@ jobs:
           publish_dir: ./build
           publish_branch: gh-pages
 
-  notify-success:
-    needs: sync-and-deploy
-    if: success()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          secure: false
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "✅ Genetics Map: Sync and Deploy succeeded"
-          body: |
-            Sync and Deploy completed successfully.
-
-            Repository: ${{ github.repository }}
-            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          to: boscacci.data@gmail.com
-          from: Genetics Map Bot <${{ secrets.SMTP_USERNAME }}>
-
   notify-failure:
     needs: sync-and-deploy
     if: failure()

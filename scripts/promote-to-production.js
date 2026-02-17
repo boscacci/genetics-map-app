@@ -26,7 +26,7 @@ async function loadPhoneFallback(sheets, spreadsheetId) {
   try {
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: "'Production'!A:N",
+      range: "'Production'!A:O",
     });
     const rows = res.data.values || [];
     const map = new Map();
@@ -62,7 +62,7 @@ async function main() {
   console.log('Reading Working Copy...');
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'Working Copy'!A:N",
+    range: "'Working Copy'!A:O",
   });
   const rows = res.data.values || [];
 

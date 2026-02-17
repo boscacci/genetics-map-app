@@ -1,15 +1,38 @@
 # Genetics Map: Migration Plan
 
 **Last Updated:** February 16, 2026  
-**Status:** Phase 1 complete. Google Sheet is the primary source of truth. Working Copy → Production promotion every 4 hours via GitHub Actions.
+**Status:** Phases 1–3 complete. Automation pipeline runs every 4h; backup, geocoding, email notifications wired up.
+
+**Design:** All automation runs in GitHub Actions; no local deployment steps required.
 
 ---
 
-## Scope of Work (Contract)
+## 🔴 REMAINING WORK
 
-**This section contains the contractual language against which delivery and payment will be evaluated.**
+### Completed (Phases 1–4, most of 5)
+- Pipeline: Geocode → Promote → Backup → Clean → Encrypt → Build → Deploy ✅
+- Admin guide, troubleshooting, system architecture, cost transfer docs ✅
+- Bugs fixed: nan→Anonymous; name search (type 2+ chars); NYC alias; country #strip ✅
+- Email notifications on failure only ✅
 
-Consultant will migrate the Genetics Map provider data management system from manual Excel-based workflows to an automated Google Sheets pipeline with GitHub Actions deployment.
+### Remaining
+
+| Priority | Item | Notes |
+|----------|------|-------|
+| **Key Req 1** | Multi-lingual support | Squarespace wrapper: paid service if needed. Node map app: multi-language for filters, buttons, error messages. Survey data: no translation (display as entered). |
+| **Phase 5** | Mobile UI: nav bar | Fix Squarespace/map embed so users can't accidentally lose the top nav bar on mobile |
+| **Phase 5** | Map access after signup | Make it obvious how to get to the map after account creation |
+| **Phase 5** | UI scrolling | Scrolling inside vs outside map area — prevent loss of context |
+| **Phase 4** | Admin training | Walk through with Monisha; add screenshots to guide during session |
+| **Phase 6** | Handoff | Transfer costs, final meeting, two-week monitoring |
+
+---
+
+## Scope of Work
+
+**This section reflects what was detailed in the client contract.**
+
+The project migrates the Genetics Map provider data management system from manual Excel-based workflows to an automated Google Sheets pipeline with GitHub Actions deployment.
 
 **Final Deliverables:**
 - Functional automated data pipeline with geocoding integration
@@ -21,13 +44,13 @@ Consultant will migrate the Genetics Map provider data management system from ma
 - Cost transfer documentation (Squarespace, domain, GCP billing)
 - Two-week post-launch monitoring with email support
 
-**Additional Work (Bugs / Notes):**
-- People named "nan nan" showing up on map
-- Name search should not expose full list of names (don't auto-fill names)
-- Fix NYC geocoding: "New York City" is rendering as "NY"
-- Country field has weird value: "Mexico# Test comment"
-- UI: scrolling inside vs. outside map area; possible to lose navigation bar
-- Make it obvious how to get to the map after account creation
+**Additional Work (Refinements):**
+- Placeholder names (e.g. "nan nan") showing on map
+- Name search should not expose full list (no auto-fill)
+- NYC geocoding: "New York City" should render correctly (not "NY")
+- Country field artifacts (e.g. "Mexico# Test comment")
+- UI: scrolling inside vs. outside map area; navigation bar visibility on mobile
+- Make map access obvious after account creation
 
 ---
 
@@ -93,67 +116,80 @@ Transfer all operational costs to **Einstein Montefiore Hospital** or **Monisha*
 - Squarespace hosting
 - Domain names
 - Any API costs
-- Document who owns logins, payment methods, and receives invoices
+- Document who owns logins, billing, and receives invoices
 
 ---
 
 ## Migration Plan: 6 Simple Phases
 
+*Each phase addresses the **Final Deliverables**, **Key Requirements**, and **Additional Work** from the Scope above.*
+
 ### Phase 1: Set Up Google Cloud (Week 1) ✅ COMPLETE
-**What:** Connect our system to Google's services  
+**What:** Connect the system to Google's services  
 **Tasks:**
 - Create Google Cloud account ✅
 - Enable Google Sheets API (for reading data) ✅
 - Enable Geocoding API (for adding map coordinates) ✅
-- Set up two-tab structure: "Working Copy" and "Production" ✅
-- Share the production Google Sheet with our automation account ✅
+- Set up two-tab structure: "Working Copy" and "Production" ✅ (Key Req 2: Safe Data Entry)
+- Share the production Google Sheet with the automation service account ✅
 
 **Primary source of truth:** The Google Sheet is now the sole source. The `data/` folder seed data is deprecated—used only for one-time backfill. All live data flows: Working Copy (admin edits) → Production (via promote) → website (via scheduled sync).
 
-### Phase 2: Automate Data Processing (Weeks 2-3)
-**What:** Replace manual Excel/Jupyter workflow with automated scripts  
+### Phase 2: Automate Data Processing (Weeks 2-3) ✅ COMPLETE
+**What:** Replace manual Excel/Jupyter workflow with automated scripts *(Deliverable: functional data pipeline with geocoding)*  
 **Tasks:**
-- Build script to read from Production tab in Google Sheets
-- Build script to clean and validate data automatically
-- Build script to geocode new addresses automatically
-- Add sheet validation rules (required fields, email/URL formats)
-- Test with real data locally
+- Build script to read from Production tab in Google Sheets ✅
+- Build script to clean and validate data automatically ✅ (`clean_and_validate.py`)
+- Build script to geocode new addresses ✅ (`geocode_working_copy.py` in sync workflow; skips when no API key)
+- Add sheet validation rules (required fields, email/URL formats) ✅
+- **Credential Documents (Key Req 3):** ✅ `credential_link` column in sheet; Drive folder for credential PDFs. Excluded from public CSV.
+- Test with real data ✅ (via Sync and Deploy run)
 
-### Phase 3: Set Up GitHub Actions (Week 4)
-**What:** Make the system run automatically AND on-demand  
+**Sync workflow:** Geocode → Promote → Backup → **Clean & validate** → Encrypt (DATA_CSV_BASE64) → Build → Deploy.
+
+### Phase 3: Set Up GitHub Actions (Week 4) ✅ COMPLETE
+**What:** Make the system run automatically AND on-demand *(Deliverables: GitHub Actions deployment, automated backup, email notifications)*  
 **Tasks:**
-- Configure GitHub Actions for manual triggering (button in GitHub)
-- Configure scheduled runs (6am and 6pm UTC, optional)
-- Set up email notifications for success/failure
-- Create automatic backups before each update
-- Test the full automated pipeline
+- Configure GitHub Actions for manual triggering ✅
+- Configure scheduled runs (every 4h) ✅
+- Set up email notifications for workflow failures ✅ (includes workflow log attachment)
+- Create automatic backups before each update ✅ (separate Drive folder; 2d/1w/3w staggered)
+- Test the full automated pipeline ✅ (Sync and Deploy verified; site deploys successfully)
 
 ### Phase 4: Train Monisha on Manual Deployment (Week 5)
-**What:** Enable Monisha to trigger deployments herself  
+**What:** Enable Monisha to trigger deployments herself *(Deliverable: Administrator operations guide with screenshots)*  
 **Tasks:**
 - Walk through GitHub login and navigation
 - Show how to trigger manual deployment (click "Run workflow")
 - Explain how to read deployment status and error messages
 - Practice with test data
-- Create quick-reference guide with screenshots
+- Create administrator operations guide with screenshots and quick-reference materials
 
 ### Phase 5: Testing & Refinement (Week 6)
-**What:** Make sure everything works reliably  
+**What:** Make sure everything works reliably *(Deliverables: troubleshooting docs, error recovery)*  
 **Tasks:**
 - Test two-tab workflow (Working Copy → Production)
 - Test various scenarios (new providers, edits, deletions)
 - Verify error handling (what happens if bad data is submitted)
 - Confirm email notifications work
-- Document common troubleshooting scenarios
+- **Additional Work (refinements):** Placeholder names; name search (no auto-fill); NYC geocoding; country field artifacts; UI scrolling / navigation bar; map access after signup
+- Document common troubleshooting scenarios and error recovery procedures
 
 ### Phase 6: Go Live & Cost Transfer (Weeks 7-8)
-**What:** Switch to the new system and finalize handoff  
+**What:** Switch to the new system and finalize handoff *(Deliverables: cost transfer docs, system architecture docs, two-week monitoring)*  
 **Tasks:**
 - Enable scheduled automation (if desired) or keep manual-only
 - Create comprehensive admin guide
-- Monitor closely for first 2 weeks
+- **System architecture documentation**
+- **Cost transfer documentation** (Squarespace, domain, GCP billing; who owns logins, billing, and invoices) — Key Req 4
+- Monitor closely for first 2 weeks (post-launch support)
 - Transfer Squarespace and domain costs to Einstein/Monisha
 - Final handoff meeting with Monisha
+
+**Cross-phase: Multi-Language Support (Key Req 1):**
+- Squarespace (wrapper): paid service if needed
+- Node map app: multi-language for filters, buttons, error messages
+- Survey data: no translation—display as entered
 
 **Total Timeline:** 8 weeks
 
@@ -177,7 +213,7 @@ Transfer all operational costs to **Einstein Montefiore Hospital** or **Monisha*
 4. Review your changes (check for typos, required fields)
 5. **Promote to Production:**
    - **Option A (Sheet Macro):** Extensions → Apps Script → Run `promoteWorkingCopyToProduction`, or use the custom menu "Genetics Map" → "Promote to Production"
-   - **Option B (Local):** Run `npm run promote` (requires Node + GCP credentials)
+   - **Option B:** Trigger **Sync and Deploy** workflow (GitHub → Actions → "Sync and Deploy" → Run workflow) — promotes, cleans, and deploys in one run
 6. **Website update:** Happens automatically every 4 hours via GitHub Actions. Manual trigger: GitHub → Actions → "Sync and Deploy" → Run workflow.
 7. Website updates within ~10 minutes after the sync runs
 
@@ -206,7 +242,7 @@ The system stores and displays all phone values as plain text—no calculations,
 - System sends email notification with error details
 - Bad data is NOT deployed (fails safely)
 - Previous good version stays live
-- Developer can restore from automatic backup if needed
+- The system can be restored from automatic backup if needed
 
 ---
 
@@ -215,7 +251,8 @@ The system stores and displays all phone values as plain text—no calculations,
 ### Current Costs
 - **GitHub Pages** (App Hosting): **Free**
 - **GitHub Actions** (Automated Deployment): **Free** (under 2,000 min/month)
-- **Google Sheets + Google AppScript** (Manual Geocoding): **Free, but manual**
+- **Google Sheets API:** Free
+- **Geocoding API:** ~$0.05–$0.25/month (pay per lookup)
 
 ### New Costs (After Automation)
 - **Google Cloud Platform** (Geocoding API): **~$0.05-$0.25/month** (only ~10-20 new addresses/month at $0.005 per lookup)
@@ -248,35 +285,33 @@ The system stores and displays all phone values as plain text—no calculations,
 
 GitHub Action `sync-and-deploy` runs every 4 hours (0:00, 4:00, 8:00, 12:00, 16:00, 20:00 UTC):
 
-1. Promote Working Copy → Production (in the sheet, with name/phone cleanup)
-2. **Backup Production** to time-staggered safeguard sheets (max 3 copies)
-3. Export Production tab to CSV
-4. Encrypt and build the React app
-5. Deploy to GitHub Pages
+1. **Geocode** Working Copy (skips when no API key) — fills missing lat/lng
+2. Promote Working Copy → Production (in the sheet, with name/phone cleanup)
+3. **Backup** Production to 3 separate Drive files (2d / 1w / 3w staggered)
+4. Clean and validate (pandas, reads/writes Production via Sheets API)
+5. Encrypt and build the React app
+6. Deploy to GitHub Pages
 
-## Backup Safeguard (Max 3 Copies)
+## Backup Safeguard (Separate Sheets in Drive Folder)
 
-The sync workflow keeps **at most 3 backup sheets** with data-types preserved:
+The sync workflow keeps **3 separate Google Sheet files** in a Drive folder (not tabs in the main sheet):
 
-| Sheet | Updated every | Represents |
-|-------|---------------|------------|
-| **Backup (2 days ago)** | 2 days | Production state from ~2 days ago |
-| **Backup (1 week ago)** | 7 days | Production state from ~1 week ago |
-| **Backup (3 weeks ago)** | 21 days | Production state from ~3 weeks ago |
+| File name | Updated every | Represents |
+|-----------|---------------|------------|
+| Genetics Map Backup (2 days ago) | 2 days | Production state from ~2 days ago |
+| Genetics Map Backup (1 week ago) | 7 days | Production state from ~1 week ago |
+| Genetics Map Backup (3 weeks ago) | 21 days | Production state from ~3 weeks ago |
 
-- Uses `valueInputOption: RAW` to preserve numbers, strings, etc.
-- Metadata stored in hidden sheet `_Backup_Metadata`
-- Any extra backup sheets are removed automatically
-- Run manually: `npm run backup:production`
+- **One-time setup:** Create 3 blank sheets in your Drive folder with the exact names above; share the folder with the service account as Editor. (Service account has limited Drive quota; user-created files use your quota.)
+- **BACKUP_FOLDER_ID** secret: Drive folder ID
+- Script updates existing files only; populates empty sheets on first run
+- Main sheet stays simple: Working Copy + Production only
 
-**Required GitHub secrets:** See `docs/GITHUB_ACTIONS_SETUP.md` for full setup.
-- `GCP_SA_KEY` – **Base64-encoded** JSON of `genetics-map-sa-key.json` (`base64 -w0 genetics-map-sa-key.json`)
-- `SHEET_ID` – Google Sheet ID (from sheet URL or `sheet-id.txt`)
-- `REACT_APP_SECRET_KEY` – Encryption key from `.secret_env`
+**GitHub secrets** (see `docs/SETUP.md`): `GCP_SA_KEY`, `SHEET_ID`, `REACT_APP_SECRET_KEY`, `BACKUP_FOLDER_ID`, `GEOCODING_API_KEY`, `SMTP_USERNAME`, `SMTP_PASSWORD`
 
 ## Sheet Macro: Promote to Production
 
-A Google Apps Script macro lives in the sheet (Extensions → Apps Script). It performs the same promote logic as `npm run promote`:
+A Google Apps Script macro lives in the sheet (Extensions → Apps Script). It performs the same promote logic as the Sync and Deploy workflow:
 - Copies Working Copy → Production
 - Applies name cleanup (title-case, Dr. normalization, nan → Anonymous Contributor)
 - Fixes corrupted phone cells using Production as fallback
@@ -285,11 +320,5 @@ A Google Apps Script macro lives in the sheet (Extensions → Apps Script). It p
 **To add the macro:** Copy `scripts/promote.gs` into the sheet's Apps Script editor, save, and run `onOpen` once to install the custom menu.
 
 ---
-
-## Next Steps
-
-1. **Phase 2:** Geocoding automation (run `geocode_working_copy.py` on new rows)
-2. **Action:** Identify all services to transfer to Einstein/Monisha
-3. **Schedule:** Plan Monisha's training session (Week 5)
 
 **End of Document**

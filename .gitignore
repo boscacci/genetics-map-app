@@ -39,6 +39,4 @@ yarn-error.log*
 moni_data* 
 data.csv:Zone.Identifier
 
-# Jupyter notebook checkpoints (but keep the notebooks themselves)
-.ipynb_checkpoints/
 */__pycache__

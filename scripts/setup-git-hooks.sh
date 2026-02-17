@@ -8,25 +8,9 @@ PRE_PUSH_HOOK="$HOOKS_DIR/pre-push"
 
 mkdir -p "$HOOKS_DIR"
 
-# Install pre-commit hook to encrypt data.csv and verify sync
+# Install pre-commit hook to verify sync (data comes from Sheet in CI, no local csv)
 cat > "$PRE_COMMIT_HOOK" <<'HOOK'
 #!/bin/sh
-
-# Check if data/data.csv is staged for commit
-if git diff --cached --name-only | grep -q "^data/data.csv$"; then
-  echo "[pre-commit] data/data.csv changed - encrypting to src/secureDataBlob.ts"
-  
-  node scripts/process-data.js
-  status=$?
-  if [ $status -ne 0 ]; then
-    echo "[pre-commit] Data encryption failed (exit $status); aborting commit."
-    exit $status
-  fi
-  
-  # Stage the updated encrypted blob
-  git add src/secureDataBlob.ts
-  echo "[pre-commit] Encrypted data staged for commit"
-fi
 
 # Check if .secret_env changed - update hash in App.tsx
 if git diff --cached --name-only | grep -q "^.secret_env$"; then

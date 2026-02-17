@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 /**
- * Backup Production tab to time-staggered backup sheets (safeguard).
- * Keeps MAX 3 backup copies: "Backup (2 days ago)", "Backup (1 week ago)", "Backup (3 weeks ago)".
- * Each is updated at its interval (2d, 7d, 21d) so they represent the sheet state at those ages.
- * Data types preserved (RAW valueInputOption).
+ * Backup Production tab to separate Google Sheet files in a Drive folder.
+ * Keeps 3 copies: "Genetics Map Backup (2 days ago)", "(1 week ago)", "(3 weeks ago)".
+ * Each is updated at its interval (2d, 7d, 21d).
+ *
+ * Requires: BACKUP_FOLDER_ID ( Drive folder; share with service account as Editor )
+ * One-time: Create 3 blank sheets in the folder with these exact names; share folder with service account.
  *
  * Run: node scripts/backup-production.js
  * Called by sync-and-deploy workflow after promote.
@@ -16,16 +18,16 @@ const { google } = require('googleapis');
 const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-map-sa-key.json');
 const SHEET_ID_PATH = path.resolve(__dirname, '../.gcp-credentials/sheet-id.txt');
 
-const BACKUP_METADATA_SHEET = '_Backup_Metadata';
 const BACKUPS = [
-  { key: '2d', title: 'Backup (2 days ago)', intervalMs: 2 * 24 * 60 * 60 * 1000 },
-  { key: '1w', title: 'Backup (1 week ago)', intervalMs: 7 * 24 * 60 * 60 * 1000 },
-  { key: '3w', title: 'Backup (3 weeks ago)', intervalMs: 21 * 24 * 60 * 60 * 1000 },
+  { key: '2d', name: 'Genetics Map Backup (2 days ago)', intervalMs: 2 * 24 * 60 * 60 * 1000 },
+  { key: '1w', name: 'Genetics Map Backup (1 week ago)', intervalMs: 7 * 24 * 60 * 60 * 1000 },
+  { key: '3w', name: 'Genetics Map Backup (3 weeks ago)', intervalMs: 21 * 24 * 60 * 60 * 1000 },
 ];
 
 async function main() {
   let credentials;
   let spreadsheetId;
+  let backupFolderId;
 
   if (process.env.GCP_SA_KEY && process.env.SHEET_ID) {
     credentials = JSON.parse(process.env.GCP_SA_KEY);
@@ -38,61 +40,27 @@ async function main() {
     process.exit(1);
   }
 
+  backupFolderId = process.env.BACKUP_FOLDER_ID?.trim();
+  if (!backupFolderId) {
+    console.log('BACKUP_FOLDER_ID not set, skipping backup.');
+    return;
+  }
+
   const auth = new google.auth.GoogleAuth({
     credentials,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    scopes: [
+      'https://www.googleapis.com/auth/spreadsheets',
+      'https://www.googleapis.com/auth/drive',
+      'https://www.googleapis.com/auth/drive.file',
+    ],
   });
   const sheets = google.sheets({ version: 'v4', auth });
+  const drive = google.drive({ version: 'v3', auth });
 
-  const now = Date.now();
-  const allowedBackupTitles = new Set(BACKUPS.map(b => b.title));
-
-  const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId });
-  const existingSheets = spreadsheet.data.sheets || [];
-
-  // Remove any backup sheets not in our allowed 3
-  const deleteRequests = [];
-  for (const s of existingSheets) {
-    const title = s.properties?.title || '';
-    if (title.startsWith('Backup') && !allowedBackupTitles.has(title)) {
-      deleteRequests.push({ deleteSheet: { sheetId: s.properties.sheetId } });
-    }
-  }
-  if (deleteRequests.length > 0) {
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId,
-      requestBody: { requests: deleteRequests },
-    });
-  }
-
-  // Ensure _Backup_Metadata sheet exists and read last update times
-  const metaSheet = existingSheets.find(s => s.properties?.title === BACKUP_METADATA_SHEET);
-
-  let lastUpdates = { '2d': 0, '1w': 0, '3w': 0 };
-  if (metaSheet) {
-    try {
-      const metaRes = await sheets.spreadsheets.values.get({
-        spreadsheetId,
-        range: `'${BACKUP_METADATA_SHEET}'!A1:C1`,
-      });
-      const row = metaRes.data.values?.[0] || [];
-      if (row[0]) lastUpdates['2d'] = parseInt(row[0], 10) || 0;
-      if (row[1]) lastUpdates['1w'] = parseInt(row[1], 10) || 0;
-      if (row[2]) lastUpdates['3w'] = parseInt(row[2], 10) || 0;
-    } catch (_) {}
-  } else {
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId,
-      requestBody: {
-        requests: [{ addSheet: { properties: { title: BACKUP_METADATA_SHEET, hidden: true } } }],
-      },
-    });
-  }
-
-  // Read Production
+  // Read Production from main sheet
   const prodRes = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'Production'!A:N",
+    range: "'Production'!A:O",
     valueRenderOption: 'UNFORMATTED_VALUE',
   });
   const prodValues = prodRes.data.values || [];
@@ -101,56 +69,68 @@ async function main() {
     return;
   }
 
+  const now = Date.now();
+  const allowedNames = new Set(BACKUPS.map((b) => b.name));
   const updates = [];
 
-  for (const backup of BACKUPS) {
-    const elapsed = now - lastUpdates[backup.key];
-    if (elapsed >= backup.intervalMs || lastUpdates[backup.key] === 0) {
-      // Create backup sheet if needed
-      const backupSheet = existingSheets.find(s => s.properties?.title === backup.title);
-      if (!backupSheet) {
-        await sheets.spreadsheets.batchUpdate({
-          spreadsheetId,
-          requestBody: {
-            requests: [{ addSheet: { properties: { title: backup.title } } }],
-          },
-        });
-        // Refresh sheet list for range
-      }
+  // List existing backup files in folder
+  const listRes = await drive.files.list({
+    q: `'${backupFolderId}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`,
+    fields: 'files(id, name, modifiedTime)',
+  });
+  const existingFiles = listRes.data.files || [];
 
-      const range = `'${backup.title}'!A:N`;
-      await sheets.spreadsheets.values.clear({ spreadsheetId, range }).catch(() => {});
+  for (const backup of BACKUPS) {
+    const existing = existingFiles.find((f) => f.name === backup.name);
+    if (!existing) {
+      console.warn(`   Skipping ${backup.name}: file not found. Create it manually in the folder, share with service account.`);
+      continue;
+    }
+    const modifiedMs = new Date(existing.modifiedTime).getTime();
+    const elapsed = now - modifiedMs;
+    const isDue = elapsed >= backup.intervalMs;
+
+    let needsPopulate = false;
+    if (!isDue) {
+      try {
+        const got = await sheets.spreadsheets.values.get({
+          spreadsheetId: existing.id,
+          range: 'A1',
+        });
+        const rowCount = got.data.values?.length ?? 0;
+        needsPopulate = rowCount < 2;
+      } catch {
+        needsPopulate = true;
+      }
+    }
+
+    if (isDue || needsPopulate) {
       await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: `'${backup.title}'!A1`,
+        spreadsheetId: existing.id,
+        range: 'A1',
         valueInputOption: 'RAW',
         requestBody: { values: prodValues },
       });
-
-      lastUpdates[backup.key] = now;
-      updates.push(backup.title);
+      updates.push(backup.name);
     }
   }
 
-  // Write updated metadata
-  const metaRange = `'${BACKUP_METADATA_SHEET}'!A1`;
-  await sheets.spreadsheets.values.update({
-    spreadsheetId,
-    range: metaRange,
-    valueInputOption: 'RAW',
-    requestBody: {
-      values: [[String(lastUpdates['2d']), String(lastUpdates['1w']), String(lastUpdates['3w'])]],
-    },
-  });
+  // Remove any backup files in folder that aren't in our 3
+  for (const file of existingFiles) {
+    if (!allowedNames.has(file.name)) {
+      await drive.files.update({ fileId: file.id, requestBody: { trashed: true } });
+      console.log('   Removed old backup:', file.name);
+    }
+  }
 
   if (updates.length > 0) {
-    console.log(`✅ Backed up Production to: ${updates.join(', ')}`);
+    console.log(`✅ Backed up Production to Drive folder: ${updates.join(', ')}`);
   } else {
     console.log('Backup intervals not yet reached (no updates).');
   }
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('Backup error:', err.message);
   process.exit(1);
 });

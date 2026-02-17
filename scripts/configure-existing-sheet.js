@@ -19,7 +19,8 @@ const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-m
 const HEADERS = [
   'name_first', 'name_last', 'email', 'phone_work', 'work_website', 'work_institution',
   'work_address', 'language_spoken', 'uses_interpreters', 'specialties',
-  'Latitude', 'Longitude', 'City', 'Country'
+  'Latitude', 'Longitude', 'City', 'Country',
+  'credential_link'  // Key Req 3: admin-only; never in public CSV
 ];
 
 async function main() {
@@ -68,8 +69,8 @@ async function main() {
     requestBody: {
       valueInputOption: 'USER_ENTERED',
       data: [
-        { range: "'Working Copy'!A1:N1", values: headerValues },
-        { range: "'Production'!A1:N1", values: headerValues },
+        { range: "'Working Copy'!A1:O1", values: headerValues },
+        { range: "'Production'!A1:O1", values: headerValues },
       ],
     },
   });

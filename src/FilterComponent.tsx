@@ -837,9 +837,14 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 isMulti
                 options={availableNameOptions}
                 onChange={handleProviderNameChange}
-                placeholder="Names..."
+                placeholder="Type 2+ chars to search..."
                 value={selectedProviderNames}
                 isSearchable
+                filterOption={(option, inputValue) => {
+                  if (!inputValue || inputValue.trim().length < 2) return false;
+                  return option.label.toLowerCase().includes(inputValue.toLowerCase().trim());
+                }}
+                noOptionsMessage={() => 'Type at least 2 characters to search'}
                 className="react-select-container"
                 classNamePrefix="react-select"
                 menuPortalTarget={document.body}

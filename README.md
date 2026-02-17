@@ -8,7 +8,7 @@ This app provides an interactive map and directory of genetic professionals from
 ## ✨ Features
 - Interactive world map of genetic professionals
 - Search and filter by region or specialty
-- Simple CSV-based data import with automatic encryption
+- Google Sheet as data source; GitHub Actions for promote, clean, encrypt, deploy
 - Clean, approachable interface
 - Secure authentication via URL key
 
@@ -22,8 +22,7 @@ This app provides an interactive map and directory of genetic professionals from
 
 ```
 ├── data/           # CSV inputs (data.csv), Excel exports
-├── docs/            # Planning and architecture (_AUTOMATION_PLAN.md)
-├── notebooks/       # Jupyter notebooks for data processing
+├── docs/            # _AUTOMATION_PLAN, SETUP, ADMIN_GUIDE, REFERENCE
 ├── scripts/         # Build scripts (process-data, hash-secret, etc.)
 ├── src/             # React app source
 └── public/          # Static assets
@@ -49,47 +48,11 @@ Replace `YOUR_SECRET_KEY` with the actual key from your `.secret_env` file. The 
 
 ## 🔄 Development Workflow
 
-### Initial Setup
+**Pipeline runs only in GitHub Actions** (no local Node for scripts/deploy). See `docs/SETUP.md`.
 
-1. Install Git hooks:
-```bash
-npm run setup:hooks
-```
-
-This installs:
-- **Pre-commit hook**: Automatically encrypts `data/data.csv` into `src/secureDataBlob.ts` when you commit changes
-- **Pre-push hook**: Automatically syncs `.secret_env` key to GitHub Secrets
-
-### Working with Data
-
-1. Edit `data/data.csv` locally (this file is gitignored)
-2. Commit your changes - the pre-commit hook automatically:
-   - Encrypts `data/data.csv` using the key from `.secret_env`
-   - Generates `src/secureDataBlob.ts` with the encrypted data
-   - Stages the encrypted blob for commit
-3. Push to GitHub - the pre-push hook automatically:
-   - Reads `REACT_APP_SECRET_KEY` from `.secret_env`
-   - Updates the GitHub repository secret via GitHub CLI
-
-### Manual Operations
-
-**Manually encrypt data:**
-```bash
-npm run encrypt-data
-```
-
-**Manually sync GitHub secrets:**
-```bash
-npm run sync-secrets
-```
-Requires:
-- GitHub CLI (`gh`) to be installed
-- Authentication with GitHub CLI (`gh auth login`)
-
-**Prepare everything locally:**
-```bash
-npm run prepare-local
-```
+- **Data entry:** Google Sheet Working Copy tab
+- **Promote:** Sheet macro or Sync and Deploy workflow
+- **Deploy:** Sync and Deploy workflow (every 4 hours or manual trigger)
 
 ### Secret Management
 
@@ -117,7 +80,7 @@ No sensitive data (CSV or secret key) is exposed - only the encrypted blob and h
 
 ## 🗺️ Architecture diagram
 
-See `docs/architecture.md` for a graphical view of the full pipeline (Excel/Sheets ingestion → cleaning/geocoding → encryption → CI build → GitHub Pages) and the runtime auth/decryption flow.
+See `docs/REFERENCE.md` for pipeline overview, secrets, and architecture.
 
 ---
 
