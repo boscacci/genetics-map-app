@@ -164,21 +164,40 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     return value;
   };
 
+  // Central sanitizer for display values - scrubs placeholders and null-like strings
+  const cleanDisplay = (val?: string | null): string => {
+    const s = (val ?? '').toString().trim();
+    return ['nan', 'null', 'undefined', 'n/a', 'na', '-', '--'].includes(s.toLowerCase()) ? '' : s;
+  };
+
+  // Assembles a full name, falls back to "Anonymous Contributor" if empty
+  const displayName = (first?: string, last?: string): string => {
+    const parts = [cleanDisplay(first), cleanDisplay(last)].filter(Boolean);
+    return parts.length ? parts.join(' ') : 'Anonymous Contributor';
+  };
+
+  // Joins city and country, handling empty values gracefully
+  const displayLocation = (city?: string, country?: string): string => {
+    const parts = [cleanDisplay(city), cleanDisplay(country)].filter(Boolean);
+    return parts.join(', ');
+  };
+
   const createTooltipContent = (specialist: MapPoint) => {
+    const loc = displayLocation(specialist.City, specialist.Country);
     return `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 200px; max-width: 250px;">
         <div style="margin-bottom: 8px;">
           <div style="margin: 0 0 3px 0; font-size: 14px; font-weight: 600; color: #2c3e50; line-height: 1.3;">
-            ${specialist.name_first} ${specialist.name_last}
+            ${displayName(specialist.name_first, specialist.name_last)}
           </div>
           <div style="font-size: 12px; color: #6c757d; font-weight: 500; margin-bottom: 4px;">
             ${displayInstitution(specialist.work_institution)}
           </div>
           <div style="font-size: 11px; color: #6c757d;">
-            📍 ${specialist.City}, ${specialist.Country}
+            ${loc ? '📍 ' + loc : ''}
           </div>
         </div>
-        
+
         <div style="padding: 6px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; font-size: 11px; font-weight: 500; text-align: center; margin-top: 6px;">
           Click to contact
         </div>
@@ -254,14 +273,14 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                   }}
                 >
                   <div className="popup-header">
-                    <h3 className="popup-name">{specialist.name_first} {specialist.name_last}</h3>
+                    <h3 className="popup-name">{displayName(specialist.name_first, specialist.name_last)}</h3>
                     <div className="popup-institution">{displayInstitution(specialist.work_institution)}</div>
                   </div>
-                  
+
                   <div className="popup-details">
                     <div className="detail-item">
                       <span className="detail-label">📍 Location:</span>
-                      <span className="detail-value">{specialist.City}, {specialist.Country}</span>
+                      <span className="detail-value">{displayLocation(specialist.City, specialist.Country)}</span>
                     </div>
                     
                     {specialist.language_spoken && (
@@ -307,8 +326,8 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
               onClick={(e) => e.stopPropagation()}
             >
               <div className="contact-modal-header">
-                <h3>Contact {specialist.name_first} {specialist.name_last}</h3>
-                <button 
+                <h3>Contact {displayName(specialist.name_first, specialist.name_last)}</h3>
+                <button
                   className="modal-close-btn"
                   onClick={() => closeContactModal(index)}
                 >
@@ -358,7 +377,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                   <span className="contact-icon">📍</span>
                   <span className="contact-text">
                     {specialist.work_address ? `${specialist.work_address}, ` : ''}
-                    {specialist.City}, {specialist.Country}
+                    {displayLocation(specialist.City, specialist.Country)}
                   </span>
                 </div>
               </div>

@@ -171,6 +171,12 @@ const toSelectOptions = (values: string[]) => {
   return values.map(value => ({ value, label: value }));
 };
 
+// Sanitize display values - scrubs placeholder strings that should not appear in UI
+const cleanDisplay = (val?: string | null): string => {
+  const s = (val ?? '').toString().trim();
+  return ['nan', 'null', 'undefined', 'n/a', 'na', '-', '--'].includes(s.toLowerCase()) ? '' : s;
+};
+
 const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilterChange, onMapNavigation, onDropdownStateChange }) => {
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
@@ -331,10 +337,10 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   // Get available options based on current filters
   const availableCountries = getRemainingSpecialists(() => true)
     .map(s => s.Country)
-    .filter(Boolean);
+    .filter((c): c is string => Boolean(c) && cleanDisplay(c) !== '');
   const availableCities = getRemainingSpecialists(() => true)
     .map(s => s.City)
-    .filter(Boolean);
+    .filter((c): c is string => Boolean(c) && cleanDisplay(c) !== '');
   const availableLanguages = getRemainingSpecialists(() => true)
     .map(s => s.language_spoken)
     .filter(Boolean)
@@ -826,7 +832,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
               <input
                 type="text"
                 className="filter-input"
-                placeholder="Search by name, press Enter"
+                placeholder="Name..."
                 value={nameInputValue}
                 onChange={(e) => setNameInputValue(e.target.value)}
                 onKeyDown={handleNameSearchKeyDown}
