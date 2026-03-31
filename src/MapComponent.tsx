@@ -182,6 +182,30 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     return parts.join(', ');
   };
 
+  // Formats full address for contact modal, avoiding city duplication when address already contains it
+  const displayFullAddress = (address?: string, city?: string, country?: string): string => {
+    const cleanAddr = cleanDisplay(address);
+    const cleanCity = cleanDisplay(city);
+    const cleanCountry = cleanDisplay(country);
+
+    // If no address, just return city + country
+    if (!cleanAddr) {
+      return [cleanCity, cleanCountry].filter(Boolean).join(', ');
+    }
+
+    // Check if address already contains the city (case-insensitive)
+    const addrLower = cleanAddr.toLowerCase();
+    const cityLower = cleanCity?.toLowerCase() || '';
+
+    // If city is in address, only add country to avoid "Reading Pa, Reading, USA" duplication
+    if (cleanCity && addrLower.includes(cityLower)) {
+      return cleanCountry ? `${cleanAddr}, ${cleanCountry}` : cleanAddr;
+    }
+
+    // Otherwise, combine all parts
+    return [cleanAddr, cleanCity, cleanCountry].filter(Boolean).join(', ');
+  };
+
   const createTooltipContent = (specialist: MapPoint) => {
     const loc = displayLocation(specialist.City, specialist.Country);
     return `
@@ -376,8 +400,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                 <div className="contact-item">
                   <span className="contact-icon">📍</span>
                   <span className="contact-text">
-                    {specialist.work_address ? `${specialist.work_address}, ` : ''}
-                    {displayLocation(specialist.City, specialist.Country)}
+                    {displayFullAddress(specialist.work_address, specialist.City, specialist.Country)}
                   </span>
                 </div>
               </div>
