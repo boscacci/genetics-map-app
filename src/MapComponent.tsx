@@ -194,11 +194,12 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     }
 
     // Check if address already contains the city (case-insensitive)
+    // Strip leading articles ("The ", "the ") before comparing so "The Bronx" matches "Bronx"
     const addrLower = cleanAddr.toLowerCase();
-    const cityLower = cleanCity?.toLowerCase() || '';
+    const cityLower = (cleanCity?.toLowerCase() || '').replace(/^the\s+/, '');
 
-    // If city is in address, only add country to avoid "Reading Pa, Reading, USA" duplication
-    if (cleanCity && addrLower.includes(cityLower)) {
+    // If city is in address, only add country to avoid city duplication
+    if (cleanCity && cityLower && addrLower.includes(cityLower)) {
       return cleanCountry ? `${cleanAddr}, ${cleanCountry}` : cleanAddr;
     }
 
