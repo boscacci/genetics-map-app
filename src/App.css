@@ -427,6 +427,24 @@
   font-weight: 500;
 }
 
+.contact-modal-content .contact-address-line {
+  display: block;
+}
+
+.contact-modal-content .contact-address-line + .contact-address-line {
+  margin-top: 4px;
+}
+
+.contact-modal-content .contact-address-detail {
+  color: #495057;
+}
+
+.contact-modal-content .contact-address-structured {
+  color: #6c757d;
+  font-size: 13px;
+  font-weight: 400;
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
   .contact-modal {

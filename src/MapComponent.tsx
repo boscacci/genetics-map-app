@@ -244,7 +244,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
   };
 
   // Contact modal: preserve free-text detail, strip parts we already have structurally
-  const displayFullAddress = (s: MapPoint): string => {
+  const displayFullAddress = (s: MapPoint): { detailLine: string; structuredLine: string } => {
     const street = cleanDisplay(s.address_street);
     const city = cleanDisplay(s.City);
     const state = cleanDisplay(s.address_state);
@@ -252,7 +252,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     const country = cleanDisplay(s.Country);
     const stateZip = [state, zip].filter(Boolean).join(' ');
     const cityLine = [city, stateZip].filter(Boolean).join(', ');
-    const structured = [street, cityLine, country].filter(Boolean).join(', ');
+    const structuredLine = [street, cityLine, country].filter(Boolean).join(', ');
     const cityNoArticle = city.replace(/^the\s+/i, '').trim();
     const variants = [
       street,
@@ -287,7 +287,15 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
       }
     }
 
-    return [freeText, structured].filter(Boolean).join(', ');
+    if (!freeText) {
+      const normalizedStructured = normalizeAddressToken(structuredLine);
+      const fallback = cleanDisplay(s.work_address);
+      if (fallback && normalizeAddressToken(fallback) !== normalizedStructured) {
+        freeText = fallback;
+      }
+    }
+
+    return { detailLine: freeText, structuredLine };
   };
 
   const createTooltipContent = (specialist: MapPoint) => {
@@ -421,8 +429,9 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
       })}
       
       {/* Contact Info Modals */}
-      {specialists.map((specialist, index) => (
-        showContactModal[index] && (
+      {specialists.map((specialist, index) => {
+        const addressLines = displayFullAddress(specialist);
+        return showContactModal[index] && (
 
           <div 
             key={`modal-${index}`} 
@@ -484,14 +493,23 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                 <div className="contact-item">
                   <span className="contact-icon">📍</span>
                   <span className="contact-text">
-                    {displayFullAddress(specialist)}
+                    {addressLines.detailLine && (
+                      <span className="contact-address-line contact-address-detail">
+                        {addressLines.detailLine}
+                      </span>
+                    )}
+                    {addressLines.structuredLine && (
+                      <span className="contact-address-line contact-address-structured">
+                        {addressLines.structuredLine}
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>
             </div>
           </div>
-        )
-      ))}
+        );
+      })}
     </>
   );
 });
