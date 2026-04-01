@@ -182,7 +182,68 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     return parts.join(', ');
   };
 
-  // Contact modal: structured fields from geocoder (no free-text duplication)
+  const normalizeAddressToken = (val?: string | null): string => {
+    return cleanDisplay(val)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase()
+      .replace(/^the\s+/, '');
+  };
+
+  const escapeRegExp = (value: string): string => {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  };
+
+  const getCountryVariants = (country?: string): string[] => {
+    const value = cleanDisplay(country);
+    const normalized = normalizeAddressToken(value);
+    const variants = new Set<string>();
+
+    if (value) variants.add(value);
+    if (normalized === 'united states') {
+      variants.add('USA');
+      variants.add('US');
+      variants.add('U.S.A.');
+      variants.add('United States of America');
+    }
+    if (normalized === 'united kingdom') {
+      variants.add('UK');
+      variants.add('U.K.');
+      variants.add('Great Britain');
+    }
+
+    return Array.from(variants);
+  };
+
+  const cleanAddressFragment = (fragment: string, variants: string[]): string => {
+    let cleaned = cleanDisplay(fragment);
+    if (!cleaned) return '';
+
+    const orderedVariants = variants
+      .map(v => cleanDisplay(v))
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length);
+
+    for (let pass = 0; pass < 2; pass += 1) {
+      for (const variant of orderedVariants) {
+        const escaped = escapeRegExp(variant);
+        cleaned = cleaned.replace(new RegExp(`^${escaped}(?:[\\s,./-]+|$)`, 'i'), '');
+        cleaned = cleaned.replace(new RegExp(`(?:[\\s,./-]+|^)${escaped}$`, 'i'), '');
+      }
+    }
+
+    return cleaned
+      .replace(/\s{2,}/g, ' ')
+      .replace(/\s*,\s*/g, ', ')
+      .replace(/(?:,\s*){2,}/g, ', ')
+      .replace(/^[,.\s/-]+|[,.\s/-]+$/g, '')
+      .trim();
+  };
+
+  // Contact modal: preserve free-text detail, strip parts we already have structurally
   const displayFullAddress = (s: MapPoint): string => {
     const street = cleanDisplay(s.address_street);
     const city = cleanDisplay(s.City);
@@ -192,9 +253,41 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     const stateZip = [state, zip].filter(Boolean).join(' ');
     const cityLine = [city, stateZip].filter(Boolean).join(', ');
     const structured = [street, cityLine, country].filter(Boolean).join(', ');
-    if (structured) return structured;
-    const fallback = cleanDisplay(s.work_address);
-    return [fallback, country].filter(Boolean).join(', ');
+    const cityNoArticle = city.replace(/^the\s+/i, '').trim();
+    const variants = [
+      street,
+      city,
+      cityNoArticle,
+      state,
+      zip,
+      stateZip,
+      cityLine,
+      ...getCountryVariants(country),
+    ].filter(Boolean);
+    const variantSet = new Set(variants.map(v => normalizeAddressToken(v)));
+    const rawFreeText = cleanDisplay(s.work_address);
+
+    let freeText = rawFreeText
+      ? rawFreeText
+          .split(',')
+          .map(fragment => cleanAddressFragment(fragment, variants))
+          .filter(Boolean)
+          .filter(fragment => !variantSet.has(normalizeAddressToken(fragment)))
+          .filter((fragment, index, all) => {
+            const normalized = normalizeAddressToken(fragment);
+            return all.findIndex(item => normalizeAddressToken(item) === normalized) === index;
+          })
+          .join(', ')
+      : '';
+
+    if (!freeText && rawFreeText) {
+      const whole = cleanAddressFragment(rawFreeText, variants);
+      if (whole && !variantSet.has(normalizeAddressToken(whole))) {
+        freeText = whole;
+      }
+    }
+
+    return [freeText, structured].filter(Boolean).join(', ');
   };
 
   const createTooltipContent = (specialist: MapPoint) => {
