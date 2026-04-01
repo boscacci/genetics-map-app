@@ -82,6 +82,9 @@ const parsedData = (data).filter((item) => {
     interpreter_services: typeof item.uses_interpreters === 'string' ? item.uses_interpreters : 'unknown',
     City: cleanValue(item.City),
     Country: cleanValue(item.Country),
+    address_street: cleanValue(item.address_street),
+    address_state: cleanValue(item.address_state),
+    address_zip: cleanValue(item.address_zip),
   };
 });
 

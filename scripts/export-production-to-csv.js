@@ -20,7 +20,8 @@ const CSV_OUTPUT_PATH = path.resolve(__dirname, '../data/data.csv');
 const PUBLIC_HEADERS = [
   'name_first', 'name_last', 'email', 'phone_work', 'work_website', 'work_institution',
   'work_address', 'language_spoken', 'uses_interpreters', 'specialties',
-  'Latitude', 'Longitude', 'City', 'Country'
+  'Latitude', 'Longitude', 'City', 'Country',
+  'address_street', 'address_state', 'address_zip',
 ];
 
 async function main() {
@@ -46,7 +47,7 @@ async function main() {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'Production'!A:O",
+    range: "'Production'!A:R",
   });
   const rows = res.data.values || [];
 
@@ -57,11 +58,16 @@ async function main() {
 
   const headerRow = rows[0];
   const dataRows = rows.slice(1);
+  const idxByName = {};
+  headerRow.forEach((name, i) => {
+    idxByName[name] = i;
+  });
 
   const data = dataRows.map((row) => {
     const obj = {};
-    PUBLIC_HEADERS.forEach((h, i) => {
-      obj[h] = row[i] ?? '';
+    PUBLIC_HEADERS.forEach((h) => {
+      const idx = idxByName[h];
+      obj[h] = idx !== undefined && row[idx] !== undefined ? row[idx] : '';
     });
     return obj;
   });

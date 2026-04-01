@@ -38,6 +38,9 @@ LAT_COL = 10
 LNG_COL = 11
 CITY_COL = 12
 COUNTRY_COL = 13
+ADDRESS_STREET_COL = 15
+ADDRESS_STATE_COL = 16
+ADDRESS_ZIP_COL = 17
 
 # Rate limiting (seconds between API calls)
 DELAY_BETWEEN_ROWS = 0.25
@@ -117,12 +120,21 @@ def extract_city_from_address(address: str) -> str:
 
 def extract_location_data(result: dict) -> dict:
     lat = lng = city = country = ""
+    street_number = route = state = zip_code = ""
     if result.get("geometry", {}).get("location"):
         loc = result["geometry"]["location"]
         lat = loc.get("lat", "")
         lng = loc.get("lng", "")
     for comp in result.get("address_components", []):
         types = comp.get("types", [])
+        if "street_number" in types:
+            street_number = comp.get("long_name", "")
+        if "route" in types:
+            route = comp.get("long_name", "")
+        if "postal_code" in types:
+            zip_code = comp.get("long_name", "")
+        if "administrative_area_level_1" in types:
+            state = comp.get("short_name", "") or state
         if "locality" in types:
             city = comp.get("long_name", "")
         elif "sublocality" in types and not city:
@@ -141,7 +153,16 @@ def extract_location_data(result: dict) -> dict:
         city = ""
     if city:
         city = CITY_ALIASES.get(city.lower().strip(), city)
-    return {"lat": lat, "lng": lng, "city": city, "country": country}
+    street = " ".join(x for x in (street_number, route) if x).strip()
+    return {
+        "lat": lat,
+        "lng": lng,
+        "city": city,
+        "country": country,
+        "street": street,
+        "state": state,
+        "zip": zip_code,
+    }
 
 
 def is_complete_data(data: dict) -> bool:
@@ -210,7 +231,15 @@ def smart_geocode(inst: str, addr: str, api_key: str) -> dict:
         valid_inst,
     ]
     attempts = [a for a in attempts if a]
-    best = {"lat": "", "lng": "", "city": "", "country": ""}
+    best = {
+        "lat": "",
+        "lng": "",
+        "city": "",
+        "country": "",
+        "street": "",
+        "state": "",
+        "zip": "",
+    }
     best_score = 0.0
     for i, query in enumerate(attempts):
         if not query:
@@ -295,6 +324,17 @@ def _has_geocoding(row: list) -> bool:
         return False
 
 
+def _has_address_components(row: list) -> bool:
+    """True if any structured address field (street/state/zip) is populated."""
+    while len(row) <= ADDRESS_ZIP_COL:
+        row.append("")
+    for col in (ADDRESS_STREET_COL, ADDRESS_STATE_COL, ADDRESS_ZIP_COL):
+        v = row[col] if len(row) > col else ""
+        if not is_empty_or_nan(v):
+            return True
+    return False
+
+
 def main():
     parser = argparse.ArgumentParser(description="Geocode Working Copy records via Google Geocoding API")
     parser.add_argument(
@@ -332,7 +372,7 @@ def main():
     print("Reading Working Copy...", flush=True)
     result = sheets.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id,
-        range="'Working Copy'!A:O",
+        range="'Working Copy'!A:R",
     ).execute()
     rows = result.get("values", [])
     if len(rows) < 2:
@@ -340,8 +380,12 @@ def main():
         return
 
     header = rows[0]
+    _extra_headers = ("address_street", "address_state", "address_zip")
+    while len(header) < 18:
+        header.append(_extra_headers[len(header) - 15] if len(header) >= 15 else "")
     data_rows = rows[1:]
-    n_cols = max(len(r) for r in rows) if rows else 14
+    n_cols = max(len(r) for r in rows) if rows else 18
+    n_cols = max(n_cols, 18)
     for row in data_rows:
         while len(row) < n_cols:
             row.append("")
@@ -356,7 +400,7 @@ def main():
         print("Writing to Working Copy...", flush=True)
         sheets.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
-            range="'Working Copy'!A1:O",
+            range="'Working Copy'!A1:R",
             valueInputOption="USER_ENTERED",
             body={"values": out_rows},
         ).execute()
@@ -368,11 +412,14 @@ def main():
     for i, row in enumerate(data_rows):
         if is_empty_or_nan(row[WORK_INSTITUTION_COL]) and is_empty_or_nan(row[WORK_ADDRESS_COL]):
             continue
-        if backfill_all or not _has_geocoding(row):
+        if backfill_all or not _has_geocoding(row) or not _has_address_components(row):
             to_process.append(i)
 
     if not to_process:
-        print("No rows need geocoding. (All have lat/lng; use --backfill-all-records to re-run.)")
+        print(
+            "No rows need geocoding. (All have lat/lng and structured address; "
+            "use --backfill-all-records to re-run.)"
+        )
         return
 
     mode = "backfill (all records)" if backfill_all else "fill missing only"
@@ -385,6 +432,8 @@ def main():
     for idx, i in enumerate(to_process):
         row = data_rows[i]
         while len(row) <= COUNTRY_COL:
+            row.append("")
+        while len(row) <= ADDRESS_ZIP_COL:
             row.append("")
         inst = row[WORK_INSTITUTION_COL] if len(row) > WORK_INSTITUTION_COL else ""
         addr = row[WORK_ADDRESS_COL] if len(row) > WORK_ADDRESS_COL else ""
@@ -402,8 +451,15 @@ def main():
         row[LNG_COL] = str(geo["lng"]) if geo["lng"] else ""
         row[CITY_COL] = geo["city"]
         row[COUNTRY_COL] = geo["country"]
+        row[ADDRESS_STREET_COL] = geo.get("street", "")
+        row[ADDRESS_STATE_COL] = geo.get("state", "")
+        row[ADDRESS_ZIP_COL] = geo.get("zip", "")
         processed += 1
-        print(f"({geo['lat']}, {geo['lng']}) {geo['city']}, {geo['country']}", flush=True)
+        print(
+            f"({geo['lat']}, {geo['lng']}) {geo['city']}, {geo['country']} | "
+            f"{geo.get('street', '')} | {geo.get('state', '')} {geo.get('zip', '')}",
+            flush=True,
+        )
         time.sleep(DELAY_BETWEEN_ROWS)
 
     # Apply city fixes to ALL rows before persist (handles stale "NY" etc. even when not re-geocoded)
@@ -419,7 +475,7 @@ def main():
     print("Writing to Working Copy...")
     sheets.spreadsheets().values().update(
         spreadsheetId=spreadsheet_id,
-        range="'Working Copy'!A1:O",
+        range="'Working Copy'!A1:R",
         valueInputOption="USER_ENTERED",
         body={"values": out_rows},
     ).execute()

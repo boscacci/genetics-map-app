@@ -59,7 +59,7 @@ Three separate Google Sheet files in a Drive folder:
 
 ## Data Model (Production)
 
-Columns: name_first, name_last, email, phone_work, work_website, work_institution, work_address, language_spoken, uses_interpreters, specialties, Latitude, Longitude, City, Country, credential_link. Public CSV excludes `credential_link`.
+Columns: name_first, name_last, email, phone_work, work_website, work_institution, work_address, language_spoken, uses_interpreters, specialties, Latitude, Longitude, City, Country, credential_link, address_street, address_state, address_zip (last three from Google Geocoding `address_components`). Public CSV excludes `credential_link`.
 
 ---
 

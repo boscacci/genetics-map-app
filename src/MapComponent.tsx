@@ -182,11 +182,19 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     return parts.join(', ');
   };
 
-  // Formats full address for contact modal: address + country only (city is redundant in work_address)
-  const displayFullAddress = (address?: string, _city?: string, country?: string): string => {
-    const cleanAddr = cleanDisplay(address);
-    const cleanCountry = cleanDisplay(country);
-    return [cleanAddr, cleanCountry].filter(Boolean).join(', ');
+  // Contact modal: structured fields from geocoder (no free-text duplication)
+  const displayFullAddress = (s: MapPoint): string => {
+    const street = cleanDisplay(s.address_street);
+    const city = cleanDisplay(s.City);
+    const state = cleanDisplay(s.address_state);
+    const zip = cleanDisplay(s.address_zip);
+    const country = cleanDisplay(s.Country);
+    const stateZip = [state, zip].filter(Boolean).join(' ');
+    const cityLine = [city, stateZip].filter(Boolean).join(', ');
+    const structured = [street, cityLine, country].filter(Boolean).join(', ');
+    if (structured) return structured;
+    const fallback = cleanDisplay(s.work_address);
+    return [fallback, country].filter(Boolean).join(', ');
   };
 
   const createTooltipContent = (specialist: MapPoint) => {
@@ -383,7 +391,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                 <div className="contact-item">
                   <span className="contact-icon">📍</span>
                   <span className="contact-text">
-                    {displayFullAddress(specialist.work_address, specialist.City, specialist.Country)}
+                    {displayFullAddress(specialist)}
                   </span>
                 </div>
               </div>

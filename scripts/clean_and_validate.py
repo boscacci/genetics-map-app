@@ -39,6 +39,9 @@ SHEET_HEADERS = [
     "City",
     "Country",
     "credential_link",
+    "address_street",
+    "address_state",
+    "address_zip",
 ]
 PUBLIC_HEADERS = [h for h in SHEET_HEADERS if h != "credential_link"]
 
@@ -94,7 +97,15 @@ def _strip_comment(val) -> str:
 
 
 def clean_fields(df: pd.DataFrame) -> pd.DataFrame:
-    fields = ["name_first", "name_last", "work_institution", "work_address"]
+    fields = [
+        "name_first",
+        "name_last",
+        "work_institution",
+        "work_address",
+        "address_street",
+        "address_state",
+        "address_zip",
+    ]
     df = df.copy()
     for col in fields:
         if col not in df.columns:
@@ -244,7 +255,7 @@ def _get_sheets_client():
 def _read_production_from_sheet(sheets, spreadsheet_id):
     res = sheets.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id,
-        range="'Production'!A:O",
+        range="'Production'!A:R",
     ).execute()
     rows = res.get("values", [])
     if len(rows) < 2:

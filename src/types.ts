@@ -11,6 +11,10 @@ export interface MapPoint {
   Longitude: number;
   City: string;
   Country: string;
+  /** From Google Geocoding API address_components */
+  address_street?: string;
+  address_state?: string;
+  address_zip?: string;
   interpreter_services: string;
   specialties: string;
 } 

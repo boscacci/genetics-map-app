@@ -26,7 +26,7 @@ async function loadPhoneFallback(sheets, spreadsheetId) {
   try {
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: "'Production'!A:O",
+      range: "'Production'!A:R",
     });
     const rows = res.data.values || [];
     const map = new Map();
@@ -62,7 +62,7 @@ async function main() {
   console.log('Reading Working Copy...');
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'Working Copy'!A:O",
+    range: "'Working Copy'!A:R",
   });
   const rows = res.data.values || [];
 
@@ -71,22 +71,30 @@ async function main() {
     process.exit(1);
   }
 
-  const headerRow = rows[0];
+  const extra = ['address_street', 'address_state', 'address_zip'];
+  const headerRow = [...rows[0]];
+  while (headerRow.length < 18) {
+    headerRow.push(headerRow.length >= 15 ? extra[headerRow.length - 15] : '');
+  }
   const dataRows = rows.slice(1);
 
+  const EXPECTED_COLS = 18;
+
   const cleaned = dataRows.map((row) => {
-    const nameFirst = row[NAME_FIRST_COL] ?? '';
-    const nameLast = row[NAME_LAST_COL] ?? '';
+    const padded = [...row];
+    while (padded.length < EXPECTED_COLS) padded.push('');
+    const nameFirst = padded[NAME_FIRST_COL] ?? '';
+    const nameLast = padded[NAME_LAST_COL] ?? '';
     const { name_first, name_last } = cleanFullName(nameFirst, nameLast);
 
-    let phone = (row[PHONE_COL] ?? '').toString().trim();
+    let phone = (padded[PHONE_COL] ?? '').toString().trim();
     if (isPhoneCorrupted(phone)) {
-      const email = (row[2] ?? '').toString().trim().toLowerCase();
+      const email = (padded[2] ?? '').toString().trim().toLowerCase();
       phone = phoneFallback.get(email) || '';
     }
     phone = sanitizeForSheets(phone);
 
-    const newRow = [...row];
+    const newRow = [...padded];
     newRow[NAME_FIRST_COL] = name_first;
     newRow[NAME_LAST_COL] = name_last;
     newRow[PHONE_COL] = phone;
