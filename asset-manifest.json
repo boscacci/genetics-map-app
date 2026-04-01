@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/genetics-map-app/static/css/main.fa023aba.css",
-    "main.js": "/genetics-map-app/static/js/main.a7d7fd9e.js",
+    "main.css": "/genetics-map-app/static/css/main.ede6fcad.css",
+    "main.js": "/genetics-map-app/static/js/main.67f76aa5.js",
     "index.html": "/genetics-map-app/index.html",
-    "main.fa023aba.css.map": "/genetics-map-app/static/css/main.fa023aba.css.map",
-    "main.a7d7fd9e.js.map": "/genetics-map-app/static/js/main.a7d7fd9e.js.map"
+    "main.ede6fcad.css.map": "/genetics-map-app/static/css/main.ede6fcad.css.map",
+    "main.67f76aa5.js.map": "/genetics-map-app/static/js/main.67f76aa5.js.map"
   },
   "entrypoints": [
-    "static/css/main.fa023aba.css",
-    "static/js/main.a7d7fd9e.js"
+    "static/css/main.ede6fcad.css",
+    "static/js/main.67f76aa5.js"
   ]
 }
