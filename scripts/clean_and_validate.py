@@ -42,6 +42,10 @@ SHEET_HEADERS = [
     "address_street",
     "address_state",
     "address_zip",
+    "hide_name",
+    "hide_phone",
+    "hide_email",
+    "hide_institution_address",
 ]
 PUBLIC_HEADERS = [h for h in SHEET_HEADERS if h != "credential_link"]
 
@@ -255,7 +259,7 @@ def _get_sheets_client():
 def _read_production_from_sheet(sheets, spreadsheet_id):
     res = sheets.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id,
-        range="'Production'!A:R",
+        range="'Production'!A:V",
     ).execute()
     rows = res.get("values", [])
     if len(rows) < 2:

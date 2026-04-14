@@ -372,7 +372,7 @@ def main():
     print("Reading Working Copy...", flush=True)
     result = sheets.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id,
-        range="'Working Copy'!A:R",
+        range="'Working Copy'!A:V",
     ).execute()
     rows = result.get("values", [])
     if len(rows) < 2:
@@ -380,12 +380,20 @@ def main():
         return
 
     header = rows[0]
-    _extra_headers = ("address_street", "address_state", "address_zip")
-    while len(header) < 18:
+    _extra_headers = (
+        "address_street",
+        "address_state",
+        "address_zip",
+        "hide_name",
+        "hide_phone",
+        "hide_email",
+        "hide_institution_address",
+    )
+    while len(header) < 22:
         header.append(_extra_headers[len(header) - 15] if len(header) >= 15 else "")
     data_rows = rows[1:]
-    n_cols = max(len(r) for r in rows) if rows else 18
-    n_cols = max(n_cols, 18)
+    n_cols = max(len(r) for r in rows) if rows else 22
+    n_cols = max(n_cols, 22)
     for row in data_rows:
         while len(row) < n_cols:
             row.append("")
@@ -400,7 +408,7 @@ def main():
         print("Writing to Working Copy...", flush=True)
         sheets.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
-            range="'Working Copy'!A1:R",
+            range="'Working Copy'!A1:V",
             valueInputOption="USER_ENTERED",
             body={"values": out_rows},
         ).execute()
@@ -475,7 +483,7 @@ def main():
     print("Writing to Working Copy...")
     sheets.spreadsheets().values().update(
         spreadsheetId=spreadsheet_id,
-        range="'Working Copy'!A1:R",
+        range="'Working Copy'!A1:V",
         valueInputOption="USER_ENTERED",
         body={"values": out_rows},
     ).execute()

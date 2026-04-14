@@ -60,7 +60,7 @@ async function main() {
   // Read Production from main sheet
   const prodRes = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'Production'!A:R",
+    range: "'Production'!A:V",
     valueRenderOption: 'UNFORMATTED_VALUE',
   });
   const prodValues = prodRes.data.values || [];

@@ -22,6 +22,7 @@ const HEADERS = [
   'Latitude', 'Longitude', 'City', 'Country',
   'credential_link', // Key Req 3: admin-only; never in public CSV
   'address_street', 'address_state', 'address_zip',
+  'hide_name', 'hide_phone', 'hide_email', 'hide_institution_address',
 ];
 
 async function main() {
@@ -70,8 +71,8 @@ async function main() {
     requestBody: {
       valueInputOption: 'USER_ENTERED',
       data: [
-        { range: "'Working Copy'!A1:R1", values: headerValues },
-        { range: "'Production'!A1:R1", values: headerValues },
+        { range: "'Working Copy'!A1:V1", values: headerValues },
+        { range: "'Production'!A1:V1", values: headerValues },
       ],
     },
   });

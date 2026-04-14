@@ -22,6 +22,7 @@ const PUBLIC_HEADERS = [
   'work_address', 'language_spoken', 'uses_interpreters', 'specialties',
   'Latitude', 'Longitude', 'City', 'Country',
   'address_street', 'address_state', 'address_zip',
+  'hide_name', 'hide_phone', 'hide_email', 'hide_institution_address',
 ];
 
 async function main() {
@@ -47,7 +48,7 @@ async function main() {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'Production'!A:R",
+    range: "'Production'!A:V",
   });
   const rows = res.data.values || [];
 

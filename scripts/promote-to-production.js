@@ -26,7 +26,7 @@ async function loadPhoneFallback(sheets, spreadsheetId) {
   try {
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: "'Production'!A:R",
+      range: "'Production'!A:V",
     });
     const rows = res.data.values || [];
     const map = new Map();
@@ -62,7 +62,7 @@ async function main() {
   console.log('Reading Working Copy...');
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'Working Copy'!A:R",
+    range: "'Working Copy'!A:V",
   });
   const rows = res.data.values || [];
 
@@ -71,14 +71,22 @@ async function main() {
     process.exit(1);
   }
 
-  const extra = ['address_street', 'address_state', 'address_zip'];
+  const extra = [
+    'address_street',
+    'address_state',
+    'address_zip',
+    'hide_name',
+    'hide_phone',
+    'hide_email',
+    'hide_institution_address',
+  ];
   const headerRow = [...rows[0]];
-  while (headerRow.length < 18) {
+  while (headerRow.length < 22) {
     headerRow.push(headerRow.length >= 15 ? extra[headerRow.length - 15] : '');
   }
   const dataRows = rows.slice(1);
 
-  const EXPECTED_COLS = 18;
+  const EXPECTED_COLS = 22;
 
   const cleaned = dataRows.map((row) => {
     const padded = [...row];

@@ -182,6 +182,10 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     return parts.join(', ');
   };
 
+  const isFlagTrue = (value?: string): boolean => {
+    return String(value ?? '').trim().toUpperCase() === 'TRUE';
+  };
+
   const normalizeAddressToken = (val?: string | null): string => {
     return cleanDisplay(val)
       .normalize('NFD')
@@ -299,16 +303,20 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
   };
 
   const createTooltipContent = (specialist: MapPoint) => {
+    const safeName = isFlagTrue(specialist.hide_name)
+      ? 'Anonymous Contributor'
+      : displayName(specialist.name_first, specialist.name_last);
+    const showInstitution = !isFlagTrue(specialist.hide_institution_address);
     const loc = displayLocation(specialist.City, specialist.Country);
     return `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 200px; max-width: 250px;">
         <div style="margin-bottom: 8px;">
           <div style="margin: 0 0 3px 0; font-size: 14px; font-weight: 600; color: #2c3e50; line-height: 1.3;">
-            ${displayName(specialist.name_first, specialist.name_last)}
+            ${safeName}
           </div>
-          <div style="font-size: 12px; color: #6c757d; font-weight: 500; margin-bottom: 4px;">
+          ${showInstitution ? `<div style="font-size: 12px; color: #6c757d; font-weight: 500; margin-bottom: 4px;">
             ${displayInstitution(specialist.work_institution)}
-          </div>
+          </div>` : ''}
           <div style="font-size: 11px; color: #6c757d;">
             ${loc ? '📍 ' + loc : ''}
           </div>
@@ -324,6 +332,10 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
   return (
     <>
       {specialists.flatMap((specialist, index) => {
+        const showInstitution = !isFlagTrue(specialist.hide_institution_address);
+        const safeName = isFlagTrue(specialist.hide_name)
+          ? 'Anonymous Contributor'
+          : displayName(specialist.name_first, specialist.name_last);
         const markers = createDatelineMarkers(specialist, index);
         return markers.map((markerData, markerIndex) => {
           const { specialist, lng, index: originalIndex, isDuplicate } = markerData;
@@ -389,8 +401,10 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                   }}
                 >
                   <div className="popup-header">
-                    <h3 className="popup-name">{displayName(specialist.name_first, specialist.name_last)}</h3>
-                    <div className="popup-institution">{displayInstitution(specialist.work_institution)}</div>
+                    <h3 className="popup-name">{safeName}</h3>
+                    {showInstitution && (
+                      <div className="popup-institution">{displayInstitution(specialist.work_institution)}</div>
+                    )}
                   </div>
 
                   <div className="popup-details">
@@ -431,6 +445,10 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
       {/* Contact Info Modals */}
       {specialists.map((specialist, index) => {
         const addressLines = displayFullAddress(specialist);
+        const showInstitution = !isFlagTrue(specialist.hide_institution_address);
+        const safeName = isFlagTrue(specialist.hide_name)
+          ? 'Anonymous Contributor'
+          : displayName(specialist.name_first, specialist.name_last);
         return showContactModal[index] && (
 
           <div 
@@ -443,7 +461,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
               onClick={(e) => e.stopPropagation()}
             >
               <div className="contact-modal-header">
-                <h3>Contact {displayName(specialist.name_first, specialist.name_last)}</h3>
+                <h3>Contact {safeName}</h3>
                 <button
                   className="modal-close-btn"
                   onClick={() => closeContactModal(index)}
@@ -453,10 +471,12 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
               </div>
               
               <div className="contact-modal-content">
-                <div className="contact-item">
-                  <span className="contact-icon">🏢</span>
-                  <span className="contact-text">{displayInstitution(specialist.work_institution)}</span>
-                </div>
+                {showInstitution && (
+                  <div className="contact-item">
+                    <span className="contact-icon">🏢</span>
+                    <span className="contact-text">{displayInstitution(specialist.work_institution)}</span>
+                  </div>
+                )}
                 
                 {specialist.specialties && (
                   <div className="contact-item">

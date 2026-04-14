@@ -15,6 +15,10 @@ export interface MapPoint {
   address_street?: string;
   address_state?: string;
   address_zip?: string;
+  hide_name?: string;
+  hide_phone?: string;
+  hide_email?: string;
+  hide_institution_address?: string;
   interpreter_services: string;
   specialties: string;
 } 

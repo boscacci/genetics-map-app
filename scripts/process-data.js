@@ -56,35 +56,48 @@ const cleanValue = (value) => {
   return value;
 };
 
+const normalizeHideFlag = (value) => String(cleanValue(value) || '').toUpperCase() === 'TRUE' ? 'TRUE' : 'FALSE';
+
 const parsedData = (data).filter((item) => {
   return item.Latitude && item.Longitude &&
     !Number.isNaN(Number(item.Latitude)) && !Number.isNaN(Number(item.Longitude));
 }).map((item) => {
+  const hideName = normalizeHideFlag(item.hide_name);
+  const hidePhone = normalizeHideFlag(item.hide_phone);
+  const hideEmail = normalizeHideFlag(item.hide_email);
+  const hideInstitutionAddress = normalizeHideFlag(item.hide_institution_address);
+
   // Handle First Name field specifically (cleanValue treats nan/n/a/etc as '')
-  let firstName = cleanValue(item.name_first);
-  let lastName = cleanValue(item.name_last);
+  let firstName = hideName === 'TRUE' ? 'Anonymous Contributor' : cleanValue(item.name_first);
+  let lastName = hideName === 'TRUE' ? '' : cleanValue(item.name_last);
   if (!firstName || firstName === '') {
     firstName = 'Anonymous Contributor';
     lastName = '';
     console.log(`Set anonymous contributor for: ${item.email || 'no email'}`);
   }
+
+  const scrubInstitutionAddress = hideInstitutionAddress === 'TRUE';
   
   return {
     ...item,
     name_first: firstName,
     name_last: lastName,
-    email: cleanValue(item.email),
-    phone_work: cleanValue(item.phone_work),
+    email: hideEmail === 'TRUE' ? '' : cleanValue(item.email),
+    phone_work: hidePhone === 'TRUE' ? '' : cleanValue(item.phone_work),
     work_website: cleanValue(item.work_website),
-    work_institution: cleanValue(item.work_institution),
-    work_address: cleanValue(item.work_address),
+    work_institution: scrubInstitutionAddress ? '' : cleanValue(item.work_institution),
+    work_address: scrubInstitutionAddress ? '' : cleanValue(item.work_address),
     language_spoken: cleanLanguageString(item.language_spoken),
     interpreter_services: typeof item.uses_interpreters === 'string' ? item.uses_interpreters : 'unknown',
     City: cleanValue(item.City),
     Country: cleanValue(item.Country),
-    address_street: cleanValue(item.address_street),
-    address_state: cleanValue(item.address_state),
-    address_zip: cleanValue(item.address_zip),
+    address_street: scrubInstitutionAddress ? '' : cleanValue(item.address_street),
+    address_state: scrubInstitutionAddress ? '' : cleanValue(item.address_state),
+    address_zip: scrubInstitutionAddress ? '' : cleanValue(item.address_zip),
+    hide_name: hideName,
+    hide_phone: hidePhone,
+    hide_email: hideEmail,
+    hide_institution_address: hideInstitutionAddress,
   };
 });
 
