@@ -31,16 +31,28 @@ CREDENTIALS_PATH = REPO_ROOT / ".gcp-credentials" / "genetics-map-sa-key.json"
 SHEET_ID_PATH = REPO_ROOT / ".gcp-credentials" / "sheet-id.txt"
 API_KEY_PATH = REPO_ROOT / ".gcp-credentials" / "geocoding-api-key.txt"
 
+# Canonical sheet header order (A:V)
+HEADERS = [
+    "name_first", "name_last", "hide_name",
+    "email", "hide_email",
+    "phone_work", "hide_phone",
+    "work_website", "work_institution", "work_address", "hide_institution_address",
+    "language_spoken", "uses_interpreters", "specialties",
+    "Latitude", "Longitude", "City", "Country",
+    "credential_link",
+    "address_street", "address_state", "address_zip",
+]
+
 # Column indices (0-based) per HEADERS
-WORK_INSTITUTION_COL = 5
-WORK_ADDRESS_COL = 6
-LAT_COL = 10
-LNG_COL = 11
-CITY_COL = 12
-COUNTRY_COL = 13
-ADDRESS_STREET_COL = 15
-ADDRESS_STATE_COL = 16
-ADDRESS_ZIP_COL = 17
+WORK_INSTITUTION_COL = HEADERS.index("work_institution")
+WORK_ADDRESS_COL = HEADERS.index("work_address")
+LAT_COL = HEADERS.index("Latitude")
+LNG_COL = HEADERS.index("Longitude")
+CITY_COL = HEADERS.index("City")
+COUNTRY_COL = HEADERS.index("Country")
+ADDRESS_STREET_COL = HEADERS.index("address_street")
+ADDRESS_STATE_COL = HEADERS.index("address_state")
+ADDRESS_ZIP_COL = HEADERS.index("address_zip")
 
 # Rate limiting (seconds between API calls)
 DELAY_BETWEEN_ROWS = 0.25
@@ -379,24 +391,14 @@ def main():
         print("No data rows in Working Copy.")
         return
 
-    header = rows[0]
-    _extra_headers = (
-        "address_street",
-        "address_state",
-        "address_zip",
-        "hide_name",
-        "hide_phone",
-        "hide_email",
-        "hide_institution_address",
-    )
-    while len(header) < 22:
-        header.append(_extra_headers[len(header) - 15] if len(header) >= 15 else "")
-    data_rows = rows[1:]
-    n_cols = max(len(r) for r in rows) if rows else 22
-    n_cols = max(n_cols, 22)
-    for row in data_rows:
-        while len(row) < n_cols:
-            row.append("")
+    source_header = rows[0]
+    source_idx = {str(h).strip(): i for i, h in enumerate(source_header)}
+    header = HEADERS[:]
+    data_rows = []
+    for raw_row in rows[1:]:
+        remapped = [raw_row[source_idx[h]] if h in source_idx and source_idx[h] < len(raw_row) else "" for h in HEADERS]
+        data_rows.append(remapped)
+    n_cols = len(HEADERS)
 
     if fix_cities_only:
         print("Applying city alias lookup and NYC fallback...", flush=True)

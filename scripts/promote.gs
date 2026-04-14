@@ -11,8 +11,8 @@ const PLACEHOLDER_NAMES = ['nan', 'n/a', 'na', 'null', 'undefined', '-', '--', '
 const FORMULA_PREFIXES = ['=', '+', '-', '@'];
 const NAME_FIRST_COL = 0;
 const NAME_LAST_COL = 1;
-const EMAIL_COL = 2;
-const PHONE_COL = 3;
+const EMAIL_COL = 3;
+const PHONE_COL = 5;
 
 function onOpen() {
   SpreadsheetApp.getUi()

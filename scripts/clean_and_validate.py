@@ -26,11 +26,15 @@ SHEET_ID_PATH = REPO_ROOT / ".gcp-credentials" / "sheet-id.txt"
 SHEET_HEADERS = [
     "name_first",
     "name_last",
+    "hide_name",
     "email",
+    "hide_email",
     "phone_work",
+    "hide_phone",
     "work_website",
     "work_institution",
     "work_address",
+    "hide_institution_address",
     "language_spoken",
     "uses_interpreters",
     "specialties",
@@ -42,10 +46,6 @@ SHEET_HEADERS = [
     "address_street",
     "address_state",
     "address_zip",
-    "hide_name",
-    "hide_phone",
-    "hide_email",
-    "hide_institution_address",
 ]
 PUBLIC_HEADERS = [h for h in SHEET_HEADERS if h != "credential_link"]
 
@@ -266,22 +266,20 @@ def _read_production_from_sheet(sheets, spreadsheet_id):
         return None, pd.DataFrame()
     header_row = rows[0]
     data_rows = rows[1:]
-    # Map by position: col i = SHEET_HEADERS[i]
+    idx_by_name = {str(h).strip(): i for i, h in enumerate(header_row)}
     data = []
     for row in data_rows:
         obj = {}
-        for i, h in enumerate(SHEET_HEADERS):
-            obj[h] = row[i] if i < len(row) else ""
+        for h in SHEET_HEADERS:
+            i = idx_by_name.get(h, -1)
+            obj[h] = row[i] if 0 <= i < len(row) else ""
         data.append(obj)
     df = pd.DataFrame(data, columns=SHEET_HEADERS)
     return header_row, df
 
 
 def _write_to_production(sheets, spreadsheet_id, header_row, df):
-    header = list(header_row) if header_row else SHEET_HEADERS
-    while len(header) < len(SHEET_HEADERS):
-        header.append("")
-    rows = [header]
+    rows = [SHEET_HEADERS]
     for _, r in df.iterrows():
         row = [str(r.get(h, "")) for h in SHEET_HEADERS]
         rows.append(row)

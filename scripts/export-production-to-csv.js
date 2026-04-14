@@ -18,11 +18,13 @@ const CSV_OUTPUT_PATH = path.resolve(__dirname, '../data/data.csv');
 
 // Exclude credential_link (admin-only) from export
 const PUBLIC_HEADERS = [
-  'name_first', 'name_last', 'email', 'phone_work', 'work_website', 'work_institution',
-  'work_address', 'language_spoken', 'uses_interpreters', 'specialties',
+  'name_first', 'name_last', 'hide_name',
+  'email', 'hide_email',
+  'phone_work', 'hide_phone',
+  'work_website', 'work_institution', 'work_address', 'hide_institution_address',
+  'language_spoken', 'uses_interpreters', 'specialties',
   'Latitude', 'Longitude', 'City', 'Country',
   'address_street', 'address_state', 'address_zip',
-  'hide_name', 'hide_phone', 'hide_email', 'hide_institution_address',
 ];
 
 async function main() {

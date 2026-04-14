@@ -17,9 +17,21 @@ const { isLikelyCorrupted: isPhoneCorrupted } = require('./lib/phone-validate');
 const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-map-sa-key.json');
 const SHEET_ID_PATH = path.resolve(__dirname, '../.gcp-credentials/sheet-id.txt');
 
+const EXPECTED_HEADERS = [
+  'name_first', 'name_last', 'hide_name',
+  'email', 'hide_email',
+  'phone_work', 'hide_phone',
+  'work_website', 'work_institution', 'work_address', 'hide_institution_address',
+  'language_spoken', 'uses_interpreters', 'specialties',
+  'Latitude', 'Longitude', 'City', 'Country',
+  'credential_link',
+  'address_street', 'address_state', 'address_zip',
+];
+
 const NAME_FIRST_COL = 0;
 const NAME_LAST_COL = 1;
-const PHONE_COL = 3;
+const EMAIL_COL = 3;
+const PHONE_COL = 5;
 
 /** Build email -> phone map from Production tab for recovering #ERROR! cells. Sheet is source of truth. */
 async function loadPhoneFallback(sheets, spreadsheetId) {
@@ -29,12 +41,14 @@ async function loadPhoneFallback(sheets, spreadsheetId) {
       range: "'Production'!A:V",
     });
     const rows = res.data.values || [];
+    const headerRow = rows[0] || [];
+    const emailIdx = headerRow.indexOf('email');
+    const phoneIdx = headerRow.indexOf('phone_work');
     const map = new Map();
-    // Col 2 = email, col 3 = phone_work
     for (let r = 1; r < rows.length; r++) {
       const row = rows[r];
-      const email = (row[2] || '').toString().trim().toLowerCase();
-      const phone = (row[3] || '').toString().trim();
+      const email = (row[emailIdx >= 0 ? emailIdx : EMAIL_COL] || '').toString().trim().toLowerCase();
+      const phone = (row[phoneIdx >= 0 ? phoneIdx : PHONE_COL] || '').toString().trim();
       if (email && phone && phone.toUpperCase() !== '#ERROR!') map.set(email, phone);
     }
     return map;
@@ -71,33 +85,28 @@ async function main() {
     process.exit(1);
   }
 
-  const extra = [
-    'address_street',
-    'address_state',
-    'address_zip',
-    'hide_name',
-    'hide_phone',
-    'hide_email',
-    'hide_institution_address',
-  ];
-  const headerRow = [...rows[0]];
-  while (headerRow.length < 22) {
-    headerRow.push(headerRow.length >= 15 ? extra[headerRow.length - 15] : '');
-  }
+  const sourceHeader = rows[0] || [];
+  const sourceIdxByHeader = {};
+  sourceHeader.forEach((h, idx) => {
+    sourceIdxByHeader[String(h || '').trim()] = idx;
+  });
+  const headerRow = [...EXPECTED_HEADERS];
   const dataRows = rows.slice(1);
 
-  const EXPECTED_COLS = 22;
+  const EXPECTED_COLS = EXPECTED_HEADERS.length;
 
   const cleaned = dataRows.map((row) => {
-    const padded = [...row];
-    while (padded.length < EXPECTED_COLS) padded.push('');
+    const padded = EXPECTED_HEADERS.map((header) => {
+      const srcIdx = sourceIdxByHeader[header];
+      return srcIdx !== undefined ? (row[srcIdx] ?? '') : '';
+    });
     const nameFirst = padded[NAME_FIRST_COL] ?? '';
     const nameLast = padded[NAME_LAST_COL] ?? '';
     const { name_first, name_last } = cleanFullName(nameFirst, nameLast);
 
     let phone = (padded[PHONE_COL] ?? '').toString().trim();
     if (isPhoneCorrupted(phone)) {
-      const email = (padded[2] ?? '').toString().trim().toLowerCase();
+      const email = (padded[EMAIL_COL] ?? '').toString().trim().toLowerCase();
       phone = phoneFallback.get(email) || '';
     }
     phone = sanitizeForSheets(phone);
