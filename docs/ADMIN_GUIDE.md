@@ -28,7 +28,7 @@ The Genetics Map shows genetic counselors and specialists around the world. You 
 1. Open the Genetics Map spreadsheet (link from your team)
 2. Click the **Working Copy** tab
 3. Add, edit, or delete rows
-4. **Phone numbers with +** (e.g. +91 9502409815): Type an apostrophe first: `'+91 9502409815` — otherwise Sheets treats it as a formula and shows an error
+4. **Phone numbers with +** (e.g. +91 9502409815): the `phone_work` column is Plain text, so type the `+` number directly. If a copied sheet loses Plain text formatting, run `npm run format:phones`.
 
 ---
 
@@ -69,13 +69,17 @@ When Production looks good and you want to go live:
 | name_first | First name |
 | name_last | Last name |
 | email | Email address |
-| phone_work | Work phone (use `'+91 1234567890` for international) |
+| phone_work | Work phone as plain text (international `+` numbers are OK) |
 | work_website | Website URL (include https://) |
 | work_institution | Hospital, clinic, or practice name |
+| hide_workinstitution | TRUE hides only the institution name |
+| job_title | Required job title or role |
 | work_address | Full street address |
+| hide_institution_address | TRUE hides institution and address details |
 | language_spoken | Languages (e.g., English, Spanish) |
 | uses_interpreters | TRUE or FALSE |
 | specialties | Areas of focus |
+| signed_up_for_newsletter | Working Copy only; TRUE if they opted into news/updates/future research contact |
 | Latitude, Longitude, City, Country | *Usually blank—the system fills these in* |
 
 ---
@@ -96,7 +100,7 @@ When Production looks good and you want to go live:
 
 | Symptom | Fix |
 |---------|-----|
-| Phone shows #ERROR! in sheet | Add `'` before number: `'+91 9502409815`. Re-promote |
+| Phone shows #ERROR! in sheet | Run `npm run format:phones`, then re-enter the phone as plain text and re-promote |
 | Placeholder names (nan, n/a) on map | Fix in Working Copy or leave blank; re-run Sync and Deploy |
 | City shows "NY" not "New York City" | Re-run Sync and Deploy (pipeline now fixes this) |
 | Country has "Mexico# comment" | Re-run Sync and Deploy (pipeline strips #) or edit cell |

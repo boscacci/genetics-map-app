@@ -24,4 +24,25 @@ function looksLikePhone(val) {
   return digitsOnly.length >= 7 && digitsOnly.length <= 15;
 }
 
-module.exports = { isLikelyCorrupted, looksLikePhone };
+function stripSheetTextEscape(val) {
+  if (val == null) return val;
+  const s = String(val).trim();
+  if (/^'[=+\-@]/.test(s)) return s.slice(1);
+  return s;
+}
+
+function normalizePhoneText(val) {
+  if (val == null || val === '') return '';
+  const s = stripSheetTextEscape(val);
+  if (s == null) return '';
+  const phone = String(s).trim();
+  if (phone === '' || phone.toUpperCase() === '#ERROR!') return '';
+  return phone.replace(/\s+/g, ' ');
+}
+
+module.exports = {
+  isLikelyCorrupted,
+  looksLikePhone,
+  normalizePhoneText,
+  stripSheetTextEscape,
+};

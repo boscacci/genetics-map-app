@@ -14,18 +14,15 @@ const fs = require('fs');
 const path = require('path');
 const { google } = require('googleapis');
 const Papa = require('papaparse');
+const {
+  PRODUCTION_HEADER_ROW_RANGE_A1,
+  PRODUCTION_HEADERS,
+  WORKING_COPY_HEADER_ROW_RANGE_A1,
+  WORKING_COPY_HEADERS,
+} = require('./lib/sheet-schema');
+const { applyPhoneColumnPlainTextFormat } = require('./lib/sheet-formatting');
 
 const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-map-sa-key.json');
-const HEADERS = [
-  'name_first', 'name_last', 'hide_name',
-  'email', 'hide_email',
-  'phone_work', 'hide_phone',
-  'work_website', 'work_institution', 'work_address', 'hide_institution_address',
-  'language_spoken', 'uses_interpreters', 'specialties',
-  'Latitude', 'Longitude', 'City', 'Country',
-  'credential_link', // Key Req 3: admin-only; never in public CSV
-  'address_street', 'address_state', 'address_zip',
-];
 
 async function main() {
   const spreadsheetId = process.argv[2];
@@ -67,32 +64,33 @@ async function main() {
   ];
   await sheets.spreadsheets.batchUpdate({ spreadsheetId, requestBody: { requests } });
 
-  const headerValues = [HEADERS];
   await sheets.spreadsheets.values.batchUpdate({
     spreadsheetId,
     requestBody: {
       valueInputOption: 'USER_ENTERED',
       data: [
-        { range: "'Working Copy'!A1:V1", values: headerValues },
-        { range: "'Production'!A1:V1", values: headerValues },
+        { range: `'Working Copy'!${WORKING_COPY_HEADER_ROW_RANGE_A1}`, values: [WORKING_COPY_HEADERS] },
+        { range: `'Production'!${PRODUCTION_HEADER_ROW_RANGE_A1}`, values: [PRODUCTION_HEADERS] },
       ],
     },
   });
   console.log('   Added Working Copy and Production tabs with column headers');
+  await applyPhoneColumnPlainTextFormat(sheets, spreadsheetId);
+  console.log('   Formatted phone_work columns as Plain text');
 
   const csvPath = path.resolve(__dirname, '../data/data.csv');
   if (fs.existsSync(csvPath)) {
     const csvContent = fs.readFileSync(csvPath, 'utf8');
     const { data } = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
     if (data.length > 0) {
-      const values = [HEADERS];
+      const values = [PRODUCTION_HEADERS];
       data.forEach(row => {
-        values.push(HEADERS.map(h => String(row[h] ?? '')));
+        values.push(PRODUCTION_HEADERS.map(h => String(row[h] ?? '')));
       });
       await sheets.spreadsheets.values.update({
         spreadsheetId,
         range: "'Production'!A1",
-        valueInputOption: 'USER_ENTERED',
+        valueInputOption: 'RAW',
         requestBody: { values },
       });
       console.log('   Populated Production with', data.length, 'rows from data/data.csv');
@@ -100,8 +98,13 @@ async function main() {
       await sheets.spreadsheets.values.update({
         spreadsheetId,
         range: "'Working Copy'!A1",
-        valueInputOption: 'USER_ENTERED',
-        requestBody: { values },
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [
+            WORKING_COPY_HEADERS,
+            ...data.map(row => WORKING_COPY_HEADERS.map(h => String(row[h] ?? ''))),
+          ],
+        },
       });
       console.log('   Backfilled Working Copy with same data');
     }

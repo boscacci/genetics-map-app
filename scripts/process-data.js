@@ -3,6 +3,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const Papa = require('papaparse');
 const CryptoJS = require('crypto-js');
+const { normalizeProviderRecord } = require('./lib/provider-record');
 
 // Load .secret_env if present (optional in CI)
 const envPath = path.resolve(__dirname, '../.secret_env');
@@ -36,70 +37,10 @@ if (errors.length > 0) {
   console.error('CSV parsing errors:', errors);
 }
 
-// Filter and clean data (similar to parseCSVString)
-const cleanLanguageString = (languageString) => {
-  if (!languageString) return '';
-  return languageString
-    .replace(/[.,;!?()\[\]{}"'`]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-};
-const PLACEHOLDER_NAMES = new Set(['nan', 'n/a', 'na', 'null', 'undefined', '-', '--', '']);
-
-// Helper function to convert NaN/placeholders to empty string
-const cleanValue = (value) => {
-  if (value === null || value === undefined || (typeof value === 'number' && Number.isNaN(value))) {
-    return '';
-  }
-  const s = String(value).trim().toLowerCase();
-  if (PLACEHOLDER_NAMES.has(s)) return '';
-  return value;
-};
-
-const normalizeHideFlag = (value) => String(cleanValue(value) || '').toUpperCase() === 'TRUE' ? 'TRUE' : 'FALSE';
-
 const parsedData = (data).filter((item) => {
   return item.Latitude && item.Longitude &&
     !Number.isNaN(Number(item.Latitude)) && !Number.isNaN(Number(item.Longitude));
-}).map((item) => {
-  const hideName = normalizeHideFlag(item.hide_name);
-  const hidePhone = normalizeHideFlag(item.hide_phone);
-  const hideEmail = normalizeHideFlag(item.hide_email);
-  const hideInstitutionAddress = normalizeHideFlag(item.hide_institution_address);
-
-  // Handle First Name field specifically (cleanValue treats nan/n/a/etc as '')
-  let firstName = hideName === 'TRUE' ? 'Anonymous Contributor' : cleanValue(item.name_first);
-  let lastName = hideName === 'TRUE' ? '' : cleanValue(item.name_last);
-  if (!firstName || firstName === '') {
-    firstName = 'Anonymous Contributor';
-    lastName = '';
-    console.log(`Set anonymous contributor for: ${item.email || 'no email'}`);
-  }
-
-  const scrubInstitutionAddress = hideInstitutionAddress === 'TRUE';
-  
-  return {
-    ...item,
-    name_first: firstName,
-    name_last: lastName,
-    email: hideEmail === 'TRUE' ? '' : cleanValue(item.email),
-    phone_work: hidePhone === 'TRUE' ? '' : cleanValue(item.phone_work),
-    work_website: cleanValue(item.work_website),
-    work_institution: scrubInstitutionAddress ? '' : cleanValue(item.work_institution),
-    work_address: scrubInstitutionAddress ? '' : cleanValue(item.work_address),
-    language_spoken: cleanLanguageString(item.language_spoken),
-    interpreter_services: typeof item.uses_interpreters === 'string' ? item.uses_interpreters : 'unknown',
-    City: cleanValue(item.City),
-    Country: cleanValue(item.Country),
-    address_street: scrubInstitutionAddress ? '' : cleanValue(item.address_street),
-    address_state: scrubInstitutionAddress ? '' : cleanValue(item.address_state),
-    address_zip: scrubInstitutionAddress ? '' : cleanValue(item.address_zip),
-    hide_name: hideName,
-    hide_phone: hidePhone,
-    hide_email: hideEmail,
-    hide_institution_address: hideInstitutionAddress,
-  };
-});
+}).map((item) => normalizeProviderRecord(item));
 
 // Encrypt JSON string
 const jsonString = JSON.stringify(parsedData);

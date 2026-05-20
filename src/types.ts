@@ -5,6 +5,7 @@ export interface MapPoint {
   phone_work: string;
   work_website: string;
   work_institution: string;
+  job_title: string;
   work_address: string;
   language_spoken: string;
   Latitude: number;
@@ -18,6 +19,7 @@ export interface MapPoint {
   hide_name?: string;
   hide_phone?: string;
   hide_email?: string;
+  hide_workinstitution?: string;
   hide_institution_address?: string;
   interpreter_services: string;
   specialties: string;

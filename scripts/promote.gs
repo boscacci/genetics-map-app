@@ -8,11 +8,21 @@
  */
 
 const PLACEHOLDER_NAMES = ['nan', 'n/a', 'na', 'null', 'undefined', '-', '--', ''];
-const FORMULA_PREFIXES = ['=', '+', '-', '@'];
 const NAME_FIRST_COL = 0;
 const NAME_LAST_COL = 1;
 const EMAIL_COL = 3;
 const PHONE_COL = 5;
+const PRODUCTION_HEADERS = [
+  'name_first', 'name_last', 'hide_name',
+  'email', 'hide_email',
+  'phone_work', 'hide_phone',
+  'work_website', 'work_institution', 'hide_workinstitution', 'job_title', 'work_address', 'hide_institution_address',
+  'language_spoken', 'uses_interpreters', 'specialties',
+  'Latitude', 'Longitude', 'City', 'Country',
+  'credential_link',
+  'address_street', 'address_state', 'address_zip',
+];
+const REQUIRED_HEADERS = ['job_title'];
 
 function onOpen() {
   SpreadsheetApp.getUi()
@@ -30,6 +40,7 @@ function promoteWorkingCopyToProduction() {
     SpreadsheetApp.getUi().alert('Need both "Working Copy" and "Production" sheets.');
     return;
   }
+  formatPhoneColumnsAsPlainText(workingCopy, production);
 
   const wcData = workingCopy.getDataRange().getValues();
   if (wcData.length < 2) {
@@ -68,20 +79,29 @@ function promoteWorkingCopyToProduction() {
   }
 
   const headerRow = wcData[0];
+  const sourceIdxByHeader = buildHeaderIndex(headerRow);
   const dataRows = wcData.slice(1);
+  const missingRequired = findMissingRequiredFields(dataRows, sourceIdxByHeader, REQUIRED_HEADERS);
+  if (missingRequired.length > 0) {
+    SpreadsheetApp.getUi().alert('Cannot promote Working Copy:\n' + formatMissingRequiredFields(missingRequired));
+    return;
+  }
 
   const cleaned = dataRows.map(row => {
-    const newRow = row.map(c => c);
-    const nameFirst = String(row[NAME_FIRST_COL] || '').trim();
-    const nameLast = String(row[NAME_LAST_COL] || '').trim();
+    const newRow = PRODUCTION_HEADERS.map(header => {
+      const srcIdx = sourceIdxByHeader[header];
+      return srcIdx !== undefined ? (row[srcIdx] || '') : '';
+    });
+    const nameFirst = String(newRow[NAME_FIRST_COL] || '').trim();
+    const nameLast = String(newRow[NAME_LAST_COL] || '').trim();
     const { name_first, name_last } = cleanFullName(nameFirst, nameLast);
 
-    let phone = String(row[PHONE_COL] || '').trim();
+    let phone = String(newRow[PHONE_COL] || '').trim();
     if (isLikelyCorrupted(phone)) {
-      const email = String(row[EMAIL_COL] || '').trim().toLowerCase();
+      const email = String(newRow[EMAIL_COL] || '').trim().toLowerCase();
       phone = phoneFallback.get(email) || '';
     }
-    phone = sanitizeForSheets(phone);
+    phone = normalizePhoneText(phone);
 
     newRow[NAME_FIRST_COL] = name_first;
     newRow[NAME_LAST_COL] = name_last;
@@ -90,10 +110,67 @@ function promoteWorkingCopyToProduction() {
     return newRow;
   });
 
-  const values = [headerRow, ...cleaned];
+  const values = [PRODUCTION_HEADERS, ...cleaned];
+  production.clearContents();
   production.getRange(1, 1, values.length, values[0].length).setValues(values);
 
   SpreadsheetApp.getUi().alert(`Promoted ${cleaned.length} rows from Working Copy to Production.`);
+}
+
+function buildHeaderIndex(headerRow) {
+  const idxByHeader = {};
+  headerRow.forEach((header, idx) => {
+    idxByHeader[String(header || '').trim()] = idx;
+  });
+  return idxByHeader;
+}
+
+function formatPhoneColumnsAsPlainText(workingCopy, production) {
+  const sheets = [workingCopy, production];
+  sheets.forEach(sheet => {
+    const rowCount = Math.max(sheet.getMaxRows() - 1, 1);
+    sheet.getRange(2, PHONE_COL + 1, rowCount, 1).setNumberFormat('@');
+  });
+}
+
+function isBlankRequiredValue(value) {
+  if (value == null) return true;
+  return PLACEHOLDER_NAMES.includes(String(value).trim().toLowerCase());
+}
+
+function findMissingRequiredFields(dataRows, idxByHeader, requiredHeaders) {
+  const missing = [];
+  requiredHeaders.forEach(header => {
+    const columnIndex = idxByHeader[header];
+    if (columnIndex === undefined) {
+      missing.push({ header, rowNumber: 1, reason: 'missing_column' });
+      return;
+    }
+    dataRows.forEach((row, rowIndex) => {
+      if (isBlankRequiredValue(row[columnIndex])) {
+        missing.push({ header, rowNumber: rowIndex + 2, reason: 'blank_value' });
+      }
+    });
+  });
+  return missing;
+}
+
+function formatMissingRequiredFields(missing) {
+  const missingColumns = missing.filter(item => item.reason === 'missing_column');
+  const blankValues = missing.filter(item => item.reason === 'blank_value');
+  const messages = [];
+
+  missingColumns.forEach(item => {
+    messages.push(`Missing required column: ${item.header}`);
+  });
+
+  if (blankValues.length > 0) {
+    const examples = blankValues.slice(0, 10).map(item => `${item.header} row ${item.rowNumber}`).join(', ');
+    const suffix = blankValues.length > 10 ? `, and ${blankValues.length - 10} more` : '';
+    messages.push(`Missing required values: ${examples}${suffix}`);
+  }
+
+  return messages.join('\n');
 }
 
 function cleanFullName(nameFirst, nameLast) {
@@ -149,11 +226,10 @@ function isLikelyCorrupted(val) {
   return false;
 }
 
-function sanitizeForSheets(val) {
-  if (val == null || val === '') return val;
-  const s = String(val).trim();
+function normalizePhoneText(val) {
+  if (val == null || val === '') return '';
+  let s = String(val).trim();
+  if (/^'[=+\-@]/.test(s)) s = s.slice(1);
   if (s === '' || s.toUpperCase() === '#ERROR!') return '';
-  const first = s.charAt(0);
-  if (FORMULA_PREFIXES.includes(first)) return "'" + s;
-  return s;
+  return s.replace(/\s+/g, ' ');
 }

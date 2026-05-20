@@ -220,13 +220,9 @@ Transfer all operational costs to **Einstein Montefiore Hospital** or **Monisha*
 ### Data Entry Tips
 
 **Phone numbers with a plus sign (+)**  
-Google Sheets treats `+` at the start of a cell as a formula. To enter a phone like `+91 9502409815` or `+1-404-616-7537` and have it display exactly as typed:
+The `phone_work` column is formatted as Plain text in both Working Copy and Production, so type international numbers directly: `+91 9502409815` or `+1-404-616-7537`.
 
-1. Type an **apostrophe first**: `'`
-2. Then type the full number: `+91 9502409815`
-3. The cell will show `+91 9502409815`; the apostrophe keeps it as plain text (no math)
-
-**Example:** For `+91-044-28296490`, type: `'+91-044-28296490`
+If a copied sheet loses that formatting, run `npm run format:phones` to restore Plain text formatting before entering new phone values.
 
 The system stores and displays all phone values as plain text—no calculations, no formatting changes. What you enter is what appears on the map.
 

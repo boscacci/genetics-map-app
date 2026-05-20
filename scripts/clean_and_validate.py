@@ -16,6 +16,7 @@ from pathlib import Path
 import pandas as pd
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from phone_cleaning import clean_phone
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
@@ -33,6 +34,8 @@ SHEET_HEADERS = [
     "hide_phone",
     "work_website",
     "work_institution",
+    "hide_workinstitution",
+    "job_title",
     "work_address",
     "hide_institution_address",
     "language_spoken",
@@ -105,6 +108,7 @@ def clean_fields(df: pd.DataFrame) -> pd.DataFrame:
         "name_first",
         "name_last",
         "work_institution",
+        "job_title",
         "work_address",
         "address_street",
         "address_state",
@@ -161,22 +165,6 @@ def clean_website(val):
         if re.match(domain_pattern, s, re.IGNORECASE):
             return "https://" + s.rstrip("/")
     return s if s else None
-
-
-def clean_phone(val):
-    if pd.isnull(val):
-        return None
-    val_str = str(val).strip()
-    if val_str.lower() in ("prefer not to say", "") or val_str.upper() == "#ERROR!":
-        return None
-    if "/" in val_str:
-        parts = [p.strip() for p in val_str.split("/")]
-        for part in parts:
-            if re.search(r"(\+?\d[\d\s\-\(\)]{5,})", part):
-                val_str = part
-                break
-    val_str = re.sub(r" {2,}", " ", val_str.strip())
-    return val_str if val_str else None
 
 
 INTERPRETER_PATTERNS = [
@@ -259,7 +247,7 @@ def _get_sheets_client():
 def _read_production_from_sheet(sheets, spreadsheet_id):
     res = sheets.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id,
-        range="'Production'!A:V",
+        range="'Production'!A:X",
     ).execute()
     rows = res.get("values", [])
     if len(rows) < 2:
@@ -286,7 +274,7 @@ def _write_to_production(sheets, spreadsheet_id, header_row, df):
     sheets.spreadsheets().values().update(
         spreadsheetId=spreadsheet_id,
         range="'Production'!A1",
-        valueInputOption="USER_ENTERED",
+        valueInputOption="RAW",
         body={"values": rows},
     ).execute()
 

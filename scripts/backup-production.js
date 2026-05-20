@@ -14,6 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const { google } = require('googleapis');
+const { PRODUCTION_SHEET_RANGE_A1 } = require('./lib/sheet-schema');
 
 const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-map-sa-key.json');
 const SHEET_ID_PATH = path.resolve(__dirname, '../.gcp-credentials/sheet-id.txt');
@@ -60,7 +61,7 @@ async function main() {
   // Read Production from main sheet
   const prodRes = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'Production'!A:V",
+    range: `'Production'!${PRODUCTION_SHEET_RANGE_A1}`,
     valueRenderOption: 'UNFORMATTED_VALUE',
   });
   const prodValues = prodRes.data.values || [];

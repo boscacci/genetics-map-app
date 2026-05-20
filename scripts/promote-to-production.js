@@ -11,22 +11,23 @@ const fs = require('fs');
 const path = require('path');
 const { google } = require('googleapis');
 const { cleanFullName } = require('./lib/name-cleanup');
-const { sanitizeForSheets } = require('./lib/sheet-sanitize');
-const { isLikelyCorrupted: isPhoneCorrupted } = require('./lib/phone-validate');
+const {
+  isLikelyCorrupted: isPhoneCorrupted,
+  normalizePhoneText,
+} = require('./lib/phone-validate');
+const {
+  PRODUCTION_HEADERS,
+  PRODUCTION_SHEET_RANGE_A1,
+  WORKING_COPY_SHEET_RANGE_A1,
+} = require('./lib/sheet-schema');
+const {
+  findMissingRequiredFields,
+  formatMissingRequiredFields,
+} = require('./lib/promotion-validation');
+const { applyPhoneColumnPlainTextFormat } = require('./lib/sheet-formatting');
 
 const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-map-sa-key.json');
 const SHEET_ID_PATH = path.resolve(__dirname, '../.gcp-credentials/sheet-id.txt');
-
-const EXPECTED_HEADERS = [
-  'name_first', 'name_last', 'hide_name',
-  'email', 'hide_email',
-  'phone_work', 'hide_phone',
-  'work_website', 'work_institution', 'work_address', 'hide_institution_address',
-  'language_spoken', 'uses_interpreters', 'specialties',
-  'Latitude', 'Longitude', 'City', 'Country',
-  'credential_link',
-  'address_street', 'address_state', 'address_zip',
-];
 
 const NAME_FIRST_COL = 0;
 const NAME_LAST_COL = 1;
@@ -38,7 +39,7 @@ async function loadPhoneFallback(sheets, spreadsheetId) {
   try {
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: "'Production'!A:V",
+      range: `'Production'!${PRODUCTION_SHEET_RANGE_A1}`,
     });
     const rows = res.data.values || [];
     const headerRow = rows[0] || [];
@@ -71,12 +72,13 @@ async function main() {
   });
   const sheets = google.sheets({ version: 'v4', auth });
 
+  await applyPhoneColumnPlainTextFormat(sheets, spreadsheetId);
   const phoneFallback = await loadPhoneFallback(sheets, spreadsheetId);
 
   console.log('Reading Working Copy...');
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'Working Copy'!A:V",
+    range: `'Working Copy'!${WORKING_COPY_SHEET_RANGE_A1}`,
   });
   const rows = res.data.values || [];
 
@@ -90,13 +92,17 @@ async function main() {
   sourceHeader.forEach((h, idx) => {
     sourceIdxByHeader[String(h || '').trim()] = idx;
   });
-  const headerRow = [...EXPECTED_HEADERS];
   const dataRows = rows.slice(1);
+  const missingRequired = findMissingRequiredFields(dataRows, sourceIdxByHeader, ['job_title']);
+  if (missingRequired.length > 0) {
+    console.error(`❌ Cannot promote Working Copy:\n${formatMissingRequiredFields(missingRequired)}`);
+    process.exit(1);
+  }
 
-  const EXPECTED_COLS = EXPECTED_HEADERS.length;
+  const headerRow = [...PRODUCTION_HEADERS];
 
   const cleaned = dataRows.map((row) => {
-    const padded = EXPECTED_HEADERS.map((header) => {
+    const padded = PRODUCTION_HEADERS.map((header) => {
       const srcIdx = sourceIdxByHeader[header];
       return srcIdx !== undefined ? (row[srcIdx] ?? '') : '';
     });
@@ -109,7 +115,7 @@ async function main() {
       const email = (padded[EMAIL_COL] ?? '').toString().trim().toLowerCase();
       phone = phoneFallback.get(email) || '';
     }
-    phone = sanitizeForSheets(phone);
+    phone = normalizePhoneText(phone);
 
     const newRow = [...padded];
     newRow[NAME_FIRST_COL] = name_first;
@@ -121,10 +127,15 @@ async function main() {
   const values = [headerRow, ...cleaned];
 
   console.log('Writing to Production...');
+  await sheets.spreadsheets.values.clear({
+    spreadsheetId,
+    range: `'Production'!${WORKING_COPY_SHEET_RANGE_A1}`,
+    requestBody: {},
+  });
   await sheets.spreadsheets.values.update({
     spreadsheetId,
     range: "'Production'!A1",
-    valueInputOption: 'USER_ENTERED',
+    valueInputOption: 'RAW',
     requestBody: { values },
   });
 

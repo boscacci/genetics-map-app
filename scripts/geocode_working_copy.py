@@ -31,17 +31,20 @@ CREDENTIALS_PATH = REPO_ROOT / ".gcp-credentials" / "genetics-map-sa-key.json"
 SHEET_ID_PATH = REPO_ROOT / ".gcp-credentials" / "sheet-id.txt"
 API_KEY_PATH = REPO_ROOT / ".gcp-credentials" / "geocoding-api-key.txt"
 
-# Canonical sheet header order (A:V)
+# Canonical Working Copy header order (A:Y)
 HEADERS = [
     "name_first", "name_last", "hide_name",
     "email", "hide_email",
     "phone_work", "hide_phone",
-    "work_website", "work_institution", "work_address", "hide_institution_address",
+    "work_website", "work_institution", "hide_workinstitution", "job_title",
+    "work_address", "hide_institution_address",
     "language_spoken", "uses_interpreters", "specialties",
     "Latitude", "Longitude", "City", "Country",
     "credential_link",
     "address_street", "address_state", "address_zip",
+    "signed_up_for_newsletter",
 ]
+SHEET_RANGE_A1 = "A:Y"
 
 # Column indices (0-based) per HEADERS
 WORK_INSTITUTION_COL = HEADERS.index("work_institution")
@@ -384,7 +387,7 @@ def main():
     print("Reading Working Copy...", flush=True)
     result = sheets.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id,
-        range="'Working Copy'!A:V",
+        range=f"'Working Copy'!{SHEET_RANGE_A1}",
     ).execute()
     rows = result.get("values", [])
     if len(rows) < 2:
@@ -410,8 +413,8 @@ def main():
         print("Writing to Working Copy...", flush=True)
         sheets.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
-            range="'Working Copy'!A1:V",
-            valueInputOption="USER_ENTERED",
+            range="'Working Copy'!A1:Y",
+            valueInputOption="RAW",
             body={"values": out_rows},
         ).execute()
         print(f"Done. Fixed {changed} city values.", flush=True)
@@ -485,8 +488,8 @@ def main():
     print("Writing to Working Copy...")
     sheets.spreadsheets().values().update(
         spreadsheetId=spreadsheet_id,
-        range="'Working Copy'!A1:V",
-        valueInputOption="USER_ENTERED",
+        range="'Working Copy'!A1:Y",
+        valueInputOption="RAW",
         body={"values": out_rows},
     ).execute()
     print(f"Done. Geocoded {processed} rows, skipped {skipped} empty rows.")

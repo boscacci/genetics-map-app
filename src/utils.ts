@@ -10,6 +10,7 @@ interface CSVRow {
   phone_work: string;
   work_website: string;
   work_institution: string;
+  job_title: string;
   work_address: string;
   language_spoken: string;
   Latitude: number | string;
@@ -20,7 +21,17 @@ interface CSVRow {
   specialties?: string;
   specialty?: string; // fallback: accept singular form
   speciality?: string; // fallback: accept British spelling
+  hide_name?: string;
+  hide_phone?: string;
+  hide_email?: string;
+  hide_workinstitution?: string;
+  hide_institution_address?: string;
 }
+
+const stripSheetTextEscape = (value: string): string => {
+  const trimmed = (value ?? '').toString().trim();
+  return /^'[=+\-@]/.test(trimmed) ? trimmed.slice(1) : trimmed;
+};
 
 // Function to clean up language strings by removing punctuation and normalizing whitespace
 export const cleanLanguageString = (languageString: string): string => {
@@ -54,9 +65,10 @@ export const parseCSVString = (csvString: string): MapPoint[] => {
       name_first: row.name_first,
       name_last: row.name_last,
       email: row.email,
-      phone_work: row.phone_work,
+      phone_work: stripSheetTextEscape(row.phone_work),
       work_website: row.work_website,
       work_institution: row.work_institution,
+      job_title: row.job_title || '',
       work_address: row.work_address,
       language_spoken: cleanLanguageString(row.language_spoken),
       Latitude: Number(row.Latitude),
@@ -65,6 +77,11 @@ export const parseCSVString = (csvString: string): MapPoint[] => {
       Country: row.Country,
       interpreter_services: row.uses_interpreters || 'unknown',
       specialties: (row.specialties || row.specialty || row.speciality || '') as string,
+      hide_name: row.hide_name,
+      hide_phone: row.hide_phone,
+      hide_email: row.hide_email,
+      hide_workinstitution: row.hide_workinstitution,
+      hide_institution_address: row.hide_institution_address,
     }));
     
     // Filter out specialists without coordinates
@@ -104,9 +121,10 @@ export const parseCSV = async (url: string): Promise<MapPoint[]> => {
       name_first: row.name_first,
       name_last: row.name_last,
       email: row.email,
-      phone_work: row.phone_work,
+      phone_work: stripSheetTextEscape(row.phone_work),
       work_website: row.work_website,
       work_institution: row.work_institution,
+      job_title: row.job_title || '',
       work_address: row.work_address,
       language_spoken: cleanLanguageString(row.language_spoken),
       Latitude: Number(row.Latitude),
@@ -115,6 +133,11 @@ export const parseCSV = async (url: string): Promise<MapPoint[]> => {
       Country: row.Country,
       interpreter_services: row.uses_interpreters || 'unknown',
       specialties: (row.specialties || row.specialty || row.speciality || '') as string,
+      hide_name: row.hide_name,
+      hide_phone: row.hide_phone,
+      hide_email: row.hide_email,
+      hide_workinstitution: row.hide_workinstitution,
+      hide_institution_address: row.hide_institution_address,
     }));
     
     // Filter out specialists without coordinates
@@ -150,9 +173,9 @@ function encryptData(data: string, key: string): string {
 export function simpleDecrypt(ciphertext: string, key: string): string {
   const bytes = CryptoJS.AES.decrypt(ciphertext, key);
   return bytes.toString(CryptoJS.enc.Utf8);
-} 
+}
 
 // Utility to compute SHA-256 hash (hex) of a string
 export function sha256Hex(str: string): string {
   return CryptoJS.SHA256(str).toString(CryptoJS.enc.Hex);
-} 
+}

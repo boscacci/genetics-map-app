@@ -11,21 +11,11 @@ const fs = require('fs');
 const path = require('path');
 const Papa = require('papaparse');
 const { google } = require('googleapis');
+const { PUBLIC_HEADERS, PRODUCTION_SHEET_RANGE_A1 } = require('./lib/sheet-schema');
 
 const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-map-sa-key.json');
 const SHEET_ID_PATH = path.resolve(__dirname, '../.gcp-credentials/sheet-id.txt');
 const CSV_OUTPUT_PATH = path.resolve(__dirname, '../data/data.csv');
-
-// Exclude credential_link (admin-only) from export
-const PUBLIC_HEADERS = [
-  'name_first', 'name_last', 'hide_name',
-  'email', 'hide_email',
-  'phone_work', 'hide_phone',
-  'work_website', 'work_institution', 'work_address', 'hide_institution_address',
-  'language_spoken', 'uses_interpreters', 'specialties',
-  'Latitude', 'Longitude', 'City', 'Country',
-  'address_street', 'address_state', 'address_zip',
-];
 
 async function main() {
   let credentials;
@@ -50,7 +40,7 @@ async function main() {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'Production'!A:V",
+    range: `'Production'!${PRODUCTION_SHEET_RANGE_A1}`,
   });
   const rows = res.data.values || [];
 

@@ -186,6 +186,10 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     return String(value ?? '').trim().toUpperCase() === 'TRUE';
   };
 
+  const shouldShowInstitution = (specialist: MapPoint): boolean => {
+    return !isFlagTrue(specialist.hide_workinstitution) && !isFlagTrue(specialist.hide_institution_address);
+  };
+
   const normalizeAddressToken = (val?: string | null): string => {
     return cleanDisplay(val)
       .normalize('NFD')
@@ -306,7 +310,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     const safeName = isFlagTrue(specialist.hide_name)
       ? 'Anonymous Contributor'
       : displayName(specialist.name_first, specialist.name_last);
-    const showInstitution = !isFlagTrue(specialist.hide_institution_address);
+    const showInstitution = shouldShowInstitution(specialist);
     const loc = displayLocation(specialist.City, specialist.Country);
     return `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 200px; max-width: 250px;">
@@ -332,7 +336,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
   return (
     <>
       {specialists.flatMap((specialist, index) => {
-        const showInstitution = !isFlagTrue(specialist.hide_institution_address);
+        const showInstitution = shouldShowInstitution(specialist);
         const safeName = isFlagTrue(specialist.hide_name)
           ? 'Anonymous Contributor'
           : displayName(specialist.name_first, specialist.name_last);
@@ -445,7 +449,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
       {/* Contact Info Modals */}
       {specialists.map((specialist, index) => {
         const addressLines = displayFullAddress(specialist);
-        const showInstitution = !isFlagTrue(specialist.hide_institution_address);
+        const showInstitution = shouldShowInstitution(specialist);
         const safeName = isFlagTrue(specialist.hide_name)
           ? 'Anonymous Contributor'
           : displayName(specialist.name_first, specialist.name_last);
@@ -577,4 +581,4 @@ const MapComponent: React.FC<MapComponentProps> = ({ specialists, filteredSpecia
   );
 };
 
-export default MapComponent; 
+export default MapComponent;
