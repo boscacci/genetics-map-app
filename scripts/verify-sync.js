@@ -32,8 +32,7 @@ if (fs.existsSync(envGeneratedPath)) {
     console.log('✅ .env.generated hash matches');
   } else {
     console.error(`❌ .env.generated hash mismatch!`);
-    console.error(`   Expected: ${expectedHash}`);
-    console.error(`   Found: ${hashMatch ? hashMatch[1] : 'none'}`);
+    console.error(`   Found: ${hashMatch ? `${hashMatch[1].substring(0, 16)}...` : 'none'}`);
     process.exit(1);
   }
 } else {
@@ -50,8 +49,7 @@ if (fs.existsSync(appTsxPath)) {
     console.log('✅ App.tsx SECRET_HASH matches');
   } else {
     console.error(`❌ App.tsx SECRET_HASH mismatch!`);
-    console.error(`   Expected: ${expectedHash}`);
-    console.error(`   Found: ${secretHashMatch ? secretHashMatch[1] : 'none'}`);
+    console.error(`   Found: ${secretHashMatch ? `${secretHashMatch[1].substring(0, 16)}...` : 'none'}`);
     process.exit(1);
   }
 } else {
@@ -74,6 +72,4 @@ if (fs.existsSync(blobPath)) {
 }
 
 console.log('\n✅ All checks passed! System is in sync.');
-console.log(`📝 Secret key: ${SECRET_KEY}`);
 console.log(`🔐 Hash: ${expectedHash.substring(0, 16)}...`);
-

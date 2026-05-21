@@ -129,17 +129,23 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
   };
 
   const getWebsiteLink = (website: string) => {
-    if (!website) return null;
-    
-    // Add http if it doesn't exist
-    let url = website;
-    if (!url.startsWith('http')) {
-      url = 'https://' + url;
+    const displayValue = cleanDisplay(website);
+    if (!displayValue) return null;
+
+    const candidate = /^https?:\/\//i.test(displayValue) ? displayValue : `https://${displayValue}`;
+    let url: URL;
+    try {
+      url = new URL(candidate);
+    } catch {
+      return <span className="contact-text">{displayValue}</span>;
     }
-    
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return <span className="contact-text">{displayValue}</span>;
+    }
+
     return (
-      <a href={url} target="_blank" rel="noopener noreferrer">
-        {website}
+      <a href={url.toString()} target="_blank" rel="noopener noreferrer">
+        {displayValue}
       </a>
     );
   };
@@ -306,31 +312,34 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     return { detailLine: freeText, structuredLine };
   };
 
-  const createTooltipContent = (specialist: MapPoint) => {
+  const renderTooltipContent = (specialist: MapPoint) => {
     const safeName = isFlagTrue(specialist.hide_name)
       ? 'Anonymous Contributor'
       : displayName(specialist.name_first, specialist.name_last);
     const showInstitution = shouldShowInstitution(specialist);
     const loc = displayLocation(specialist.City, specialist.Country);
-    return `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 200px; max-width: 250px;">
-        <div style="margin-bottom: 8px;">
-          <div style="margin: 0 0 3px 0; font-size: 14px; font-weight: 600; color: #2c3e50; line-height: 1.3;">
-            ${safeName}
+
+    return (
+      <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", minWidth: 200, maxWidth: 250 }}>
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ margin: '0 0 3px 0', fontSize: 14, fontWeight: 600, color: '#2c3e50', lineHeight: 1.3 }}>
+            {safeName}
           </div>
-          ${showInstitution ? `<div style="font-size: 12px; color: #6c757d; font-weight: 500; margin-bottom: 4px;">
-            ${displayInstitution(specialist.work_institution)}
-          </div>` : ''}
-          <div style="font-size: 11px; color: #6c757d;">
-            ${loc ? '📍 ' + loc : ''}
+          {showInstitution && (
+            <div style={{ fontSize: 12, color: '#6c757d', fontWeight: 500, marginBottom: 4 }}>
+              {displayInstitution(specialist.work_institution)}
+            </div>
+          )}
+          <div style={{ fontSize: 11, color: '#6c757d' }}>
+            {loc ? `📍 ${loc}` : ''}
           </div>
         </div>
 
-        <div style="padding: 6px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; font-size: 11px; font-weight: 500; text-align: center; margin-top: 6px;">
+        <div style={{ padding: '6px 10px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 500, textAlign: 'center', marginTop: 6 }}>
           Click to contact
         </div>
       </div>
-    `;
+    );
   };
 
   return (
@@ -366,7 +375,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                   permanent={false}
                   className={tooltipClass}
                 >
-                  <div dangerouslySetInnerHTML={{ __html: createTooltipContent(specialist) }} />
+                  {renderTooltipContent(specialist)}
                 </Tooltip>
               )}
               <Popup

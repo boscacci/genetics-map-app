@@ -5,8 +5,9 @@ function isBlankRequiredValue(value) {
   return PLACEHOLDER_VALUES.has(String(value).trim().toLowerCase());
 }
 
-function findMissingRequiredFields(dataRows, idxByHeader, requiredHeaders) {
+function findMissingRequiredFields(dataRows, idxByHeader, requiredHeaders, options = {}) {
   const missing = [];
+  const isRowExempt = options.isRowExempt || (() => false);
 
   for (const header of requiredHeaders) {
     const columnIndex = idxByHeader[header];
@@ -16,7 +17,7 @@ function findMissingRequiredFields(dataRows, idxByHeader, requiredHeaders) {
     }
 
     dataRows.forEach((row, rowIndex) => {
-      if (isBlankRequiredValue(row[columnIndex])) {
+      if (isBlankRequiredValue(row[columnIndex]) && !isRowExempt({ row, rowIndex, header, columnIndex })) {
         missing.push({ header, rowNumber: rowIndex + 2, reason: 'blank_value' });
       }
     });

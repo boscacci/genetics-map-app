@@ -23,7 +23,7 @@ const App: React.FC = () => {
   const [activeFilteredIndex, setActiveFilteredIndex] = useState<number>(0);
 
   // Add the hash of the secret key (from .env.generated)
-  const SECRET_HASH = "60d9b74cfda42aed2bc3f066ab4f996dfbb7a941548f1ea93403f862c88c697c";
+  const SECRET_HASH = "5c38acced5ae6d286f71c4d6b05262be5a2940e137ae4b06cb7c70bdea2c9890";
 
   const isMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||

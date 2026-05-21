@@ -40,6 +40,5 @@ if (appContent === updatedContent) {
   console.log('SECRET_HASH in App.tsx is already up to date.');
 } else {
   fs.writeFileSync(appTsxPath, updatedContent, 'utf8');
-  console.log(`Updated SECRET_HASH in App.tsx to: ${newHash}`);
+  console.log(`Updated SECRET_HASH in App.tsx to: ${newHash.substring(0, 16)}...`);
 }
-

@@ -23,6 +23,25 @@ test('promotion validation requires job title values', () => {
   ]);
 });
 
+test('promotion validation can exempt legacy rows while still requiring new rows', () => {
+  const rows = [
+    ['Ada', 'Lovelace', ''],
+    ['Grace', 'Hopper', ''],
+  ];
+  const missing = findMissingRequiredFields(
+    rows,
+    { name_first: 0, name_last: 1, job_title: 2 },
+    ['job_title'],
+    {
+      isRowExempt: ({ row }) => row[0] === 'Ada',
+    },
+  );
+
+  assert.deepEqual(missing, [
+    { header: 'job_title', rowNumber: 3, reason: 'blank_value' },
+  ]);
+});
+
 test('promotion validation reports missing required columns', () => {
   const missing = findMissingRequiredFields(
     [['Ada', 'Lovelace']],

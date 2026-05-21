@@ -48,40 +48,17 @@ function promoteWorkingCopyToProduction() {
     return;
   }
 
-  // Build email -> phone map from Production (fallback for corrupted phones)
-  const phoneFallback = new Map();
+  // Build Production context for phone fallback and legacy required-field migration.
   const prodData = production.getDataRange().getValues();
-  if (prodData.length >= 2) {
-    const headerRow = prodData[0];
-    const emailIdx = headerRow.findIndex(h => String(h).toLowerCase().includes('email'));
-    const phoneIdx = headerRow.findIndex(h => String(h).toLowerCase().includes('phone'));
-    if (emailIdx >= 0 && phoneIdx >= 0) {
-      for (let r = 1; r < prodData.length; r++) {
-        const row = prodData[r];
-        const email = String(row[emailIdx] || '').trim().toLowerCase();
-        const phone = String(row[phoneIdx] || '').trim();
-        if (email && phone && phone.toUpperCase() !== '#ERROR!') {
-          phoneFallback.set(email, phone);
-        }
-      }
-    }
-  }
-  // Fallback to column indices if header lookup fails
-  if (phoneFallback.size === 0 && prodData.length >= 2) {
-    for (let r = 1; r < prodData.length; r++) {
-      const row = prodData[r];
-      const email = String(row[EMAIL_COL] || '').trim().toLowerCase();
-      const phone = String(row[PHONE_COL] || '').trim();
-      if (email && phone && phone.toUpperCase() !== '#ERROR!') {
-        phoneFallback.set(email, phone);
-      }
-    }
-  }
+  const productionContext = buildProductionContext(prodData);
+  const phoneFallback = productionContext.phoneFallback;
 
   const headerRow = wcData[0];
   const sourceIdxByHeader = buildHeaderIndex(headerRow);
   const dataRows = wcData.slice(1);
-  const missingRequired = findMissingRequiredFields(dataRows, sourceIdxByHeader, REQUIRED_HEADERS);
+  const missingRequired = findMissingRequiredFields(dataRows, sourceIdxByHeader, REQUIRED_HEADERS, function(row, header) {
+    return header === 'job_title' && hasLegacyMissingJobTitle(row, sourceIdxByHeader, productionContext.legacyMissingJobTitleKeys);
+  });
   if (missingRequired.length > 0) {
     SpreadsheetApp.getUi().alert('Cannot promote Working Copy:\n' + formatMissingRequiredFields(missingRequired));
     return;
@@ -125,6 +102,79 @@ function buildHeaderIndex(headerRow) {
   return idxByHeader;
 }
 
+function buildProductionContext(prodData) {
+  const context = {
+    legacyMissingJobTitleKeys: new Set(),
+    phoneFallback: new Map(),
+  };
+
+  if (prodData.length < 2) return context;
+
+  const headerRow = prodData[0];
+  const idxByHeader = buildHeaderIndex(headerRow);
+  const emailIdx = idxByHeader.email;
+  const phoneIdx = idxByHeader.phone_work;
+  const jobTitleIdx = idxByHeader.job_title;
+
+  for (let r = 1; r < prodData.length; r++) {
+    const row = prodData[r];
+    const email = String(emailIdx !== undefined ? row[emailIdx] : '').trim().toLowerCase();
+    const phone = String(phoneIdx !== undefined ? row[phoneIdx] : '').trim();
+    if (email && phone && phone.toUpperCase() !== '#ERROR!') {
+      context.phoneFallback.set(email, phone);
+    }
+
+    if (jobTitleIdx === undefined || isBlankRequiredValue(row[jobTitleIdx])) {
+      providerRecordKeys(row, idxByHeader).forEach(function(key) {
+        context.legacyMissingJobTitleKeys.add(key);
+      });
+    }
+  }
+
+  // Fallback to column indices if header lookup fails.
+  if (context.phoneFallback.size === 0) {
+    for (let r = 1; r < prodData.length; r++) {
+      const row = prodData[r];
+      const email = String(row[EMAIL_COL] || '').trim().toLowerCase();
+      const phone = String(row[PHONE_COL] || '').trim();
+      if (email && phone && phone.toUpperCase() !== '#ERROR!') {
+        context.phoneFallback.set(email, phone);
+      }
+    }
+  }
+
+  return context;
+}
+
+function normalizeKeyPart(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function providerRecordKeys(row, idxByHeader) {
+  const keys = [];
+  const credentialIdx = idxByHeader.credential_link;
+  const credentialLink = credentialIdx !== undefined ? normalizeKeyPart(row[credentialIdx]) : '';
+  if (credentialLink) keys.push('credential:' + credentialLink);
+
+  const emailIdx = idxByHeader.email;
+  const email = emailIdx !== undefined ? normalizeKeyPart(row[emailIdx]) : '';
+  if (email) keys.push('email:' + email);
+
+  const parts = ['name_first', 'name_last', 'work_institution'].map(function(header) {
+    const idx = idxByHeader[header];
+    return idx !== undefined ? normalizeKeyPart(row[idx]) : '';
+  });
+  const fallback = parts.join('|');
+  if (fallback.replace(/\|/g, '')) keys.push('fallback:' + fallback);
+  return keys;
+}
+
+function hasLegacyMissingJobTitle(row, idxByHeader, legacyMissingJobTitleKeys) {
+  return providerRecordKeys(row, idxByHeader).some(function(key) {
+    return legacyMissingJobTitleKeys.has(key);
+  });
+}
+
 function formatPhoneColumnsAsPlainText(workingCopy, production) {
   const sheets = [workingCopy, production];
   sheets.forEach(sheet => {
@@ -138,8 +188,9 @@ function isBlankRequiredValue(value) {
   return PLACEHOLDER_NAMES.includes(String(value).trim().toLowerCase());
 }
 
-function findMissingRequiredFields(dataRows, idxByHeader, requiredHeaders) {
+function findMissingRequiredFields(dataRows, idxByHeader, requiredHeaders, isRowExempt) {
   const missing = [];
+  const exempt = isRowExempt || function() { return false; };
   requiredHeaders.forEach(header => {
     const columnIndex = idxByHeader[header];
     if (columnIndex === undefined) {
@@ -147,7 +198,7 @@ function findMissingRequiredFields(dataRows, idxByHeader, requiredHeaders) {
       return;
     }
     dataRows.forEach((row, rowIndex) => {
-      if (isBlankRequiredValue(row[columnIndex])) {
+      if (isBlankRequiredValue(row[columnIndex]) && !exempt(row, header)) {
         missing.push({ header, rowNumber: rowIndex + 2, reason: 'blank_value' });
       }
     });

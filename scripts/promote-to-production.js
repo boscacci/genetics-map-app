@@ -23,6 +23,7 @@ const {
 const {
   findMissingRequiredFields,
   formatMissingRequiredFields,
+  isBlankRequiredValue,
 } = require('./lib/promotion-validation');
 const { applyPhoneColumnPlainTextFormat } = require('./lib/sheet-formatting');
 
@@ -34,8 +35,49 @@ const NAME_LAST_COL = 1;
 const EMAIL_COL = 3;
 const PHONE_COL = 5;
 
-/** Build email -> phone map from Production tab for recovering #ERROR! cells. Sheet is source of truth. */
-async function loadPhoneFallback(sheets, spreadsheetId) {
+function buildHeaderIndex(headerRow) {
+  const idxByHeader = {};
+  for (let idx = 0; idx < headerRow.length; idx++) {
+    const header = String(headerRow[idx] || '').trim();
+    if (header) idxByHeader[header] = idx;
+  }
+  return idxByHeader;
+}
+
+function normalizeKeyPart(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function providerRecordKeys(row, idxByHeader) {
+  const keys = [];
+  const credentialIdx = idxByHeader.credential_link;
+  const credentialLink = credentialIdx !== undefined ? normalizeKeyPart(row[credentialIdx]) : '';
+  if (credentialLink) keys.push(`credential:${credentialLink}`);
+
+  const emailIdx = idxByHeader.email;
+  const email = emailIdx !== undefined ? normalizeKeyPart(row[emailIdx]) : '';
+  if (email) keys.push(`email:${email}`);
+
+  const parts = ['name_first', 'name_last', 'work_institution'].map((header) => {
+    const idx = idxByHeader[header];
+    return idx !== undefined ? normalizeKeyPart(row[idx]) : '';
+  });
+  const fallback = parts.join('|');
+  if (fallback.replace(/\|/g, '')) keys.push(`fallback:${fallback}`);
+  return keys;
+}
+
+function hasLegacyMissingJobTitle(row, idxByHeader, legacyMissingJobTitleKeys) {
+  return providerRecordKeys(row, idxByHeader).some((key) => legacyMissingJobTitleKeys.has(key));
+}
+
+/** Build Production context for recovering phones and allowing legacy blank job titles. */
+async function loadProductionContext(sheets, spreadsheetId) {
+  const context = {
+    legacyMissingJobTitleKeys: new Set(),
+    phoneFallback: new Map(),
+  };
+
   try {
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId,
@@ -43,19 +85,28 @@ async function loadPhoneFallback(sheets, spreadsheetId) {
     });
     const rows = res.data.values || [];
     const headerRow = rows[0] || [];
-    const emailIdx = headerRow.indexOf('email');
-    const phoneIdx = headerRow.indexOf('phone_work');
-    const map = new Map();
+    const idxByHeader = buildHeaderIndex(headerRow);
+    const emailIdx = idxByHeader.email;
+    const phoneIdx = idxByHeader.phone_work;
+    const jobTitleIdx = idxByHeader.job_title;
+
     for (let r = 1; r < rows.length; r++) {
       const row = rows[r];
       const email = (row[emailIdx >= 0 ? emailIdx : EMAIL_COL] || '').toString().trim().toLowerCase();
       const phone = (row[phoneIdx >= 0 ? phoneIdx : PHONE_COL] || '').toString().trim();
-      if (email && phone && phone.toUpperCase() !== '#ERROR!') map.set(email, phone);
+      if (email && phone && phone.toUpperCase() !== '#ERROR!') context.phoneFallback.set(email, phone);
+
+      if (jobTitleIdx === undefined || isBlankRequiredValue(row[jobTitleIdx])) {
+        for (const key of providerRecordKeys(row, idxByHeader)) {
+          context.legacyMissingJobTitleKeys.add(key);
+        }
+      }
     }
-    return map;
-  } catch {
-    return new Map();
+  } catch (err) {
+    console.warn('Could not load Production context:', err.message);
   }
+
+  return context;
 }
 
 async function main() {
@@ -73,7 +124,7 @@ async function main() {
   const sheets = google.sheets({ version: 'v4', auth });
 
   await applyPhoneColumnPlainTextFormat(sheets, spreadsheetId);
-  const phoneFallback = await loadPhoneFallback(sheets, spreadsheetId);
+  const { legacyMissingJobTitleKeys, phoneFallback } = await loadProductionContext(sheets, spreadsheetId);
 
   console.log('Reading Working Copy...');
   const res = await sheets.spreadsheets.values.get({
@@ -88,12 +139,13 @@ async function main() {
   }
 
   const sourceHeader = rows[0] || [];
-  const sourceIdxByHeader = {};
-  sourceHeader.forEach((h, idx) => {
-    sourceIdxByHeader[String(h || '').trim()] = idx;
-  });
+  const sourceIdxByHeader = buildHeaderIndex(sourceHeader);
   const dataRows = rows.slice(1);
-  const missingRequired = findMissingRequiredFields(dataRows, sourceIdxByHeader, ['job_title']);
+  const missingRequired = findMissingRequiredFields(dataRows, sourceIdxByHeader, ['job_title'], {
+    isRowExempt: ({ row, header }) => (
+      header === 'job_title' && hasLegacyMissingJobTitle(row, sourceIdxByHeader, legacyMissingJobTitleKeys)
+    ),
+  });
   if (missingRequired.length > 0) {
     console.error(`❌ Cannot promote Working Copy:\n${formatMissingRequiredFields(missingRequired)}`);
     process.exit(1);

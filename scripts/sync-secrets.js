@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
 const secretEnvPath = path.resolve(repoRoot, '.secret_env');
@@ -20,25 +20,27 @@ if (!match) exitWith('Error: REACT_APP_SECRET_KEY not found in .secret_env');
 const passphrase = match[1].trim();
 
 try {
-  execSync('gh --version', { stdio: 'ignore' });
+  execFileSync('gh', ['--version'], { stdio: 'ignore' });
 } catch (e) {
   exitWith('Error: GitHub CLI (gh) not installed. Install from https://cli.github.com/');
 }
 
 try {
-  execSync('gh auth status', { stdio: 'ignore' });
+  execFileSync('gh', ['auth', 'status'], { stdio: 'ignore' });
 } catch (e) {
   exitWith('Error: Not authenticated with GitHub CLI. Run: gh auth login');
 }
 
 function setSecret(name, value) {
   console.log(`Updating GitHub repository secret ${name}...`);
-  execSync(`gh secret set ${name} --body "${value.replace(/"/g, '\\"')}"`);
+  execFileSync('gh', ['secret', 'set', name], {
+    input: value,
+    stdio: ['pipe', 'inherit', 'inherit'],
+  });
   console.log(`✅ Updated ${name}`);
 }
 
 setSecret('REACT_APP_SECRET_KEY', passphrase);
 
 console.log('Secret synced successfully.');
-
 
