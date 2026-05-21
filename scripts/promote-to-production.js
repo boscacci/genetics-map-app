@@ -25,7 +25,7 @@ const {
   formatMissingRequiredFields,
   isBlankRequiredValue,
 } = require('./lib/promotion-validation');
-const { applyPhoneColumnPlainTextFormat } = require('./lib/sheet-formatting');
+const { applySheetColumnFormatting } = require('./lib/sheet-formatting');
 
 const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-map-sa-key.json');
 const SHEET_ID_PATH = path.resolve(__dirname, '../.gcp-credentials/sheet-id.txt');
@@ -123,7 +123,7 @@ async function main() {
   });
   const sheets = google.sheets({ version: 'v4', auth });
 
-  await applyPhoneColumnPlainTextFormat(sheets, spreadsheetId);
+  await applySheetColumnFormatting(sheets, spreadsheetId);
   const { legacyMissingJobTitleKeys, phoneFallback } = await loadProductionContext(sheets, spreadsheetId);
 
   console.log('Reading Working Copy...');

@@ -4,24 +4,34 @@ const {
 } = require('./sheet-schema');
 
 const PHONE_HEADER = 'phone_work';
+const BOOLEAN_WORKING_COPY_HEADERS = ['signed_up_for_newsletter'];
+const TEXT_VALIDATION_CLEAR_HEADERS = ['job_title'];
 
-function phoneColumnIndex(headers) {
-  const index = headers.indexOf(PHONE_HEADER);
+function columnIndex(headers, header) {
+  const index = headers.indexOf(header);
   if (index === -1) {
-    throw new Error(`Missing ${PHONE_HEADER} column in sheet headers`);
+    throw new Error(`Missing ${header} column in sheet headers`);
   }
   return index;
+}
+
+function phoneColumnIndex(headers) {
+  return columnIndex(headers, PHONE_HEADER);
+}
+
+function columnRange(sheetId, columnIndex) {
+  return {
+    sheetId,
+    startRowIndex: 1,
+    startColumnIndex: columnIndex,
+    endColumnIndex: columnIndex + 1,
+  };
 }
 
 function buildPlainTextColumnRequest(sheetId, columnIndex) {
   return {
     repeatCell: {
-      range: {
-        sheetId,
-        startRowIndex: 1,
-        startColumnIndex: columnIndex,
-        endColumnIndex: columnIndex + 1,
-      },
+      range: columnRange(sheetId, columnIndex),
       cell: {
         userEnteredFormat: {
           numberFormat: {
@@ -50,7 +60,55 @@ function buildPhoneColumnPlainTextRequests(sheetIdByTitle) {
   return requests;
 }
 
-async function applyPhoneColumnPlainTextFormat(sheets, spreadsheetId) {
+function buildBooleanColumnValidationRequests(sheetIdByTitle) {
+  const sheetId = sheetIdByTitle.get('Working Copy');
+  if (sheetId === undefined) return [];
+
+  return BOOLEAN_WORKING_COPY_HEADERS.map((header) => ({
+    setDataValidation: {
+      range: columnRange(sheetId, columnIndex(WORKING_COPY_HEADERS, header)),
+      rule: {
+        condition: {
+          type: 'BOOLEAN',
+        },
+        strict: true,
+        showCustomUi: true,
+      },
+    },
+  }));
+}
+
+function buildTextColumnValidationClearRequests(sheetIdByTitle) {
+  const requests = [];
+  const targets = [
+    ['Working Copy', WORKING_COPY_HEADERS],
+    ['Production', PRODUCTION_HEADERS],
+  ];
+
+  for (const [title, headers] of targets) {
+    const sheetId = sheetIdByTitle.get(title);
+    if (sheetId === undefined) continue;
+    for (const header of TEXT_VALIDATION_CLEAR_HEADERS) {
+      requests.push({
+        setDataValidation: {
+          range: columnRange(sheetId, columnIndex(headers, header)),
+        },
+      });
+    }
+  }
+
+  return requests;
+}
+
+function buildSheetFormattingRequests(sheetIdByTitle) {
+  return [
+    ...buildPhoneColumnPlainTextRequests(sheetIdByTitle),
+    ...buildBooleanColumnValidationRequests(sheetIdByTitle),
+    ...buildTextColumnValidationClearRequests(sheetIdByTitle),
+  ];
+}
+
+async function applySheetColumnFormatting(sheets, spreadsheetId) {
   const res = await sheets.spreadsheets.get({
     spreadsheetId,
     fields: 'sheets(properties(sheetId,title))',
@@ -63,7 +121,7 @@ async function applyPhoneColumnPlainTextFormat(sheets, spreadsheetId) {
     }
   }
 
-  const requests = buildPhoneColumnPlainTextRequests(sheetIdByTitle);
+  const requests = buildSheetFormattingRequests(sheetIdByTitle);
   if (requests.length === 0) return;
 
   await sheets.spreadsheets.batchUpdate({
@@ -73,9 +131,20 @@ async function applyPhoneColumnPlainTextFormat(sheets, spreadsheetId) {
 }
 
 module.exports = {
+  BOOLEAN_WORKING_COPY_HEADERS,
   PHONE_HEADER,
+  TEXT_VALIDATION_CLEAR_HEADERS,
   applyPhoneColumnPlainTextFormat,
+  applySheetColumnFormatting,
+  buildBooleanColumnValidationRequests,
   buildPhoneColumnPlainTextRequests,
   buildPlainTextColumnRequest,
+  buildSheetFormattingRequests,
+  buildTextColumnValidationClearRequests,
+  columnIndex,
   phoneColumnIndex,
 };
+
+async function applyPhoneColumnPlainTextFormat(sheets, spreadsheetId) {
+  return applySheetColumnFormatting(sheets, spreadsheetId);
+}

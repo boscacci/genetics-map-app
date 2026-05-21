@@ -40,7 +40,7 @@ function promoteWorkingCopyToProduction() {
     SpreadsheetApp.getUi().alert('Need both "Working Copy" and "Production" sheets.');
     return;
   }
-  formatPhoneColumnsAsPlainText(workingCopy, production);
+  formatSheetControls(workingCopy, production);
 
   const wcData = workingCopy.getDataRange().getValues();
   if (wcData.length < 2) {
@@ -175,12 +175,27 @@ function hasLegacyMissingJobTitle(row, idxByHeader, legacyMissingJobTitleKeys) {
   });
 }
 
-function formatPhoneColumnsAsPlainText(workingCopy, production) {
-  const sheets = [workingCopy, production];
-  sheets.forEach(sheet => {
-    const rowCount = Math.max(sheet.getMaxRows() - 1, 1);
-    sheet.getRange(2, PHONE_COL + 1, rowCount, 1).setNumberFormat('@');
+function formatSheetControls(workingCopy, production) {
+  [workingCopy, production].forEach(function(sheet) {
+    getColumnBodyRange(sheet, 'phone_work').setNumberFormat('@');
+    getColumnBodyRange(sheet, 'job_title').clearDataValidations();
   });
+
+  getColumnBodyRange(workingCopy, 'signed_up_for_newsletter').setDataValidation(
+    SpreadsheetApp.newDataValidation().requireCheckbox().build()
+  );
+}
+
+function getColumnBodyRange(sheet, header) {
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const index = headers.findIndex(function(value) {
+    return String(value || '').trim() === header;
+  });
+  if (index === -1) {
+    throw new Error('Missing required sheet column: ' + header);
+  }
+  const rowCount = Math.max(sheet.getMaxRows() - 1, 1);
+  return sheet.getRange(2, index + 1, rowCount, 1);
 }
 
 function isBlankRequiredValue(value) {

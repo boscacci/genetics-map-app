@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 /**
- * Format phone_work columns as Plain text in Working Copy and Production.
+ * Format Google Sheet controls:
+ * - phone_work as Plain text in Working Copy and Production
+ * - signed_up_for_newsletter as a boolean checkbox in Working Copy
+ * - job_title as plain free text, with accidental checkbox validation removed
  * This lets admins type international numbers like +1 404 555 1212 directly.
  */
 
 const fs = require('fs');
 const path = require('path');
 const { google } = require('googleapis');
-const { applyPhoneColumnPlainTextFormat } = require('./lib/sheet-formatting');
+const { applySheetColumnFormatting } = require('./lib/sheet-formatting');
 
 const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-map-sa-key.json');
 const SHEET_ID_PATH = path.resolve(__dirname, '../.gcp-credentials/sheet-id.txt');
@@ -26,8 +29,8 @@ async function main() {
   });
   const sheets = google.sheets({ version: 'v4', auth });
 
-  await applyPhoneColumnPlainTextFormat(sheets, spreadsheetId);
-  console.log('Phone columns formatted as Plain text in Working Copy and Production.');
+  await applySheetColumnFormatting(sheets, spreadsheetId);
+  console.log('Sheet controls formatted: phone_work as Plain text, newsletter signup as boolean, job_title as text.');
 }
 
 main().catch((err) => {

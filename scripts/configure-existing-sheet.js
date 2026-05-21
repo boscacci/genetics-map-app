@@ -20,7 +20,7 @@ const {
   WORKING_COPY_HEADER_ROW_RANGE_A1,
   WORKING_COPY_HEADERS,
 } = require('./lib/sheet-schema');
-const { applyPhoneColumnPlainTextFormat } = require('./lib/sheet-formatting');
+const { applySheetColumnFormatting } = require('./lib/sheet-formatting');
 
 const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-map-sa-key.json');
 
@@ -75,8 +75,8 @@ async function main() {
     },
   });
   console.log('   Added Working Copy and Production tabs with column headers');
-  await applyPhoneColumnPlainTextFormat(sheets, spreadsheetId);
-  console.log('   Formatted phone_work columns as Plain text');
+  await applySheetColumnFormatting(sheets, spreadsheetId);
+  console.log('   Formatted sheet controls');
 
   const csvPath = path.resolve(__dirname, '../data/data.csv');
   if (fs.existsSync(csvPath)) {

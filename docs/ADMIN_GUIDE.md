@@ -73,13 +73,13 @@ When Production looks good and you want to go live:
 | work_website | Website URL (include https://) |
 | work_institution | Hospital, clinic, or practice name |
 | hide_workinstitution | TRUE hides only the institution name |
-| job_title | Required job title or role for new records; older records can be filled in as they are updated |
+| job_title | Required free-text job title or role for new records; older records can be filled in as they are updated |
 | work_address | Full street address |
 | hide_institution_address | TRUE hides institution and address details |
 | language_spoken | Languages (e.g., English, Spanish) |
 | uses_interpreters | TRUE or FALSE |
 | specialties | Areas of focus |
-| signed_up_for_newsletter | Working Copy only; TRUE if they opted into news/updates/future research contact |
+| signed_up_for_newsletter | Working Copy only; boolean checkbox/TRUE if they opted into news/updates/future research contact |
 | Latitude, Longitude, City, Country | *Usually blank—the system fills these in* |
 
 ---

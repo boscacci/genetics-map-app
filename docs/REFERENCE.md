@@ -61,7 +61,7 @@ Three separate Google Sheet files in a Drive folder:
 
 Production columns: name_first, name_last, hide_name, email, hide_email, phone_work, hide_phone, work_website, work_institution, hide_workinstitution, job_title, work_address, hide_institution_address, language_spoken, uses_interpreters, specialties, Latitude, Longitude, City, Country, credential_link, address_street, address_state, address_zip (address fields from Google Geocoding `address_components`; hide fields are boolean privacy flags). Public CSV excludes `credential_link`.
 
-Working Copy has one additional internal-only column: signed_up_for_newsletter. Promotion ignores it, so it does not flow into Production, public CSV, encrypted map data, backups, or exports.
+Working Copy has one additional internal-only boolean column: signed_up_for_newsletter. Promotion ignores it, so it does not flow into Production, public CSV, encrypted map data, backups, or exports.
 
 ---
 
