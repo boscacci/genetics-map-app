@@ -8,7 +8,7 @@
     "prestart": "node scripts/hash-secret.js && node scripts/update-app-hash.js",
     "start": "dotenv -e .env.generated -- react-scripts start",
     "prebuild": "node scripts/hash-secret.js && node scripts/update-app-hash.js",
-    "build": "dotenv -e .env.generated -- react-scripts build",
+    "build": "GENERATE_SOURCEMAP=false dotenv -e .env.generated -- react-scripts build",
     "test": "react-scripts test",
     "test:scripts": "node --test tests/*.test.js",
     "eject": "react-scripts eject",
