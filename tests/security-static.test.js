@@ -30,3 +30,11 @@ test('unused vulnerable router dependency stays removed', () => {
   const pkg = JSON.parse(read('package.json'));
   assert.equal(pkg.dependencies['react-router-dom'], undefined);
 });
+
+test('app preserves access for previous deployed map key', () => {
+  const app = read('src/App.tsx');
+
+  assert.ok(app.includes('LEGACY_SECRET_HASH'));
+  assert.ok(app.includes('LEGACY_ENCRYPTED_SPECIALISTS_DATA'));
+  assert.ok(app.includes('ACCESS_PROFILES'));
+});

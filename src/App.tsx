@@ -2,12 +2,18 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { MapPoint } from './types';
 import MapComponent from './MapComponent';
 import FilterComponent from './FilterComponent';
-import { loadSecureData, publicData } from './secureData';
+import { loadSecureData } from './secureData';
 import { ENCRYPTED_SPECIALISTS_DATA } from './secureDataBlob';
+import { LEGACY_ENCRYPTED_SPECIALISTS_DATA } from './legacySecureDataBlob';
 import './App.css';
 import { sha256Hex } from './utils';
 
-// Remove all .env, salt, hash, and fallback logic
+const SECRET_HASH = "5c38acced5ae6d286f71c4d6b05262be5a2940e137ae4b06cb7c70bdea2c9890";
+const LEGACY_SECRET_HASH = "60d9b74cfda42aed2bc3f066ab4f996dfbb7a941548f1ea93403f862c88c697c";
+const ACCESS_PROFILES = [
+  { hash: SECRET_HASH, encryptedData: ENCRYPTED_SPECIALISTS_DATA },
+  { hash: LEGACY_SECRET_HASH, encryptedData: LEGACY_ENCRYPTED_SPECIALISTS_DATA },
+];
 
 const App: React.FC = () => {
   const [specialists, setSpecialists] = useState<MapPoint[]>([]);
@@ -20,10 +26,8 @@ const App: React.FC = () => {
   const [authChecked, setAuthChecked] = useState<boolean>(false);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState<boolean>(false);
   const [decryptionKey, setDecryptionKey] = useState<string>('');
+  const [encryptedData, setEncryptedData] = useState<string>('');
   const [activeFilteredIndex, setActiveFilteredIndex] = useState<number>(0);
-
-  // Add the hash of the secret key (from .env.generated)
-  const SECRET_HASH = "5c38acced5ae6d286f71c4d6b05262be5a2940e137ae4b06cb7c70bdea2c9890";
 
   const isMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
@@ -36,10 +40,12 @@ const App: React.FC = () => {
     if (urlKey && urlKey.trim().length > 0) {
       // Hash the key and compare to stored hash
       const keyHash = sha256Hex(urlKey.trim());
-      if (keyHash === SECRET_HASH) {
+      const accessProfile = ACCESS_PROFILES.find((profile) => profile.hash === keyHash);
+      if (accessProfile) {
         setIsAuthenticated(true);
         setAuthChecked(true);
         setDecryptionKey(urlKey);
+        setEncryptedData(accessProfile.encryptedData);
       } else {
         setIsAuthenticated(false);
         setAuthChecked(true);
@@ -53,9 +59,9 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && decryptionKey) {
+    if (isAuthenticated && decryptionKey && encryptedData) {
       try {
-        const secureData = loadSecureData(decryptionKey);
+        const secureData = loadSecureData(decryptionKey, encryptedData);
         if (secureData.length === 0) {
           setError('Failed to decrypt data. The key may be incorrect.');
           setLoading(false);
@@ -69,7 +75,7 @@ const App: React.FC = () => {
         setLoading(false);
       }
     }
-  }, [isAuthenticated, decryptionKey]);
+  }, [isAuthenticated, decryptionKey, encryptedData]);
 
   const handleFilterMapNavigation = (lat: number, lng: number, zoom: number) => {
     setMapCenter([lat, lng]);
@@ -223,4 +229,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App; 
+export default App;

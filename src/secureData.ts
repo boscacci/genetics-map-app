@@ -2,9 +2,9 @@ import { ENCRYPTED_SPECIALISTS_DATA } from './secureDataBlob';
 import { simpleDecrypt } from './utils';
 import { MapPoint } from './types';
 
-export function loadSecureData(key: string): MapPoint[] {
+export function loadSecureData(key: string, encryptedData = ENCRYPTED_SPECIALISTS_DATA): MapPoint[] {
   try {
-    const decrypted = simpleDecrypt(ENCRYPTED_SPECIALISTS_DATA, key);
+    const decrypted = simpleDecrypt(encryptedData, key);
     return JSON.parse(decrypted) as MapPoint[];
   } catch (e) {
     console.error('Failed to load secure data:', e);
@@ -12,4 +12,4 @@ export function loadSecureData(key: string): MapPoint[] {
   }
 }
 
-export const publicData: MapPoint[] = []; 
+export const publicData: MapPoint[] = [];
