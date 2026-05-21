@@ -827,7 +827,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 }}
               />
             </div>
-            <div className="filter-group">
+            <div className="filter-group name-filter">
               <label>Name</label>
               <input
                 type="text"
@@ -839,19 +839,21 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
                 aria-label="Search by provider name"
               />
             </div>
+            <div className="filter-actions">
+              <button
+                className="filter-clear-all-btn"
+                onClick={clearAllFilters}
+                title="Clear all filters"
+                aria-label="Clear all filters"
+              >
+                Clear
+              </button>
+            </div>
           </div>
-          <button 
-            className="filter-clear-all-btn"
-            onClick={clearAllFilters}
-            title="Clear all filters"
-            aria-label="Clear all filters"
-          >
-            Clear
-          </button>
         </div>
       </div>
     </>
   );
 };
 
-export default FilterComponent; 
+export default FilterComponent;

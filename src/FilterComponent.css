@@ -48,23 +48,26 @@
 
 .filter-group label {
   display: block;
-  margin-bottom: 4px;
-  font-size: 13px;
+  margin-bottom: 6px;
+  font-size: 11px;
   color: #555;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  line-height: 1.2;
 }
 
 .filter-input {
   width: 100%;
   box-sizing: border-box;
-  height: 28px;
-  padding: 2px 8px;
+  height: 36px;
+  padding: 0 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 13px;
   background-color: #fafafa;
   color: #333;
-  line-height: 1.3;
+  line-height: normal;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -296,14 +299,14 @@
   position: absolute;
   z-index: 2000;
   background: #fff;
-  border-radius: 10px; /* Slightly smaller radius */
-  box-shadow: 0 6px 24px rgba(0,0,0,0.12); /* Lighter shadow */
-  padding: 12px 16px 52px 16px; /* Extra bottom padding for Clear button */
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  padding: 14px 16px 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px; /* Reduced gap */
-  min-width: 500px; /* Reduced from 600px */
-  max-width: 700px; /* Reduced from 800px */
+  gap: 10px;
+  width: 760px;
+  max-width: calc(100vw - 56px);
   border: 1px solid #e0e0e0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   overflow: visible;
@@ -331,14 +334,12 @@
 }
 
 .filter-clear-all-btn {
-  position: absolute;
-  bottom: 10px; /* pin to bottom-right below grid */
-  right: 16px;
   background: #ffffff;
   color: #e74c3c;
   border: 1px solid rgba(231, 76, 60, 0.6);
-  border-radius: 999px; /* pill shape */
-  padding: 6px 12px;
+  border-radius: 999px;
+  height: 36px;
+  padding: 0 18px;
   font-size: 12px;
   font-weight: 600;
   line-height: 1;
@@ -350,7 +351,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  min-width: 84px; /* compact */
+  min-width: 84px;
   user-select: none;
 }
 
@@ -437,11 +438,19 @@
 /* Grid layout for filters */
 .filter-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(5, minmax(112px, 1fr)) auto;
   grid-template-rows: auto;
-  gap: 8px; /* Reduced from 12px */
+  align-items: end;
+  gap: 10px 12px;
   width: 100%;
-  margin-top: 2px; /* Reduced from 4px */
+  margin-top: 0;
+}
+
+.filter-actions {
+  align-self: end;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 84px;
 }
 
 /* Medium screens - 2 columns */
@@ -450,6 +459,10 @@
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto auto;
     gap: 10px;
+  }
+
+  .filter-actions {
+    grid-column: 2;
   }
 }
 
@@ -461,12 +474,12 @@
 
 .filter-group label {
   display: block;
-  margin-bottom: 4px; /* Reduced from 8px */
-  font-size: 10px; /* Smaller label font */
+  margin-bottom: 6px;
+  font-size: 11px;
   color: #555;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.6px; /* Reduced letter spacing */
+  letter-spacing: 0;
   line-height: 1.2;
 }
 
@@ -482,28 +495,28 @@
 
 .react-select__control {
   border: 1px solid #ddd !important;
-  border-radius: 4px !important; /* Smaller radius */
-  min-height: 28px !important; /* Base height */
-  height: auto !important; /* Grow with chips */
-  max-height: none !important; /* No cap */
+  border-radius: 4px !important;
+  min-height: 36px !important;
+  height: auto !important;
+  max-height: none !important;
   box-shadow: none !important;
-  font-size: 12px !important; /* Smaller font */
+  font-size: 13px !important;
   background-color: #fafafa !important;
-  padding: 0 4px !important; /* Minimal vertical padding */
-  line-height: 1.3 !important; /* Tighter line height */
-  overflow: visible !important; /* Allow chips to expand and be clickable */
+  padding: 0 6px !important;
+  line-height: 1.3 !important;
+  overflow: visible !important;
 }
 
 .react-select__value-container {
-  padding: 2px 6px !important; /* Consistent vertical breathing room */
+  padding: 2px 6px !important;
   flex-wrap: wrap !important;
-  gap: 2px !important; /* Smaller gap */
-  min-height: 28px !important; /* Base height */
-  height: auto !important; /* Allow height to grow with chips */
-  align-items: center !important; /* Center placeholder/empty */
-  overflow: visible !important; /* Allow chips to expand fully */
+  gap: 2px !important;
+  min-height: 34px !important;
+  height: auto !important;
+  align-items: center !important;
+  overflow: visible !important;
   max-width: 100% !important;
-  width: 100% !important; /* Take full width of control */
+  width: 100% !important;
   display: flex !important;
 }
 
@@ -597,10 +610,10 @@
 
 .react-select__placeholder {
   color: #999 !important;
-  font-size: 12px !important; /* Slightly larger for readability */
+  font-size: 13px !important;
   margin: 0 !important;
-  padding: 0 !important; /* No padding */
-  line-height: 1.3 !important; /* Tighter line height */
+  padding: 0 !important;
+  line-height: 1.4 !important;
   display: flex !important;
   align-items: center !important;
   height: auto !important;
@@ -629,15 +642,15 @@
   }
   
   .filter-group label {
-    font-size: 9px !important; /* Smaller labels for mobile */
-    margin-bottom: 2px !important; /* Reduced margin */
-    letter-spacing: 0.4px !important; /* Tighter letter spacing */
-    font-weight: 600 !important; /* Slightly bolder for readability */
+    font-size: 9px !important;
+    margin-bottom: 3px !important;
+    letter-spacing: 0 !important;
+    font-weight: 600 !important;
   }
   .filter-input {
-    font-size: 16px !important; /* Prevent iOS zoom on focus */
+    font-size: 16px !important;
     height: 32px !important;
-    padding: 2px 6px !important;
+    padding: 0 8px !important;
   }
   .react-select-container {
     width: 100%;
@@ -648,18 +661,19 @@
   /* Mobile positioning - top of screen with better viewport handling */
   .topright-filter-container {
     position: fixed !important;
-    top: 70px !important; /* Moved up slightly */
+    top: 70px !important;
     bottom: auto !important;
-    left: 8px !important; /* Tighter margins */
+    left: 8px !important;
     right: 8px !important;
+    width: auto !important;
     min-width: auto !important;
     max-width: none !important;
-    max-height: none !important; /* Remove height constraint to allow dropdowns */
-    overflow: visible !important; /* Allow dropdowns to overflow */
-    padding: 6px 6px 48px 6px; /* Reserve bottom space for Clear button */
-    border-radius: 8px; /* Smaller radius */
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1); /* Lighter shadow */
-    gap: 4px; /* Reduced gap */
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 8px 8px 10px 8px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    gap: 6px;
     background: #fff;
     border: 1px solid #e0e0e0;
     z-index: 2000 !important;
@@ -678,12 +692,17 @@
   .filter-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto auto;
-    gap: 4px; /* Further reduced for mobile */
+    gap: 6px;
   }
   
-  /* Make Provider Name span full width on mobile (now it's the last child) */
-  .filter-group:last-child {
+  .name-filter {
     grid-column: 1 / -1;
+  }
+
+  .filter-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    min-width: 0;
   }
   
   /* Mobile-specific React-Select improvements */
@@ -795,7 +814,7 @@
     display: flex !important;
     align-items: center !important;
   }
-  .filter-clear-all-btn { bottom: 10px; right: 12px; padding: 8px 12px; }
+  .filter-clear-all-btn { height: 32px; padding: 0 14px; }
   
   .filter-minimize-btn {
     min-height: 44px !important;
@@ -836,7 +855,7 @@
     z-index: 2001 !important; /* Ensure it's above the filter container */
     transform: none !important; /* Prevent any transforms */
   }
-} 
+}
 
 /* Desktop-specific improvements for larger screens */
 @media (min-width: 1200px) {
@@ -848,6 +867,7 @@
   }
   .react-select__placeholder { font-size: 13px !important; }
   .react-select__input-container { font-size: 14px !important; }
+  .filter-input { height: 36px !important; font-size: 14px !important; }
   .filter-clear-all-btn { padding: 6px 12px !important; font-size: 12px !important; min-width: 84px !important; }
   .react-select__multi-value {
     margin: 2px !important; /* More spacing on desktop */
@@ -914,4 +934,4 @@
     padding: 6px 4px !important;
     font-size: 12px !important;
   }
-} 
+}
