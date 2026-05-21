@@ -30,7 +30,7 @@ async function main() {
   const sheets = google.sheets({ version: 'v4', auth });
 
   await applySheetColumnFormatting(sheets, spreadsheetId);
-  console.log('Sheet controls formatted: phone_work as Plain text, newsletter signup as boolean, job_title as text.');
+  console.log('Sheet controls formatted: phone_work as Plain text, hide_workinstitution/newsletter signup as boolean, job_title as text.');
 }
 
 main().catch((err) => {

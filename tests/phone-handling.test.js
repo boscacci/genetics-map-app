@@ -6,6 +6,7 @@ const {
   stripSheetTextEscape,
 } = require('../scripts/lib/phone-validate');
 const {
+  BOOLEAN_SHARED_HEADERS,
   BOOLEAN_WORKING_COPY_HEADERS,
   buildBooleanColumnValidationRequests,
   buildPhoneColumnPlainTextRequests,
@@ -43,20 +44,24 @@ test('sheet formatting requests mark phone_work columns as plain text', () => {
   assert.ok(requests.every(r => r.repeatCell.cell.userEnteredFormat.numberFormat.type === 'TEXT'));
 });
 
-test('sheet formatting makes newsletter signup boolean but leaves job title as text', () => {
+test('sheet formatting makes hide institution and newsletter signup boolean but leaves job title as text', () => {
   const requests = buildBooleanColumnValidationRequests(new Map([
     ['Working Copy', 111],
     ['Production', 222],
   ]));
 
+  assert.deepEqual(BOOLEAN_SHARED_HEADERS, ['hide_workinstitution']);
   assert.deepEqual(BOOLEAN_WORKING_COPY_HEADERS, ['signed_up_for_newsletter']);
+  assert.ok(!BOOLEAN_SHARED_HEADERS.includes('job_title'));
   assert.ok(!BOOLEAN_WORKING_COPY_HEADERS.includes('job_title'));
   assert.deepEqual(requests.map(r => r.setDataValidation.range), [
+    { sheetId: 111, startRowIndex: 1, startColumnIndex: 9, endColumnIndex: 10 },
+    { sheetId: 222, startRowIndex: 1, startColumnIndex: 9, endColumnIndex: 10 },
     { sheetId: 111, startRowIndex: 1, startColumnIndex: 24, endColumnIndex: 25 },
   ]);
-  assert.equal(requests[0].setDataValidation.rule.condition.type, 'BOOLEAN');
-  assert.equal(requests[0].setDataValidation.rule.strict, true);
-  assert.equal(requests[0].setDataValidation.rule.showCustomUi, true);
+  assert.ok(requests.every(r => r.setDataValidation.rule.condition.type === 'BOOLEAN'));
+  assert.ok(requests.every(r => r.setDataValidation.rule.strict === true));
+  assert.ok(requests.every(r => r.setDataValidation.rule.showCustomUi === true));
 });
 
 test('sheet formatting explicitly clears boolean validation from job title columns', () => {

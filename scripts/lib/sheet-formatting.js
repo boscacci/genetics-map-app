@@ -4,6 +4,7 @@ const {
 } = require('./sheet-schema');
 
 const PHONE_HEADER = 'phone_work';
+const BOOLEAN_SHARED_HEADERS = ['hide_workinstitution'];
 const BOOLEAN_WORKING_COPY_HEADERS = ['signed_up_for_newsletter'];
 const TEXT_VALIDATION_CLEAR_HEADERS = ['job_title'];
 
@@ -61,12 +62,37 @@ function buildPhoneColumnPlainTextRequests(sheetIdByTitle) {
 }
 
 function buildBooleanColumnValidationRequests(sheetIdByTitle) {
-  const sheetId = sheetIdByTitle.get('Working Copy');
-  if (sheetId === undefined) return [];
+  const requests = [];
+  const targets = [
+    ['Working Copy', WORKING_COPY_HEADERS],
+    ['Production', PRODUCTION_HEADERS],
+  ];
 
-  return BOOLEAN_WORKING_COPY_HEADERS.map((header) => ({
+  for (const [title, headers] of targets) {
+    const sheetId = sheetIdByTitle.get(title);
+    if (sheetId === undefined) continue;
+    for (const header of BOOLEAN_SHARED_HEADERS) {
+      requests.push(buildBooleanColumnValidationRequest(sheetId, columnIndex(headers, header)));
+    }
+  }
+
+  const workingCopySheetId = sheetIdByTitle.get('Working Copy');
+  if (workingCopySheetId !== undefined) {
+    for (const header of BOOLEAN_WORKING_COPY_HEADERS) {
+      requests.push(buildBooleanColumnValidationRequest(
+        workingCopySheetId,
+        columnIndex(WORKING_COPY_HEADERS, header),
+      ));
+    }
+  }
+
+  return requests;
+}
+
+function buildBooleanColumnValidationRequest(sheetId, columnIndex) {
+  return {
     setDataValidation: {
-      range: columnRange(sheetId, columnIndex(WORKING_COPY_HEADERS, header)),
+      range: columnRange(sheetId, columnIndex),
       rule: {
         condition: {
           type: 'BOOLEAN',
@@ -75,7 +101,7 @@ function buildBooleanColumnValidationRequests(sheetIdByTitle) {
         showCustomUi: true,
       },
     },
-  }));
+  };
 }
 
 function buildTextColumnValidationClearRequests(sheetIdByTitle) {
@@ -131,6 +157,7 @@ async function applySheetColumnFormatting(sheets, spreadsheetId) {
 }
 
 module.exports = {
+  BOOLEAN_SHARED_HEADERS,
   BOOLEAN_WORKING_COPY_HEADERS,
   PHONE_HEADER,
   TEXT_VALIDATION_CLEAR_HEADERS,

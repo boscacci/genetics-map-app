@@ -178,6 +178,9 @@ function hasLegacyMissingJobTitle(row, idxByHeader, legacyMissingJobTitleKeys) {
 function formatSheetControls(workingCopy, production) {
   [workingCopy, production].forEach(function(sheet) {
     getColumnBodyRange(sheet, 'phone_work').setNumberFormat('@');
+    getColumnBodyRange(sheet, 'hide_workinstitution').setDataValidation(
+      SpreadsheetApp.newDataValidation().requireCheckbox().build()
+    );
     getColumnBodyRange(sheet, 'job_title').clearDataValidations();
   });
 

@@ -72,7 +72,7 @@ When Production looks good and you want to go live:
 | phone_work | Work phone as plain text (international `+` numbers are OK) |
 | work_website | Website URL (include https://) |
 | work_institution | Hospital, clinic, or practice name |
-| hide_workinstitution | TRUE hides only the institution name |
+| hide_workinstitution | Boolean checkbox/TRUE hides only the institution name |
 | job_title | Required free-text job title or role for new records; older records can be filled in as they are updated |
 | work_address | Full street address |
 | hide_institution_address | TRUE hides institution and address details |
