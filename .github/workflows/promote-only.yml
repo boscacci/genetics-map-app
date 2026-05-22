@@ -6,6 +6,14 @@ name: Promote Only
 on:
   workflow_dispatch:
 
+concurrency:
+  group: genetics-map-sheet-publish
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   promote-only:
     runs-on: ubuntu-latest
@@ -29,6 +37,9 @@ jobs:
           if [ -n "${{ secrets.GEOCODING_API_KEY }}" ]; then
             echo '${{ secrets.GEOCODING_API_KEY }}' > .gcp-credentials/geocoding-api-key.txt
           fi
+
+      - name: Validate promotion requirements (read-only)
+        run: npm run validate:promotion
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -54,14 +65,16 @@ jobs:
 
   notify-failure:
     needs: promote-only
-    if: failure()
+    if: ${{ needs.promote-only.result == 'failure' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Capture workflow logs
-        run: |
-          gh run view ${{ github.run_id }} --repo ${{ github.repository }} --log 2>&1 | tail -1000 > failure-log.txt
+      - name: Checkout notification helper
+        uses: actions/checkout@v4
+
+      - name: Capture completed failed job logs
+        run: bash .github/scripts/capture-failure-log.sh
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
 
       - uses: dawidd6/action-send-mail@v3
         with:
@@ -77,7 +90,7 @@ jobs:
             Repository: ${{ github.repository }}
             Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-            Last 1000 lines of workflow log are attached.
+            The attached log starts with a failed-job summary and then includes the last 1000 lines from each completed failed upstream job.
           to: boscacci.data@gmail.com
           from: Genetics Map Bot <${{ secrets.SMTP_USERNAME }}>
           attachments: failure-log.txt

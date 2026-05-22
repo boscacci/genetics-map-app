@@ -194,7 +194,16 @@ async function main() {
   console.log(`✅ Promoted ${cleaned.length} rows from Working Copy to Production (with name cleanup)`);
 }
 
-main().catch(err => {
-  console.error('Error:', err.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch(err => {
+    console.error('Error:', err.message);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  buildHeaderIndex,
+  hasLegacyMissingJobTitle,
+  loadProductionContext,
+  providerRecordKeys,
+};

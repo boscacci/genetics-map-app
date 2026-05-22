@@ -21,6 +21,7 @@
     "test:gcp": "node scripts/test-gcp-apis.js",
     "setup:sheet": "node scripts/configure-existing-sheet.js",
     "format:phones": "node scripts/format-phone-columns.js",
+    "validate:promotion": "node scripts/validate-promotion.js",
     "promote": "node scripts/promote-to-production.js",
     "export:production": "node scripts/export-production-to-csv.js",
     "backup:production": "node scripts/backup-production.js",
