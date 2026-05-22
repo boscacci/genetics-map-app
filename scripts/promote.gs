@@ -22,7 +22,6 @@ const PRODUCTION_HEADERS = [
   'credential_link',
   'address_street', 'address_state', 'address_zip',
 ];
-const REQUIRED_HEADERS = ['job_title'];
 
 function onOpen() {
   SpreadsheetApp.getUi()
@@ -48,7 +47,7 @@ function promoteWorkingCopyToProduction() {
     return;
   }
 
-  // Build Production context for phone fallback and legacy required-field migration.
+  // Build Production context for phone fallback.
   const prodData = production.getDataRange().getValues();
   const productionContext = buildProductionContext(prodData);
   const phoneFallback = productionContext.phoneFallback;
@@ -56,13 +55,6 @@ function promoteWorkingCopyToProduction() {
   const headerRow = wcData[0];
   const sourceIdxByHeader = buildHeaderIndex(headerRow);
   const dataRows = wcData.slice(1);
-  const missingRequired = findMissingRequiredFields(dataRows, sourceIdxByHeader, REQUIRED_HEADERS, function(row, header) {
-    return header === 'job_title' && hasLegacyMissingJobTitle(row, sourceIdxByHeader, productionContext.legacyMissingJobTitleKeys);
-  });
-  if (missingRequired.length > 0) {
-    SpreadsheetApp.getUi().alert('Cannot promote Working Copy:\n' + formatMissingRequiredFields(missingRequired));
-    return;
-  }
 
   const cleaned = dataRows.map(row => {
     const newRow = PRODUCTION_HEADERS.map(header => {
@@ -104,7 +96,6 @@ function buildHeaderIndex(headerRow) {
 
 function buildProductionContext(prodData) {
   const context = {
-    legacyMissingJobTitleKeys: new Set(),
     phoneFallback: new Map(),
   };
 
@@ -114,7 +105,6 @@ function buildProductionContext(prodData) {
   const idxByHeader = buildHeaderIndex(headerRow);
   const emailIdx = idxByHeader.email;
   const phoneIdx = idxByHeader.phone_work;
-  const jobTitleIdx = idxByHeader.job_title;
 
   for (let r = 1; r < prodData.length; r++) {
     const row = prodData[r];
@@ -122,12 +112,6 @@ function buildProductionContext(prodData) {
     const phone = String(phoneIdx !== undefined ? row[phoneIdx] : '').trim();
     if (email && phone && phone.toUpperCase() !== '#ERROR!') {
       context.phoneFallback.set(email, phone);
-    }
-
-    if (jobTitleIdx === undefined || isBlankRequiredValue(row[jobTitleIdx])) {
-      providerRecordKeys(row, idxByHeader).forEach(function(key) {
-        context.legacyMissingJobTitleKeys.add(key);
-      });
     }
   }
 
@@ -144,35 +128,6 @@ function buildProductionContext(prodData) {
   }
 
   return context;
-}
-
-function normalizeKeyPart(value) {
-  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
-}
-
-function providerRecordKeys(row, idxByHeader) {
-  const keys = [];
-  const credentialIdx = idxByHeader.credential_link;
-  const credentialLink = credentialIdx !== undefined ? normalizeKeyPart(row[credentialIdx]) : '';
-  if (credentialLink) keys.push('credential:' + credentialLink);
-
-  const emailIdx = idxByHeader.email;
-  const email = emailIdx !== undefined ? normalizeKeyPart(row[emailIdx]) : '';
-  if (email) keys.push('email:' + email);
-
-  const parts = ['name_first', 'name_last', 'work_institution'].map(function(header) {
-    const idx = idxByHeader[header];
-    return idx !== undefined ? normalizeKeyPart(row[idx]) : '';
-  });
-  const fallback = parts.join('|');
-  if (fallback.replace(/\|/g, '')) keys.push('fallback:' + fallback);
-  return keys;
-}
-
-function hasLegacyMissingJobTitle(row, idxByHeader, legacyMissingJobTitleKeys) {
-  return providerRecordKeys(row, idxByHeader).some(function(key) {
-    return legacyMissingJobTitleKeys.has(key);
-  });
 }
 
 function formatSheetControls(workingCopy, production) {
@@ -201,46 +156,6 @@ function getColumnBodyRange(sheet, header) {
   return sheet.getRange(2, index + 1, rowCount, 1);
 }
 
-function isBlankRequiredValue(value) {
-  if (value == null) return true;
-  return PLACEHOLDER_NAMES.includes(String(value).trim().toLowerCase());
-}
-
-function findMissingRequiredFields(dataRows, idxByHeader, requiredHeaders, isRowExempt) {
-  const missing = [];
-  const exempt = isRowExempt || function() { return false; };
-  requiredHeaders.forEach(header => {
-    const columnIndex = idxByHeader[header];
-    if (columnIndex === undefined) {
-      missing.push({ header, rowNumber: 1, reason: 'missing_column' });
-      return;
-    }
-    dataRows.forEach((row, rowIndex) => {
-      if (isBlankRequiredValue(row[columnIndex]) && !exempt(row, header)) {
-        missing.push({ header, rowNumber: rowIndex + 2, reason: 'blank_value' });
-      }
-    });
-  });
-  return missing;
-}
-
-function formatMissingRequiredFields(missing) {
-  const missingColumns = missing.filter(item => item.reason === 'missing_column');
-  const blankValues = missing.filter(item => item.reason === 'blank_value');
-  const messages = [];
-
-  missingColumns.forEach(item => {
-    messages.push(`Missing required column: ${item.header}`);
-  });
-
-  if (blankValues.length > 0) {
-    const examples = blankValues.slice(0, 10).map(item => `${item.header} row ${item.rowNumber}`).join(', ');
-    const suffix = blankValues.length > 10 ? `, and ${blankValues.length - 10} more` : '';
-    messages.push(`Missing required values: ${examples}${suffix}`);
-  }
-
-  return messages.join('\n');
-}
 
 function cleanFullName(nameFirst, nameLast) {
   const first = cleanName(nameFirst);

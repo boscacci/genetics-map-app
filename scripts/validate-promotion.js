@@ -9,16 +9,9 @@
 const fs = require('fs');
 const path = require('path');
 const { google } = require('googleapis');
-const { WORKING_COPY_SHEET_RANGE_A1 } = require('./lib/sheet-schema');
-const {
-  findMissingRequiredFields,
-  formatMissingRequiredFields,
-} = require('./lib/promotion-validation');
-const {
-  buildHeaderIndex,
-  hasLegacyMissingJobTitle,
-  loadProductionContext,
-} = require('./promote-to-production');
+const { WORKING_COPY_HEADERS, WORKING_COPY_SHEET_RANGE_A1 } = require('./lib/sheet-schema');
+const { isBlankRequiredValue } = require('./lib/promotion-validation');
+const { buildHeaderIndex } = require('./promote-to-production');
 
 const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-map-sa-key.json');
 const SHEET_ID_PATH = path.resolve(__dirname, '../.gcp-credentials/sheet-id.txt');
@@ -37,9 +30,7 @@ async function main() {
   });
   const sheets = google.sheets({ version: 'v4', auth });
 
-  const { legacyMissingJobTitleKeys } = await loadProductionContext(sheets, spreadsheetId);
-
-  console.log('Checking Working Copy promotion requirements...');
+  console.log('Checking Working Copy structure...');
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: `'Working Copy'!${WORKING_COPY_SHEET_RANGE_A1}`,
@@ -54,18 +45,23 @@ async function main() {
   const sourceHeader = rows[0] || [];
   const sourceIdxByHeader = buildHeaderIndex(sourceHeader);
   const dataRows = rows.slice(1);
-  const missingRequired = findMissingRequiredFields(dataRows, sourceIdxByHeader, ['job_title'], {
-    isRowExempt: ({ row, header }) => (
-      header === 'job_title' && hasLegacyMissingJobTitle(row, sourceIdxByHeader, legacyMissingJobTitleKeys)
-    ),
-  });
+  const missingHeaders = WORKING_COPY_HEADERS.filter((header) => sourceIdxByHeader[header] === undefined);
 
-  if (missingRequired.length > 0) {
-    console.error(`❌ Working Copy is not ready to promote:\n${formatMissingRequiredFields(missingRequired)}`);
+  if (missingHeaders.length > 0) {
+    console.error(`❌ Working Copy is missing expected columns: ${missingHeaders.join(', ')}`);
     process.exit(1);
   }
 
-  console.log(`✅ Working Copy promotion preflight passed (${dataRows.length} rows checked)`);
+  const jobTitleIndex = sourceIdxByHeader.job_title;
+  const missingJobTitles = jobTitleIndex === undefined
+    ? 0
+    : dataRows.filter((row) => isBlankRequiredValue(row[jobTitleIndex])).length;
+
+  if (missingJobTitles > 0) {
+    console.warn(`⚠️ job_title is blank in ${missingJobTitles} Working Copy rows. This does not block promotion or deploy.`);
+  }
+
+  console.log(`✅ Working Copy structure preflight passed (${dataRows.length} rows checked)`);
 }
 
 main().catch(err => {

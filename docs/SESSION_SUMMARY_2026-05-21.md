@@ -5,9 +5,9 @@ This session tightened the Google Sheet workflow, public map data contract, and 
 ## Sheet Schema And Data Flow
 
 - Added `hide_workinstitution` immediately after `work_institution`.
-- Added required `job_title` as a public Production/map field.
+- Added `job_title` as a public Production/map field.
 - Added `signed_up_for_newsletter` as a Working Copy-only internal field. It does not promote to Production or ship in the encrypted public map data.
-- Kept `job_title` as required free text, not a boolean/checkbox.
+- Kept `job_title` as free text, not a boolean/checkbox.
 - Formatted `signed_up_for_newsletter` as a boolean checkbox in Working Copy.
 - Formatted `hide_workinstitution` as a boolean checkbox in both Working Copy and Production.
 - Added explicit formatting cleanup so accidental checkbox validation is cleared from `job_title`.
@@ -21,7 +21,7 @@ This session tightened the Google Sheet workflow, public map data contract, and 
 ## Promotion And Production Compatibility
 
 - Updated promotion to map by header names instead of assuming old column positions.
-- Added a legacy-aware `job_title` gate: new records must have a job title, while old Production rows can remain blank until they are updated.
+- Initially added a legacy-aware `job_title` gate; follow-up on May 22 removed the deploy blocker because many existing records do not have job titles.
 - Promoted, cleaned, encrypted, and deployed the current Production dataset during the session.
 
 ## Security Hardening
@@ -44,4 +44,4 @@ This session tightened the Google Sheet workflow, public map data contract, and 
 ## Follow-Up Notes
 
 - Remaining `npm audit` findings are in the Create React App/react-scripts dependency chain. `npm audit fix` has no safe non-breaking changes left; resolving the rest needs a future frontend toolchain migration.
-- Existing legacy records should be backfilled with real `job_title` values over time.
+- Existing records can be backfilled with real `job_title` values over time, but blank job titles should not block map deployment.

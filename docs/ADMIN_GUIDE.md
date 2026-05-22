@@ -73,7 +73,7 @@ When Production looks good and you want to go live:
 | work_website | Website URL (include https://) |
 | work_institution | Hospital, clinic, or practice name |
 | hide_workinstitution | Boolean checkbox/TRUE hides only the institution name |
-| job_title | Required free-text job title or role for new records; older records can be filled in as they are updated |
+| job_title | Free-text job title or role when available. It is required in survey collection, but blank values do not block promotion or deploy. |
 | work_address | Full street address |
 | hide_institution_address | TRUE hides institution and address details |
 | language_spoken | Languages (e.g., English, Spanish) |
