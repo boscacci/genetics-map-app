@@ -16,7 +16,7 @@ test('workflow failure email does not query logs for the still-running workflow 
     assert.ok(content.includes('bash .github/scripts/capture-failure-log.sh'));
     assert.ok(!content.includes('gh run view'));
     assert.ok(content.includes('actions: read'));
-    assert.ok(content.includes('Validate promotion requirements (read-only)'));
+    assert.ok(content.includes('Validate Working Copy structure (read-only)'));
     assert.ok(content.includes('genetics-map-sheet-publish'));
   }
 });

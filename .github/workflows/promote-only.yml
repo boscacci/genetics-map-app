@@ -38,7 +38,7 @@ jobs:
             echo '${{ secrets.GEOCODING_API_KEY }}' > .gcp-credentials/geocoding-api-key.txt
           fi
 
-      - name: Validate promotion requirements (read-only)
+      - name: Validate Working Copy structure (read-only)
         run: npm run validate:promotion
 
       - name: Set up Python
