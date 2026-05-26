@@ -42,3 +42,10 @@ test('promotion validation can run without writing to Google Sheets', () => {
   assert.ok(validationScript.includes('This does not block promotion or deploy'));
   assert.ok(!promotionScript.includes("['job_title']"));
 });
+
+test('deploy workflow passes cleaned CSV by file instead of oversized environment variable', () => {
+  const workflow = read('.github/workflows/sync-and-deploy.yml');
+
+  assert.ok(workflow.includes('cp /tmp/cleaned.csv data/data.csv'));
+  assert.ok(!workflow.includes('DATA_CSV_BASE64=$(base64'));
+});

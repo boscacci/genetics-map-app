@@ -70,7 +70,8 @@ jobs:
 
       - name: Encrypt data (from Production via clean script output)
         run: |
-          export DATA_CSV_BASE64=$(base64 -w0 /tmp/cleaned.csv)
+          mkdir -p data
+          cp /tmp/cleaned.csv data/data.csv
           npm run encrypt-data
 
       - name: Generate secret hash for App.tsx
