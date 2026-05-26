@@ -133,15 +133,18 @@ function buildProductionContext(prodData) {
 function formatSheetControls(workingCopy, production) {
   [workingCopy, production].forEach(function(sheet) {
     getColumnBodyRange(sheet, 'phone_work').setNumberFormat('@');
-    getColumnBodyRange(sheet, 'hide_workinstitution').setDataValidation(
-      SpreadsheetApp.newDataValidation().requireCheckbox().build()
-    );
+    setBooleanTextValidation(getColumnBodyRange(sheet, 'hide_workinstitution'));
     getColumnBodyRange(sheet, 'job_title').clearDataValidations();
   });
 
-  getColumnBodyRange(workingCopy, 'signed_up_for_newsletter').setDataValidation(
-    SpreadsheetApp.newDataValidation().requireCheckbox().build()
-  );
+  setBooleanTextValidation(getColumnBodyRange(workingCopy, 'signed_up_for_newsletter'));
+}
+
+function setBooleanTextValidation(range) {
+  const rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['TRUE', 'FALSE'], true)
+    .build();
+  range.setDataValidation(rule);
 }
 
 function getColumnBodyRange(sheet, header) {

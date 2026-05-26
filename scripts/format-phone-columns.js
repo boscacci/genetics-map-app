@@ -2,8 +2,8 @@
 /**
  * Format Google Sheet controls:
  * - phone_work as Plain text in Working Copy and Production
- * - signed_up_for_newsletter as a boolean checkbox in Working Copy
- * - job_title as plain free text, with accidental checkbox validation removed
+ * - hide_workinstitution and signed_up_for_newsletter as TRUE/FALSE dropdown-style values
+ * - job_title as a free-entry value, with accidental checkbox validation removed
  * This lets admins type international numbers like +1 404 555 1212 directly.
  */
 
@@ -30,7 +30,7 @@ async function main() {
   const sheets = google.sheets({ version: 'v4', auth });
 
   await applySheetColumnFormatting(sheets, spreadsheetId);
-  console.log('Sheet controls formatted: phone_work as Plain text, hide_workinstitution/newsletter signup as boolean, job_title as text.');
+  console.log('Sheet controls formatted: phone_work as Plain text, hide_workinstitution/newsletter signup as TRUE/FALSE values, job_title as free-entry text.');
 }
 
 main().catch((err) => {

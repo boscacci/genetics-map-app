@@ -95,9 +95,12 @@ function buildBooleanColumnValidationRequest(sheetId, columnIndex) {
       range: columnRange(sheetId, columnIndex),
       rule: {
         condition: {
-          type: 'BOOLEAN',
+          type: 'ONE_OF_LIST',
+          values: [
+            { userEnteredValue: 'TRUE' },
+            { userEnteredValue: 'FALSE' },
+          ],
         },
-        strict: true,
         showCustomUi: true,
       },
     },

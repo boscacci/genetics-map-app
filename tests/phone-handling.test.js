@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const test = require('node:test');
 
 const {
@@ -44,7 +46,7 @@ test('sheet formatting requests mark phone_work columns as plain text', () => {
   assert.ok(requests.every(r => r.repeatCell.cell.userEnteredFormat.numberFormat.type === 'TEXT'));
 });
 
-test('sheet formatting makes hide institution and newsletter signup boolean but leaves job title as text', () => {
+test('sheet formatting makes boolean-ish admin columns TRUE/FALSE dropdowns', () => {
   const requests = buildBooleanColumnValidationRequests(new Map([
     ['Working Copy', 111],
     ['Production', 222],
@@ -59,12 +61,20 @@ test('sheet formatting makes hide institution and newsletter signup boolean but 
     { sheetId: 222, startRowIndex: 1, startColumnIndex: 9, endColumnIndex: 10 },
     { sheetId: 111, startRowIndex: 1, startColumnIndex: 24, endColumnIndex: 25 },
   ]);
-  assert.ok(requests.every(r => r.setDataValidation.rule.condition.type === 'BOOLEAN'));
-  assert.ok(requests.every(r => r.setDataValidation.rule.strict === true));
+  assert.ok(requests.every(r => r.setDataValidation.rule.condition.type === 'ONE_OF_LIST'));
+  assert.ok(requests.every(r => !Object.hasOwn(r.setDataValidation.rule, 'strict')));
   assert.ok(requests.every(r => r.setDataValidation.rule.showCustomUi === true));
+  assert.deepEqual(
+    requests.map(r => r.setDataValidation.rule.condition.values),
+    [
+      [{ userEnteredValue: 'TRUE' }, { userEnteredValue: 'FALSE' }],
+      [{ userEnteredValue: 'TRUE' }, { userEnteredValue: 'FALSE' }],
+      [{ userEnteredValue: 'TRUE' }, { userEnteredValue: 'FALSE' }],
+    ],
+  );
 });
 
-test('sheet formatting explicitly clears boolean validation from job title columns', () => {
+test('sheet formatting clears strict validation from free-entry columns', () => {
   const requests = buildTextColumnValidationClearRequests(new Map([
     ['Working Copy', 111],
     ['Production', 222],
@@ -76,4 +86,25 @@ test('sheet formatting explicitly clears boolean validation from job title colum
     { sheetId: 222, startRowIndex: 1, startColumnIndex: 10, endColumnIndex: 11 },
   ]);
   assert.ok(requests.every(r => !Object.hasOwn(r.setDataValidation, 'rule')));
+});
+
+test('sheet macro formats admin booleans as TRUE/FALSE dropdowns instead of checkboxes', () => {
+  const macro = fs.readFileSync(path.resolve(__dirname, '../scripts/promote.gs'), 'utf8');
+
+  assert.match(
+    macro,
+    /setBooleanTextValidation\(getColumnBodyRange\(sheet, 'hide_workinstitution'\)\)/,
+  );
+  assert.match(
+    macro,
+    /setBooleanTextValidation\(getColumnBodyRange\(workingCopy, 'signed_up_for_newsletter'\)\)/,
+  );
+  assert.match(
+    macro,
+    /requireValueInList\(\['TRUE', 'FALSE'\], true\)/,
+  );
+  assert.doesNotMatch(
+    macro,
+    /requireCheckbox\(\)/,
+  );
 });

@@ -72,14 +72,14 @@ When Production looks good and you want to go live:
 | phone_work | Work phone as plain text (international `+` numbers are OK) |
 | work_website | Website URL (include https://) |
 | work_institution | Hospital, clinic, or practice name |
-| hide_workinstitution | Boolean checkbox/TRUE hides only the institution name |
+| hide_workinstitution | TRUE/FALSE value; TRUE hides only the institution name |
 | job_title | Free-text job title or role when available. It is required in survey collection, but blank values do not block promotion or deploy. |
 | work_address | Full street address |
 | hide_institution_address | TRUE hides institution and address details |
 | language_spoken | Languages (e.g., English, Spanish) |
 | uses_interpreters | TRUE or FALSE |
 | specialties | Areas of focus |
-| signed_up_for_newsletter | Working Copy only; boolean checkbox/TRUE if they opted into news/updates/future research contact |
+| signed_up_for_newsletter | Working Copy only; TRUE/FALSE value; TRUE if they opted into news/updates/future research contact |
 | Latitude, Longitude, City, Country | *Usually blank—the system fills these in* |
 
 ---
