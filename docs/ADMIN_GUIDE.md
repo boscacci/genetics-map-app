@@ -75,7 +75,7 @@ When Production looks good and you want to go live:
 | hide_workinstitution | TRUE/FALSE value; TRUE hides only the institution name |
 | job_title | Free-text job title or role when available. It is required in survey collection, but blank values do not block promotion or deploy. |
 | work_address | Full street address |
-| hide_institution_address | TRUE hides institution and address details |
+| hide_institution_address | TRUE/FALSE value; TRUE hides institution and address details |
 | language_spoken | Languages (e.g., English, Spanish) |
 | uses_interpreters | TRUE or FALSE |
 | specialties | Areas of focus |

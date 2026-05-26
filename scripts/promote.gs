@@ -134,6 +134,8 @@ function formatSheetControls(workingCopy, production) {
   [workingCopy, production].forEach(function(sheet) {
     getColumnBodyRange(sheet, 'phone_work').setNumberFormat('@');
     setBooleanTextValidation(getColumnBodyRange(sheet, 'hide_workinstitution'));
+    setBooleanTextValidation(getColumnBodyRange(sheet, 'hide_institution_address'));
+    setBooleanTextValidation(getColumnBodyRange(sheet, 'uses_interpreters'));
     getColumnBodyRange(sheet, 'job_title').clearDataValidations();
   });
 

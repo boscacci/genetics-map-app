@@ -4,7 +4,7 @@ const {
 } = require('./sheet-schema');
 
 const PHONE_HEADER = 'phone_work';
-const BOOLEAN_SHARED_HEADERS = ['hide_workinstitution'];
+const BOOLEAN_SHARED_HEADERS = ['hide_workinstitution', 'hide_institution_address', 'uses_interpreters'];
 const BOOLEAN_WORKING_COPY_HEADERS = ['signed_up_for_newsletter'];
 const TEXT_VALIDATION_CLEAR_HEADERS = ['job_title'];
 

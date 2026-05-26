@@ -52,13 +52,17 @@ test('sheet formatting makes boolean-ish admin columns TRUE/FALSE dropdowns', ()
     ['Production', 222],
   ]));
 
-  assert.deepEqual(BOOLEAN_SHARED_HEADERS, ['hide_workinstitution']);
+  assert.deepEqual(BOOLEAN_SHARED_HEADERS, ['hide_workinstitution', 'hide_institution_address', 'uses_interpreters']);
   assert.deepEqual(BOOLEAN_WORKING_COPY_HEADERS, ['signed_up_for_newsletter']);
   assert.ok(!BOOLEAN_SHARED_HEADERS.includes('job_title'));
   assert.ok(!BOOLEAN_WORKING_COPY_HEADERS.includes('job_title'));
   assert.deepEqual(requests.map(r => r.setDataValidation.range), [
     { sheetId: 111, startRowIndex: 1, startColumnIndex: 9, endColumnIndex: 10 },
+    { sheetId: 111, startRowIndex: 1, startColumnIndex: 12, endColumnIndex: 13 },
+    { sheetId: 111, startRowIndex: 1, startColumnIndex: 14, endColumnIndex: 15 },
     { sheetId: 222, startRowIndex: 1, startColumnIndex: 9, endColumnIndex: 10 },
+    { sheetId: 222, startRowIndex: 1, startColumnIndex: 12, endColumnIndex: 13 },
+    { sheetId: 222, startRowIndex: 1, startColumnIndex: 14, endColumnIndex: 15 },
     { sheetId: 111, startRowIndex: 1, startColumnIndex: 24, endColumnIndex: 25 },
   ]);
   assert.ok(requests.every(r => r.setDataValidation.rule.condition.type === 'ONE_OF_LIST'));
@@ -67,6 +71,10 @@ test('sheet formatting makes boolean-ish admin columns TRUE/FALSE dropdowns', ()
   assert.deepEqual(
     requests.map(r => r.setDataValidation.rule.condition.values),
     [
+      [{ userEnteredValue: 'TRUE' }, { userEnteredValue: 'FALSE' }],
+      [{ userEnteredValue: 'TRUE' }, { userEnteredValue: 'FALSE' }],
+      [{ userEnteredValue: 'TRUE' }, { userEnteredValue: 'FALSE' }],
+      [{ userEnteredValue: 'TRUE' }, { userEnteredValue: 'FALSE' }],
       [{ userEnteredValue: 'TRUE' }, { userEnteredValue: 'FALSE' }],
       [{ userEnteredValue: 'TRUE' }, { userEnteredValue: 'FALSE' }],
       [{ userEnteredValue: 'TRUE' }, { userEnteredValue: 'FALSE' }],
@@ -94,6 +102,14 @@ test('sheet macro formats admin booleans as TRUE/FALSE dropdowns instead of chec
   assert.match(
     macro,
     /setBooleanTextValidation\(getColumnBodyRange\(sheet, 'hide_workinstitution'\)\)/,
+  );
+  assert.match(
+    macro,
+    /setBooleanTextValidation\(getColumnBodyRange\(sheet, 'hide_institution_address'\)\)/,
+  );
+  assert.match(
+    macro,
+    /setBooleanTextValidation\(getColumnBodyRange\(sheet, 'uses_interpreters'\)\)/,
   );
   assert.match(
     macro,
