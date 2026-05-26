@@ -2,6 +2,10 @@ function isBlank(value) {
   return value === null || value === undefined || String(value).trim() === '';
 }
 
+function isBlankRow(row) {
+  return Object.values(row).every(isBlank);
+}
+
 function coordinateSkipReason(row) {
   if (isBlank(row.Latitude) || isBlank(row.Longitude)) {
     return 'missing_coordinates';
@@ -15,15 +19,19 @@ function coordinateSkipReason(row) {
 }
 
 function buildPublishRows(rows) {
-  return rows.filter((row) => !coordinateSkipReason(row));
+  return rows.filter((row) => !isBlankRow(row) && !coordinateSkipReason(row));
 }
 
 function summarizePublishRows(rows, options = {}) {
   const maxExamples = options.maxExamples ?? 10;
   const skippedByReason = {};
   const examples = [];
+  let totalRows = 0;
 
   rows.forEach((row, index) => {
+    if (isBlankRow(row)) return;
+    totalRows += 1;
+
     const reason = coordinateSkipReason(row);
     if (!reason) return;
 
@@ -35,8 +43,8 @@ function summarizePublishRows(rows, options = {}) {
 
   const skippedRows = Object.values(skippedByReason).reduce((sum, count) => sum + count, 0);
   return {
-    totalRows: rows.length,
-    publishableRows: rows.length - skippedRows,
+    totalRows,
+    publishableRows: totalRows - skippedRows,
     skippedRows,
     skippedByReason,
     examples,
@@ -63,5 +71,6 @@ module.exports = {
   coordinateSkipReason,
   formatPublishSummary,
   formatSkippedExamples,
+  isBlankRow,
   summarizePublishRows,
 };
