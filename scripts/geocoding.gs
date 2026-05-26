@@ -82,6 +82,14 @@ function geocodeInstitutionAddresses() {
     return data.lat && data.lng && data.city && data.country;
   }
 
+  function redactedGeocodeSummary(data) {
+    const updated = [];
+    if (data && data.lat && data.lng) updated.push('coordinates');
+    if (data && data.city) updated.push('city');
+    if (data && data.country) updated.push('country');
+    return updated.length ? 'updated ' + updated.join(', ') : 'no geocode result';
+  }
+
   // Helper function to validate if a string is a reasonable city name
   function isValidCity(city) {
     if (!city || city.length < 2 || city.length > 50) return false;
@@ -173,7 +181,7 @@ function geocodeInstitutionAddresses() {
       const query = attempts[i];
       if (!query) continue;
       
-      Logger.log(`Attempt ${i + 1}: "${query}"`);
+      Logger.log(`Attempt ${i + 1}: geocoding candidate`);
       
       try {
         const resp = geocoder.geocode(query);
@@ -198,11 +206,11 @@ function geocodeInstitutionAddresses() {
             if (extractedCity) {
               data.city = extractedCity;
               score += 1; // Boost score for having city data
-              Logger.log(`Extracted city from address: "${extractedCity}"`);
+              Logger.log('Extracted city from address fallback');
             }
           }
           
-          Logger.log(`Attempt ${i + 1} result: lat=${data.lat}, lng=${data.lng}, city="${data.city}", country="${data.country}", score=${score}`);
+          Logger.log(`Attempt ${i + 1} result: ${redactedGeocodeSummary(data)}, score=${score}`);
           
           if (score > bestScore) {
             bestResult = data;
@@ -222,7 +230,7 @@ function geocodeInstitutionAddresses() {
         }
         
       } catch (error) {
-        Logger.log(`Attempt ${i + 1} failed: ${error.message}`);
+        Logger.log(`Attempt ${i + 1} failed during geocoding request`);
       }
     }
     
@@ -231,7 +239,7 @@ function geocodeInstitutionAddresses() {
       const extractedCity = extractCityFromAddress(validAddr);
       if (extractedCity) {
         bestResult.city = extractedCity;
-        Logger.log(`Final fallback: extracted city from address: "${extractedCity}"`);
+        Logger.log('Final fallback extracted city from address');
       }
     }
     
@@ -251,21 +259,22 @@ function geocodeInstitutionAddresses() {
     const existingLng = row[colIndex['Longitude']] || '';
     
     if (existingLat && existingLng && !isEmptyOrNan(existingLat) && !isEmptyOrNan(existingLng)) {
-      Logger.log(`Row ${i + 1}: already has geocoding data (${existingLat}, ${existingLng})—skipped`);
+      Logger.log(`Row ${i + 1}: already has geocoding data - skipped`);
       skippedCount++;
       continue;
     }
     
-    Logger.log(`Row ${i + 1}: institution="${inst}", address="${addr}"`);
-    console.log({row:i + 1, inst, addr});
+    Logger.log(`Row ${i + 1}: geocoding candidate`);
+    console.log({row:i + 1, status:'geocoding candidate'});
     
     let result = { lat: '', lng: '', city: '', country: '' };
     
     // Check if we have valid (non-empty, non-nan) values to geocode
     if (!isEmptyOrNan(inst) || !isEmptyOrNan(addr)) {
       result = smartGeocode(geocoder, inst, addr);
-      Logger.log(`Row ${i + 1} final result: lat=${result.lat}, lng=${result.lng}, city="${result.city}", country="${result.country}"`);
-      console.log({row:i + 1, lat: result.lat, lng: result.lng, city: result.city, country: result.country});
+      const summary = redactedGeocodeSummary(result);
+      Logger.log(`Row ${i + 1} final result: ${summary}`);
+      console.log({row:i + 1, result: summary});
       processedCount++;
     } else {
       Logger.log(`Row ${i + 1}: both institution and address are empty/nan—skipped`);

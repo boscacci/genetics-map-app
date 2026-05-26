@@ -153,23 +153,6 @@ export const parseCSV = async (url: string): Promise<MapPoint[]> => {
   }
 }; 
 
-// Encryption utilities for secure data handling
-// Removed ENCRYPTION_KEY constant
-
-// XOR encryption (simple but effective for this use case)
-function encryptData(data: string, key: string): string {
-  if (!key || key.trim().length === 0) {
-    console.warn('No encryption key provided, data will not be encrypted');
-    return data;
-  }
-  let result = '';
-  for (let i = 0; i < data.length; i++) {
-    const charCode = data.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-    result += String.fromCharCode(charCode);
-  }
-  return btoa(result); // Base64 encode
-}
-
 export function simpleDecrypt(ciphertext: string, key: string): string {
   const bytes = CryptoJS.AES.decrypt(ciphertext, key);
   return bytes.toString(CryptoJS.enc.Utf8);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Select from 'react-select';
 import { MapPoint } from './types';
+import { cleanSpecialtyString, getSpecialtyBuckets, splitSpecialtyTokens } from './specialtyUtils';
 
 interface SelectOption {
   value: string;
@@ -25,119 +26,6 @@ const cleanLanguageString = (languageString: string): string => {
     .trim(); // Remove leading/trailing whitespace
 };
 
-// Helper function to clean specialty strings
-const cleanSpecialtyString = (specialtyString: string): string => {
-  if (!specialtyString) return '';
-  
-  return specialtyString
-    .replace(/[.,;!?()\[\]{}"'`]/g, '') // Remove common punctuation marks
-    .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
-    .trim(); // Remove leading/trailing whitespace
-};
-
-// Helper function to normalize specialty names into <=10 buckets
-const normalizeSpecialty = (specialty: string): string => {
-  const normalized = cleanSpecialtyString(specialty).toLowerCase();
-
-  // Treat very short or obviously malformed fragments as Other rather than dropping
-  if (normalized.length < 3 || normalized === 'na' || normalized === 'n/a') {
-    return 'Other';
-  }
-
-  // 1) Cancer Genetics
-  if (normalized.includes('cancer') || normalized.includes('oncology')) {
-    return 'Cancer Genetics';
-  }
-
-  // 2) Prenatal & Reproductive Genetics (includes PGT, premarital, preconception)
-  if (
-    normalized.includes('prenatal') ||
-    normalized.includes('perinatal') ||
-    normalized.includes('preconception') ||
-    normalized.includes('premarital') ||
-    normalized.includes('reproductive') ||
-    normalized.includes('pgt')
-  ) {
-    return 'Prenatal & Reproductive Genetics';
-  }
-
-  // 3) Pediatric Genetics (includes newborn screening, pediatric neurology)
-  if (
-    normalized.includes('pediatric') ||
-    normalized.includes('paediatric') ||
-    normalized.includes('newborn screening') ||
-    normalized.includes('pediatric neurology') ||
-    normalized.includes('paediatric neurology') ||
-    normalized.includes('pediatrics') ||
-    normalized.includes('paediatrics')
-  ) {
-    return 'Pediatric Genetics';
-  }
-
-  // 4) Neurogenetics
-  if (
-    normalized.includes('neurogenetic') ||
-    normalized.includes('neurodegenerative') ||
-    normalized.includes('neuromuscular') ||
-    normalized.includes('neuro')
-  ) {
-    return 'Neurogenetics';
-  }
-
-  // 5) General/Clinical Genetics (includes clinical, human, genomic medicine, medical geneticist, counseling)
-  if (
-    normalized.includes('clinical genetic') ||
-    normalized === 'clinical genetics' ||
-    normalized.includes('general genetics') ||
-    normalized === 'general' ||
-    normalized.includes('human genetic') ||
-    normalized.includes('genomic medicine') ||
-    normalized.includes('medical genetic') ||
-    normalized.includes('genetic counseling') ||
-    normalized.includes('genetic counsell') ||
-    normalized.includes('all clinical') ||
-    normalized.includes('clinical and metabolic genetics') ||
-    normalized.includes('multi speciality') ||
-    normalized.includes('adult') // captures mixed entries like "General Adult and Pediatrics"
-  ) {
-    return 'General/Clinical Genetics';
-  }
-
-  // 6) Laboratory/Diagnostic Genetics (includes molecular, lab, DTC)
-  if (
-    normalized.includes('laboratory') ||
-    normalized.includes('lab') ||
-    normalized.includes('molecular genetic') ||
-    normalized === 'laboratory' ||
-    normalized.includes('dtc')
-  ) {
-    return 'Laboratory/Diagnostic Genetics';
-  }
-
-  // 7) Cardiology Genetics
-  if (normalized.includes('cardiology') || normalized.includes('cardiac')) {
-    return 'Cardiology Genetics';
-  }
-
-  // 8) Ophthalmic Genetics
-  if (normalized.includes('ophthalmic') || normalized.includes('eye')) {
-    return 'Ophthalmic Genetics';
-  }
-
-  // 9) Rare Disease/Undiagnosed
-  if (normalized.includes('rare disease') || normalized.includes('undiagnosed')) {
-    return 'Rare Disease/Undiagnosed';
-  }
-
-  // 10) Research-oriented or uncategorized -> Other (fold research/genomic umbrella into Other to keep <=10)
-  if (normalized.includes('research')) {
-    return 'Other';
-  }
-
-  // Default bucket
-  return 'Other';
-};
-
 // Helper function to get unique values from an array
 const getUniqueValues = (arr: (string | undefined)[]): string[] => {
   const cleaned = arr
@@ -153,13 +41,7 @@ const getUniqueSpecialties = (arr: (string | undefined)[]): string[] => {
   
   arr.forEach(item => {
     if (item && item.trim()) {
-      // Split by comma and normalize each specialty
-      const specialtyList = item.split(',').map(s => normalizeSpecialty(s)).filter(Boolean);
-      specialtyList.forEach(specialty => {
-        if (specialty.trim()) { // Only add non-empty specialties
-          specialties.add(specialty);
-        }
-      });
+      getSpecialtyBuckets(item).forEach(specialty => specialties.add(specialty));
     }
   });
   
@@ -310,10 +192,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     if (selectedSpecialties.length > 0) {
       filtered = filtered.filter(s => {
         if (!s.specialties) return false;
-        const specialistSpecialties = s.specialties
-          .split(',')
-          .map(specialty => normalizeSpecialty(specialty))
-          .filter(Boolean);
+        const specialistSpecialties = getSpecialtyBuckets(s.specialties);
         return selectedSpecialties.some(selectedSpecialty => 
           specialistSpecialties.includes(selectedSpecialty)
         );
@@ -368,16 +247,17 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     specialists.forEach(s => {
       if (!s.specialties) return;
       // Raw tokens split on commas
-      s.specialties.split(',').forEach(token => {
+      splitSpecialtyTokens(s.specialties).forEach(token => {
         const raw = cleanSpecialtyString(token);
         if (!raw) return;
         rawCounts.set(raw, (rawCounts.get(raw) || 0) + 1);
       });
       // Normalized tokens using existing rules
-      s.specialties.split(',').forEach(token => {
-        const norm = normalizeSpecialty(token);
-        if (!norm) return;
-        normalizedCounts.set(norm, (normalizedCounts.get(norm) || 0) + 1);
+      splitSpecialtyTokens(s.specialties).forEach(token => {
+        getSpecialtyBuckets(token).forEach(norm => {
+          if (!norm) return;
+          normalizedCounts.set(norm, (normalizedCounts.get(norm) || 0) + 1);
+        });
       });
     });
 
@@ -457,10 +337,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
         if (!s.specialties) return false;
         
         // Parse the specialties and normalize them
-        const specialistSpecialties = s.specialties
-          .split(',')
-          .map(specialty => normalizeSpecialty(specialty))
-          .filter(Boolean);
+        const specialistSpecialties = getSpecialtyBuckets(s.specialties);
         
         // Check if any of the selected specialties matches this specialist's normalized specialties
         return selectedSpecialties.some(selectedSpecialty => 

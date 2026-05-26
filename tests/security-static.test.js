@@ -38,3 +38,22 @@ test('app preserves access for previous deployed map key', () => {
   assert.ok(app.includes('LEGACY_ENCRYPTED_SPECIALISTS_DATA'));
   assert.ok(app.includes('ACCESS_PROFILES'));
 });
+
+test('geocoding scripts do not log Working Copy address details', () => {
+  const pythonGeocoder = read('scripts/geocode_working_copy.py');
+  const appsScriptGeocoder = read('scripts/geocoding.gs');
+
+  assert.ok(pythonGeocoder.includes('format_geocode_log_summary'));
+  assert.ok(!pythonGeocoder.includes("f\"({geo['lat']}, {geo['lng']})"));
+  assert.ok(!pythonGeocoder.includes("geo.get('street', '')"));
+  assert.ok(!pythonGeocoder.includes("geo.get('zip', '')"));
+  assert.ok(!pythonGeocoder.includes('Geocode error: {e}'));
+
+  assert.ok(appsScriptGeocoder.includes('redactedGeocodeSummary'));
+  assert.ok(!appsScriptGeocoder.includes('institution="${inst}", address="${addr}"'));
+  assert.ok(!appsScriptGeocoder.includes('console.log({row:i + 1, inst, addr});'));
+  assert.ok(!appsScriptGeocoder.includes('Attempt ${i + 1}: "${query}"'));
+  assert.ok(!appsScriptGeocoder.includes('error.message'));
+  assert.ok(!appsScriptGeocoder.includes('already has geocoding data ('));
+  assert.ok(!appsScriptGeocoder.includes('lat=${result.lat}, lng=${result.lng}'));
+});

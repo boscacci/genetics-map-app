@@ -4,6 +4,12 @@ const dotenv = require('dotenv');
 const Papa = require('papaparse');
 const CryptoJS = require('crypto-js');
 const { normalizeProviderRecord } = require('./lib/provider-record');
+const {
+  buildPublishRows,
+  formatPublishSummary,
+  formatSkippedExamples,
+  summarizePublishRows,
+} = require('./lib/publish-diagnostics');
 
 // Load .secret_env if present (optional in CI)
 const envPath = path.resolve(__dirname, '../.secret_env');
@@ -37,10 +43,13 @@ if (errors.length > 0) {
   console.error('CSV parsing errors:', errors);
 }
 
-const parsedData = (data).filter((item) => {
-  return item.Latitude && item.Longitude &&
-    !Number.isNaN(Number(item.Latitude)) && !Number.isNaN(Number(item.Longitude));
-}).map((item) => normalizeProviderRecord(item));
+const publishSummary = summarizePublishRows(data);
+console.log(formatPublishSummary(publishSummary));
+if (publishSummary.skippedRows > 0) {
+  console.log(formatSkippedExamples(publishSummary));
+}
+
+const parsedData = buildPublishRows(data).map((item) => normalizeProviderRecord(item));
 
 // Encrypt JSON string
 const jsonString = JSON.stringify(parsedData);

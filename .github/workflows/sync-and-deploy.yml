@@ -20,8 +20,6 @@ permissions:
 jobs:
   sync-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -73,9 +71,13 @@ jobs:
           mkdir -p data
           cp /tmp/cleaned.csv data/data.csv
           npm run encrypt-data
+        env:
+          REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
 
       - name: Generate secret hash for App.tsx
         run: node scripts/hash-secret.js
+        env:
+          REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
 
       - name: Update secret hash in App.tsx
         run: |
@@ -83,7 +85,7 @@ jobs:
           sed -i "s|const SECRET_HASH = \"[a-f0-9]*\";|const SECRET_HASH = \"$HASH\";|" src/App.tsx
 
       - name: Build app
-        run: npm run build
+        run: GENERATE_SOURCEMAP=false ./node_modules/.bin/dotenv -e .env.generated -- ./node_modules/.bin/react-scripts build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

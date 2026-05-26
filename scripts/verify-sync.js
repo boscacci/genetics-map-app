@@ -5,60 +5,74 @@ const path = require('path');
 const crypto = require('crypto');
 const dotenv = require('dotenv');
 
-// Load .secret_env
 const envPath = path.resolve(__dirname, '../.secret_env');
-if (!fs.existsSync(envPath)) {
-  console.error('❌ .secret_env file not found');
-  process.exit(1);
-}
-
-dotenv.config({ path: envPath });
-const SECRET_KEY = process.env.REACT_APP_SECRET_KEY;
-
-if (!SECRET_KEY) {
-  console.error('❌ REACT_APP_SECRET_KEY not found in .secret_env');
-  process.exit(1);
-}
-
-// Compute expected hash
-const expectedHash = crypto.createHash('sha256').update(SECRET_KEY).digest('hex');
-
-// Check .env.generated
 const envGeneratedPath = path.resolve(__dirname, '../.env.generated');
-if (fs.existsSync(envGeneratedPath)) {
-  const envGenerated = fs.readFileSync(envGeneratedPath, 'utf8');
-  const hashMatch = envGenerated.match(/REACT_APP_SECRET_HASH=([a-f0-9]+)/);
-  if (hashMatch && hashMatch[1] === expectedHash) {
-    console.log('✅ .env.generated hash matches');
-  } else {
-    console.error(`❌ .env.generated hash mismatch!`);
-    console.error(`   Found: ${hashMatch ? `${hashMatch[1].substring(0, 16)}...` : 'none'}`);
-    process.exit(1);
+const appTsxPath = path.resolve(__dirname, '../src/App.tsx');
+const blobPath = path.resolve(__dirname, '../src/secureDataBlob.ts');
+
+function fail(message) {
+  console.error(message);
+  process.exit(1);
+}
+
+function extractHash(content, pattern, label) {
+  const match = content.match(pattern);
+  if (!match) {
+    fail(`❌ ${label} not found`);
   }
-} else {
+  return match[1];
+}
+
+if (!fs.existsSync(envGeneratedPath)) {
   console.error('❌ .env.generated not found - run: node scripts/hash-secret.js');
   process.exit(1);
 }
 
-// Check App.tsx
-const appTsxPath = path.resolve(__dirname, '../src/App.tsx');
-if (fs.existsSync(appTsxPath)) {
-  const appContent = fs.readFileSync(appTsxPath, 'utf8');
-  const secretHashMatch = appContent.match(/const SECRET_HASH = "([a-f0-9]*)";/);
-  if (secretHashMatch && secretHashMatch[1] === expectedHash) {
-    console.log('✅ App.tsx SECRET_HASH matches');
-  } else {
-    console.error(`❌ App.tsx SECRET_HASH mismatch!`);
-    console.error(`   Found: ${secretHashMatch ? `${secretHashMatch[1].substring(0, 16)}...` : 'none'}`);
+if (!fs.existsSync(appTsxPath)) {
+  fail('❌ src/App.tsx not found');
+}
+
+const envGenerated = fs.readFileSync(envGeneratedPath, 'utf8');
+const generatedHash = extractHash(
+  envGenerated,
+  /REACT_APP_SECRET_HASH=([a-f0-9]+)/,
+  'REACT_APP_SECRET_HASH in .env.generated'
+);
+
+const appContent = fs.readFileSync(appTsxPath, 'utf8');
+const appHash = extractHash(
+  appContent,
+  /const SECRET_HASH = "([a-f0-9]*)";/,
+  'SECRET_HASH in App.tsx'
+);
+
+if (appHash !== generatedHash) {
+  console.error('❌ App.tsx SECRET_HASH mismatch!');
+  console.error(`   App.tsx: ${appHash.substring(0, 16)}...`);
+  console.error(`   .env.generated: ${generatedHash.substring(0, 16)}...`);
+  process.exit(1);
+}
+console.log('✅ App.tsx SECRET_HASH matches .env.generated');
+
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+  const secretKey = process.env.REACT_APP_SECRET_KEY;
+  if (!secretKey) {
+    fail('❌ REACT_APP_SECRET_KEY not found in .secret_env');
+  }
+
+  const expectedHash = crypto.createHash('sha256').update(secretKey).digest('hex');
+  if (expectedHash !== generatedHash) {
+    console.error('❌ .env.generated hash mismatch!');
+    console.error(`   Found: ${generatedHash.substring(0, 16)}...`);
     process.exit(1);
   }
+  console.log('✅ .env.generated hash matches local secret');
 } else {
-  console.error('❌ src/App.tsx not found');
-  process.exit(1);
+  console.log('ℹ️ .secret_env not found; skipping local plaintext secret comparison');
 }
 
 // Check if secureDataBlob.ts exists and was encrypted with current key
-const blobPath = path.resolve(__dirname, '../src/secureDataBlob.ts');
 if (fs.existsSync(blobPath)) {
   const blobSize = fs.statSync(blobPath).size;
   if (blobSize > 1000) {
@@ -72,4 +86,4 @@ if (fs.existsSync(blobPath)) {
 }
 
 console.log('\n✅ All checks passed! System is in sync.');
-console.log(`🔐 Hash: ${expectedHash.substring(0, 16)}...`);
+console.log(`🔐 Hash: ${generatedHash.substring(0, 16)}...`);

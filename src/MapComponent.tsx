@@ -352,6 +352,9 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
         const markers = createDatelineMarkers(specialist, index);
         return markers.map((markerData, markerIndex) => {
           const { specialist, lng, index: originalIndex, isDuplicate } = markerData;
+          const specialtyText = cleanDisplay(specialist.specialties);
+          const jobTitle = cleanDisplay(specialist.job_title);
+          const interpreterAvailable = isFlagTrue(specialist.interpreter_services);
           // Determine tooltip class for mobile popup state
           const tooltipClass = `specialist-tooltip${isMobile() && openPopupIndex === originalIndex ? ' hide-on-mobile-popup' : ''}`;
           
@@ -425,6 +428,20 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                       <span className="detail-label">📍 Location:</span>
                       <span className="detail-value">{displayLocation(specialist.City, specialist.Country)}</span>
                     </div>
+
+                    {jobTitle && (
+                      <div className="detail-item popup-job-title">
+                        <span className="detail-label">Role:</span>
+                        <span className="detail-value">{jobTitle}</span>
+                      </div>
+                    )}
+
+                    {specialtyText && (
+                      <div className="detail-item popup-specialties">
+                        <span className="detail-label">Specialty:</span>
+                        <span className="detail-value">{specialtyText}</span>
+                      </div>
+                    )}
                     
                     {specialist.language_spoken && (
                       <div className="detail-item">
@@ -433,7 +450,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                       </div>
                     )}
                     
-                    {specialist.interpreter_services === 'True' && (
+                    {interpreterAvailable && (
                       <div className="detail-item">
                         <span className="detail-label">🔄 Interpreter Services:</span>
                         <span className="detail-value">Available</span>
@@ -462,6 +479,9 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
         const safeName = isFlagTrue(specialist.hide_name)
           ? 'Anonymous Contributor'
           : displayName(specialist.name_first, specialist.name_last);
+        const jobTitle = cleanDisplay(specialist.job_title);
+        const specialtyText = cleanDisplay(specialist.specialties);
+        const interpreterAvailable = isFlagTrue(specialist.interpreter_services);
         return showContactModal[index] && (
 
           <div 
@@ -490,11 +510,25 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                     <span className="contact-text">{displayInstitution(specialist.work_institution)}</span>
                   </div>
                 )}
+
+                {jobTitle && (
+                  <div className="contact-item contact-job-title">
+                    <span className="contact-icon">🧭</span>
+                    <span className="contact-text">{jobTitle}</span>
+                  </div>
+                )}
                 
-                {specialist.specialties && (
+                {specialtyText && (
                   <div className="contact-item">
                     <span className="contact-icon">🔬</span>
-                    <span className="contact-text">{specialist.specialties}</span>
+                    <span className="contact-text">{specialtyText}</span>
+                  </div>
+                )}
+
+                {interpreterAvailable && (
+                  <div className="contact-item contact-interpreter-services">
+                    <span className="contact-icon">🔄</span>
+                    <span className="contact-text">Interpreter services available</span>
                   </div>
                 )}
                 

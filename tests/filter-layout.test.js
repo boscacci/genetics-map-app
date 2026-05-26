@@ -48,3 +48,27 @@ test('empty filter selects match the name input height', () => {
   assert.ok(css.includes('.react-select__control:has(.react-select__multi-value)'));
   assert.ok(css.includes('.react-select__value-container--has-value'));
 });
+
+test('marker popup shows specialty before contact action', () => {
+  const component = read('src/MapComponent.tsx');
+  const popupDetails = component.indexOf('className="popup-details"');
+  const specialty = component.indexOf('popup-specialties', popupDetails);
+  const contactButton = component.indexOf('className="contact-me-btn"', popupDetails);
+
+  assert.notEqual(popupDetails, -1);
+  assert.ok(specialty > popupDetails, 'expected popup specialty row in popup details');
+  assert.ok(contactButton > specialty, 'expected specialty to appear before contact button');
+});
+
+test('contact modal includes role details before direct contact methods', () => {
+  const component = read('src/MapComponent.tsx');
+  const modalContent = component.indexOf('className="contact-modal-content"');
+  const jobTitle = component.indexOf('contact-job-title', modalContent);
+  const interpreter = component.indexOf('contact-interpreter-services', modalContent);
+  const email = component.indexOf('mailto:', modalContent);
+
+  assert.notEqual(modalContent, -1);
+  assert.ok(jobTitle > modalContent, 'expected job title in contact modal');
+  assert.ok(interpreter > jobTitle, 'expected interpreter services after role details');
+  assert.ok(email > interpreter, 'expected direct contact methods after role details');
+});

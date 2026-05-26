@@ -20,10 +20,6 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(line_buffering=True)
 
-import requests
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-
 # Paths
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
@@ -188,6 +184,8 @@ def geocode_address(address: str, api_key: str) -> dict | None:
     """Call Google Geocoding API. Returns first result or None."""
     if not address.strip():
         return None
+    import requests
+
     url = "https://maps.googleapis.com/maps/api/geocode/json"
     params = {"address": address, "key": api_key, "language": "en"}
     try:
@@ -197,12 +195,14 @@ def geocode_address(address: str, api_key: str) -> dict | None:
         if data.get("status") == "OK" and data.get("results"):
             return data["results"][0]
     except Exception as e:
-        print(f"  Geocode error: {e}", file=sys.stderr)
+        print(f"  Geocode error: {type(e).__name__}", file=sys.stderr)
     return None
 
 
 def reverse_geocode_language(lat: float, lng: float, api_key: str, language: str = "en") -> dict | None:
     """Reverse geocode lat,lng to get address components in specified language."""
+    import requests
+
     url = "https://maps.googleapis.com/maps/api/geocode/json"
     params = {"latlng": f"{lat},{lng}", "key": api_key, "language": language}
     try:
@@ -350,6 +350,26 @@ def _has_address_components(row: list) -> bool:
     return False
 
 
+def format_geocode_log_summary(geo: dict) -> str:
+    """Return a non-PII summary suitable for public CI logs."""
+    if not geo:
+        return "no geocode result"
+
+    updated = []
+    if geo.get("lat") and geo.get("lng"):
+        updated.append("coordinates")
+    if geo.get("city"):
+        updated.append("city")
+    if geo.get("country"):
+        updated.append("country")
+    if any(geo.get(key) for key in ("street", "state", "zip")):
+        updated.append("address components")
+
+    if not updated:
+        return "no geocode result"
+    return "updated " + ", ".join(updated)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Geocode Working Copy records via Google Geocoding API")
     parser.add_argument(
@@ -377,6 +397,9 @@ def main():
         return
     api_key = API_KEY_PATH.read_text().strip() if not fix_cities_only else ""
     spreadsheet_id = SHEET_ID_PATH.read_text().strip()
+
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
 
     creds = service_account.Credentials.from_service_account_file(
         str(CREDENTIALS_PATH),
@@ -468,11 +491,7 @@ def main():
         row[ADDRESS_STATE_COL] = geo.get("state", "")
         row[ADDRESS_ZIP_COL] = geo.get("zip", "")
         processed += 1
-        print(
-            f"({geo['lat']}, {geo['lng']}) {geo['city']}, {geo['country']} | "
-            f"{geo.get('street', '')} | {geo.get('state', '')} {geo.get('zip', '')}",
-            flush=True,
-        )
+        print(format_geocode_log_summary(geo), flush=True)
         time.sleep(DELAY_BETWEEN_ROWS)
 
     # Apply city fixes to ALL rows before persist (handles stale "NY" etc. even when not re-geocoded)
