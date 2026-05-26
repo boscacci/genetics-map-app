@@ -1,9 +1,36 @@
+const BLANK_PLACEHOLDERS = new Set(['nan', 'n/a', 'na', 'null', 'undefined', '-', '--']);
+const PROVIDER_CONTENT_FIELDS = [
+  'name_first',
+  'name_last',
+  'email',
+  'phone_work',
+  'work_website',
+  'work_institution',
+  'job_title',
+  'work_address',
+  'language_spoken',
+  'specialties',
+  'Latitude',
+  'Longitude',
+  'City',
+  'Country',
+  'address_street',
+  'address_state',
+  'address_zip',
+];
+
 function isBlank(value) {
-  return value === null || value === undefined || String(value).trim() === '';
+  if (value === null || value === undefined) return true;
+  const normalized = String(value).trim().toLowerCase();
+  return normalized === '' || BLANK_PLACEHOLDERS.has(normalized);
 }
 
 function isBlankRow(row) {
-  return Object.values(row).every(isBlank);
+  const contentFields = PROVIDER_CONTENT_FIELDS.filter((field) => Object.prototype.hasOwnProperty.call(row, field));
+  const values = contentFields.length > 0
+    ? contentFields.map((field) => row[field])
+    : Object.values(row);
+  return values.every(isBlank);
 }
 
 function coordinateSkipReason(row) {

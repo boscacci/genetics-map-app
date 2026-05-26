@@ -39,7 +39,14 @@ test('publish rows include only records with usable coordinates', () => {
 test('publish diagnostics ignore completely blank trailing sheet rows', () => {
   const rows = [
     { name_first: 'Ada', Latitude: '42.0', Longitude: '-71.0' },
-    { name_first: '', Latitude: '', Longitude: '' },
+    {
+      name_first: '',
+      hide_name: 'FALSE',
+      hide_email: 'FALSE',
+      uses_interpreters: 'FALSE',
+      Latitude: '',
+      Longitude: '',
+    },
     { name_first: 'Grace', Latitude: '', Longitude: '-71.0' },
   ];
   const summary = summarizePublishRows(rows);
