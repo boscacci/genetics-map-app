@@ -23,6 +23,20 @@ function normalizeHideFlag(value) {
   return String(cleanValue(value) || '').toUpperCase() === 'TRUE' ? 'TRUE' : 'FALSE';
 }
 
+function normalizeInterpreterServices(...values) {
+  for (const value of values) {
+    const cleaned = cleanValue(value);
+    if (cleaned === '') continue;
+
+    const normalized = String(cleaned).trim().toUpperCase();
+    if (normalized === 'TRUE') return 'TRUE';
+    if (normalized === 'FALSE') return 'FALSE';
+    return String(cleaned).trim();
+  }
+
+  return 'unknown';
+}
+
 function normalizeProviderRecord(item, options = {}) {
   const logger = options.logger || console;
   const hideName = normalizeHideFlag(item.hide_name);
@@ -50,10 +64,10 @@ function normalizeProviderRecord(item, options = {}) {
     phone_work: hidePhone === 'TRUE' ? '' : normalizePhoneText(cleanValue(item.phone_work)),
     work_website: cleanValue(item.work_website),
     work_institution: scrubWorkInstitution ? '' : cleanValue(item.work_institution),
-    job_title: cleanValue(item.job_title),
+    job_title: cleanValue(item.job_title) || cleanValue(item.title),
     work_address: scrubInstitutionAddress ? '' : cleanValue(item.work_address),
     language_spoken: cleanLanguageString(item.language_spoken),
-    interpreter_services: typeof item.uses_interpreters === 'string' ? item.uses_interpreters : 'unknown',
+    interpreter_services: normalizeInterpreterServices(item.uses_interpreters, item.interpreter_services),
     City: cleanValue(item.City),
     Country: cleanValue(item.Country),
     address_street: scrubInstitutionAddress ? '' : cleanValue(item.address_street),
@@ -71,5 +85,6 @@ module.exports = {
   cleanLanguageString,
   cleanValue,
   normalizeHideFlag,
+  normalizeInterpreterServices,
   normalizeProviderRecord,
 };

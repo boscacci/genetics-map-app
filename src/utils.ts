@@ -11,13 +11,15 @@ interface CSVRow {
   work_website: string;
   work_institution: string;
   job_title: string;
+  title?: string;
   work_address: string;
   language_spoken: string;
   Latitude: number | string;
   Longitude: number | string;
   City: string;
   Country: string;
-  uses_interpreters?: string;
+  uses_interpreters?: string | boolean;
+  interpreter_services?: string | boolean;
   specialties?: string;
   specialty?: string; // fallback: accept singular form
   speciality?: string; // fallback: accept British spelling
@@ -41,6 +43,19 @@ export const cleanLanguageString = (languageString: string): string => {
     .replace(/[.,;!?()\[\]{}"'`]/g, '') // Remove common punctuation marks
     .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
     .trim(); // Remove leading/trailing whitespace
+};
+
+const normalizeInterpreterServices = (...values: unknown[]): string => {
+  for (const value of values) {
+    if (value === null || value === undefined) continue;
+    const normalized = String(value).trim().toUpperCase();
+    if (!normalized) continue;
+    if (normalized === 'TRUE') return 'TRUE';
+    if (normalized === 'FALSE') return 'FALSE';
+    return String(value).trim();
+  }
+
+  return 'unknown';
 };
 
 // Synchronous version for embedded data
@@ -68,14 +83,14 @@ export const parseCSVString = (csvString: string): MapPoint[] => {
       phone_work: stripSheetTextEscape(row.phone_work),
       work_website: row.work_website,
       work_institution: row.work_institution,
-      job_title: row.job_title || '',
+      job_title: row.job_title || row.title || '',
       work_address: row.work_address,
       language_spoken: cleanLanguageString(row.language_spoken),
       Latitude: Number(row.Latitude),
       Longitude: Number(row.Longitude),
       City: row.City,
       Country: row.Country,
-      interpreter_services: row.uses_interpreters || 'unknown',
+      interpreter_services: normalizeInterpreterServices(row.uses_interpreters, row.interpreter_services),
       specialties: (row.specialties || row.specialty || row.speciality || '') as string,
       hide_name: row.hide_name,
       hide_phone: row.hide_phone,
@@ -124,14 +139,14 @@ export const parseCSV = async (url: string): Promise<MapPoint[]> => {
       phone_work: stripSheetTextEscape(row.phone_work),
       work_website: row.work_website,
       work_institution: row.work_institution,
-      job_title: row.job_title || '',
+      job_title: row.job_title || row.title || '',
       work_address: row.work_address,
       language_spoken: cleanLanguageString(row.language_spoken),
       Latitude: Number(row.Latitude),
       Longitude: Number(row.Longitude),
       City: row.City,
       Country: row.Country,
-      interpreter_services: row.uses_interpreters || 'unknown',
+      interpreter_services: normalizeInterpreterServices(row.uses_interpreters, row.interpreter_services),
       specialties: (row.specialties || row.specialty || row.speciality || '') as string,
       hide_name: row.hide_name,
       hide_phone: row.hide_phone,

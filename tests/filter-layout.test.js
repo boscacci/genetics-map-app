@@ -71,15 +71,37 @@ test('initial provider tooltip shows specialty before contact prompt', () => {
   assert.ok(contactPrompt > specialty, 'expected specialty before the contact prompt');
 });
 
-test('contact modal includes role details before direct contact methods', () => {
+test('contact modal includes interpreter services before direct contact methods', () => {
   const component = read('src/MapComponent.tsx');
   const modalContent = component.indexOf('className="contact-modal-content"');
-  const jobTitle = component.indexOf('contact-job-title', modalContent);
   const interpreter = component.indexOf('contact-interpreter-services', modalContent);
   const email = component.indexOf('mailto:', modalContent);
 
   assert.notEqual(modalContent, -1);
-  assert.ok(jobTitle > modalContent, 'expected job title in contact modal');
-  assert.ok(interpreter > jobTitle, 'expected interpreter services after role details');
-  assert.ok(email > interpreter, 'expected direct contact methods after role details');
+  assert.ok(interpreter > modalContent, 'expected interpreter services in contact modal');
+  assert.ok(email > interpreter, 'expected direct contact methods after interpreter services');
+});
+
+test('popup and contact modal show job title as a subtitle under the name', () => {
+  const component = read('src/MapComponent.tsx');
+  const popupHeader = component.indexOf('className="popup-header"');
+  const popupName = component.indexOf('className="popup-name"', popupHeader);
+  const popupSubtitle = component.indexOf('className="popup-title"', popupHeader);
+  const modalHeader = component.indexOf('className="contact-modal-header"');
+  const modalName = component.indexOf('Contact {safeName}', modalHeader);
+  const modalSubtitle = component.indexOf('className="contact-modal-title"', modalHeader);
+
+  assert.ok(popupName > popupHeader, 'expected popup name in header');
+  assert.ok(popupSubtitle > popupName, 'expected popup title subtitle under the name');
+  assert.ok(modalName > modalHeader, 'expected contact modal name in header');
+  assert.ok(modalSubtitle > modalName, 'expected contact modal title subtitle under the name');
+});
+
+test('interpreter services are shown even when the Sheet value is false or unknown', () => {
+  const component = read('src/MapComponent.tsx');
+
+  assert.ok(component.includes('formatInterpreterServices'));
+  assert.ok(component.includes('const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);'));
+  assert.ok(!component.includes('const interpreterAvailable = isFlagTrue(specialist.interpreter_services);'));
+  assert.ok(component.includes('{interpreterServicesText}'));
 });

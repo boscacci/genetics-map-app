@@ -192,6 +192,13 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     return String(value ?? '').trim().toUpperCase() === 'TRUE';
   };
 
+  const formatInterpreterServices = (value?: string): string => {
+    const normalized = String(value ?? '').trim().toUpperCase();
+    if (normalized === 'TRUE') return 'Available';
+    if (normalized === 'FALSE') return 'Not available';
+    return 'Not specified';
+  };
+
   const shouldShowInstitution = (specialist: MapPoint): boolean => {
     return !isFlagTrue(specialist.hide_workinstitution) && !isFlagTrue(specialist.hide_institution_address);
   };
@@ -360,7 +367,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
           const { specialist, lng, index: originalIndex, isDuplicate } = markerData;
           const specialtyText = cleanDisplay(specialist.specialties);
           const jobTitle = cleanDisplay(specialist.job_title);
-          const interpreterAvailable = isFlagTrue(specialist.interpreter_services);
+          const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);
           // Determine tooltip class for mobile popup state
           const tooltipClass = `specialist-tooltip${isMobile() && openPopupIndex === originalIndex ? ' hide-on-mobile-popup' : ''}`;
           
@@ -424,6 +431,9 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                 >
                   <div className="popup-header">
                     <h3 className="popup-name">{safeName}</h3>
+                    {jobTitle && (
+                      <div className="popup-title">{jobTitle}</div>
+                    )}
                     {showInstitution && (
                       <div className="popup-institution">{displayInstitution(specialist.work_institution)}</div>
                     )}
@@ -434,13 +444,6 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                       <span className="detail-label">📍 Location:</span>
                       <span className="detail-value">{displayLocation(specialist.City, specialist.Country)}</span>
                     </div>
-
-                    {jobTitle && (
-                      <div className="detail-item popup-job-title">
-                        <span className="detail-label">Role:</span>
-                        <span className="detail-value">{jobTitle}</span>
-                      </div>
-                    )}
 
                     {specialtyText && (
                       <div className="detail-item popup-specialties">
@@ -456,12 +459,10 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                       </div>
                     )}
                     
-                    {interpreterAvailable && (
-                      <div className="detail-item">
-                        <span className="detail-label">🔄 Interpreter Services:</span>
-                        <span className="detail-value">Available</span>
-                      </div>
-                    )}
+                    <div className="detail-item">
+                      <span className="detail-label">🔄 Interpreter Services:</span>
+                      <span className="detail-value">{interpreterServicesText}</span>
+                    </div>
                   </div>
                   
                   <button 
@@ -487,7 +488,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
           : displayName(specialist.name_first, specialist.name_last);
         const jobTitle = cleanDisplay(specialist.job_title);
         const specialtyText = cleanDisplay(specialist.specialties);
-        const interpreterAvailable = isFlagTrue(specialist.interpreter_services);
+        const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);
         return showContactModal[index] && (
 
           <div 
@@ -500,7 +501,12 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
               onClick={(e) => e.stopPropagation()}
             >
               <div className="contact-modal-header">
-                <h3>Contact {safeName}</h3>
+                <div className="contact-modal-heading">
+                  <h3>Contact {safeName}</h3>
+                  {jobTitle && (
+                    <div className="contact-modal-title">{jobTitle}</div>
+                  )}
+                </div>
                 <button
                   className="modal-close-btn"
                   onClick={() => closeContactModal(index)}
@@ -517,13 +523,6 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                   </div>
                 )}
 
-                {jobTitle && (
-                  <div className="contact-item contact-job-title">
-                    <span className="contact-icon">🧭</span>
-                    <span className="contact-text">{jobTitle}</span>
-                  </div>
-                )}
-                
                 {specialtyText && (
                   <div className="contact-item">
                     <span className="contact-icon">🔬</span>
@@ -531,12 +530,10 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                   </div>
                 )}
 
-                {interpreterAvailable && (
-                  <div className="contact-item contact-interpreter-services">
-                    <span className="contact-icon">🔄</span>
-                    <span className="contact-text">Interpreter services available</span>
-                  </div>
-                )}
+                <div className="contact-item contact-interpreter-services">
+                  <span className="contact-icon">🔄</span>
+                  <span className="contact-text">Interpreter services: {interpreterServicesText}</span>
+                </div>
                 
                 {specialist.email && (
                   <div className="contact-item">

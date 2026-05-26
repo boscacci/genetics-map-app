@@ -60,3 +60,30 @@ test('provider normalization strips old phone apostrophe escapes before publishi
 
   assert.equal(record.phone_work, '+44 20 7946 0958');
 });
+
+test('provider normalization preserves Sheet title and interpreter fields for display', () => {
+  const record = normalizeProviderRecord({
+    name_first: 'Katherine',
+    name_last: 'Johnson',
+    title: 'Clinical Geneticist',
+    uses_interpreters: 'FALSE',
+    Latitude: '37.0',
+    Longitude: '-122.0',
+  });
+
+  assert.equal(record.job_title, 'Clinical Geneticist');
+  assert.equal(record.interpreter_services, 'FALSE');
+});
+
+test('provider normalization preserves parsed boolean interpreter values from CSV', () => {
+  const record = normalizeProviderRecord({
+    name_first: 'Mary',
+    name_last: 'Jackson',
+    job_title: 'Genetic Counselor',
+    uses_interpreters: false,
+    Latitude: '37.0',
+    Longitude: '-122.0',
+  });
+
+  assert.equal(record.interpreter_services, 'FALSE');
+});
