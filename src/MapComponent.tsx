@@ -318,6 +318,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
       : displayName(specialist.name_first, specialist.name_last);
     const showInstitution = shouldShowInstitution(specialist);
     const loc = displayLocation(specialist.City, specialist.Country);
+    const specialtyText = cleanDisplay(specialist.specialties);
 
     return (
       <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", minWidth: 200, maxWidth: 250 }}>
@@ -333,6 +334,11 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
           <div style={{ fontSize: 11, color: '#6c757d' }}>
             {loc ? `📍 ${loc}` : ''}
           </div>
+          {specialtyText && (
+            <div className="tooltip-specialties" style={{ fontSize: 11, color: '#495057', marginTop: 5, lineHeight: 1.35 }}>
+              <span style={{ fontWeight: 600 }}>Specialty:</span> {specialtyText}
+            </div>
+          )}
         </div>
 
         <div style={{ padding: '6px 10px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 500, textAlign: 'center', marginTop: 6 }}>

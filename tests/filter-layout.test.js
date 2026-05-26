@@ -60,6 +60,17 @@ test('marker popup shows specialty before contact action', () => {
   assert.ok(contactButton > specialty, 'expected specialty to appear before contact button');
 });
 
+test('initial provider tooltip shows specialty before contact prompt', () => {
+  const component = read('src/MapComponent.tsx');
+  const tooltipRenderer = component.indexOf('const renderTooltipContent');
+  const specialty = component.indexOf('tooltip-specialties', tooltipRenderer);
+  const contactPrompt = component.indexOf('Click to contact', tooltipRenderer);
+
+  assert.notEqual(tooltipRenderer, -1);
+  assert.ok(specialty > tooltipRenderer, 'expected specialty in the first provider tooltip');
+  assert.ok(contactPrompt > specialty, 'expected specialty before the contact prompt');
+});
+
 test('contact modal includes role details before direct contact methods', () => {
   const component = read('src/MapComponent.tsx');
   const modalContent = component.indexOf('className="contact-modal-content"');
