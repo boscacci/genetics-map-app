@@ -142,10 +142,14 @@ test('cards use compact fact lists without reserving space for missing specialty
 test('popup header treats the title as a tight subtitle before the institution', () => {
   const name = appCssBlock('.popup-name');
   const title = appCssBlock('.popup-title');
+  const modalTitle = appCssBlock('.contact-modal-title');
 
   assert.match(name, /margin:\s*0\b/);
+  assert.match(name, /line-height:\s*1\.15\b/);
   assert.match(title, /margin-top:\s*0\b/);
+  assert.match(title, /line-height:\s*1\.15\b/);
   assert.match(title, /margin-bottom:\s*8px\b/);
+  assert.match(modalTitle, /margin-top:\s*1px\b/);
 });
 
 test('contact modal includes interpreter services before direct contact methods', () => {
