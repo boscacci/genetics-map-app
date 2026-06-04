@@ -123,11 +123,11 @@ body {
   border: 1px solid #e9ecef;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 12px 16px;
+  padding: 12px 14px;
   font-size: 12px;
   line-height: 1.4;
-  min-width: 200px;
-  max-width: 250px;
+  min-width: 230px;
+  max-width: 300px;
   backdrop-filter: blur(5px);
   word-break: break-word;
   overflow-wrap: break-word;
@@ -143,6 +143,14 @@ body {
   overflow-wrap: break-word !important;
   white-space: normal !important;
   box-sizing: border-box;
+}
+
+.leaflet-tooltip.specialist-tooltip .provider-fact-label {
+  white-space: nowrap !important;
+}
+
+.leaflet-tooltip.specialist-tooltip .provider-fact-value {
+  min-width: 0;
 }
 
 /* Hide Leaflet attribution */
@@ -200,4 +208,4 @@ body {
 /* Hide tooltip when popup is open on mobile (class added via JS) */
 .leaflet-tooltip.specialist-tooltip.hide-on-mobile-popup {
   display: none !important;
-} 
+}

@@ -59,7 +59,7 @@ test('empty filter selects match the name input height', () => {
 
 test('marker popup shows specialty before contact action', () => {
   const component = read('src/MapComponent.tsx');
-  const popupDetails = component.indexOf('className="popup-details"');
+  const popupDetails = component.indexOf('popup-details');
   const specialty = component.indexOf('popup-specialties', popupDetails);
   const contactButton = component.indexOf('className="contact-me-btn"', popupDetails);
 
@@ -95,7 +95,7 @@ test('provider preview and popup detail cards expose the same basic fact rows', 
   const component = read('src/MapComponent.tsx');
   const tooltipRenderer = component.indexOf('const renderTooltipContent');
   const tooltipEnd = component.indexOf('Click to contact', tooltipRenderer);
-  const popupDetails = component.indexOf('className="popup-details"');
+  const popupDetails = component.indexOf('popup-details');
   const popupEnd = component.indexOf('className="contact-me-btn"', popupDetails);
   const tooltipMarkup = component.slice(tooltipRenderer, tooltipEnd);
   const popupMarkup = component.slice(popupDetails, popupEnd);
@@ -104,6 +104,39 @@ test('provider preview and popup detail cards expose the same basic fact rows', 
     assert.ok(tooltipMarkup.includes(label), `expected preview card to include ${label}`);
     assert.ok(popupMarkup.includes(label), `expected detail card to include ${label}`);
   });
+});
+
+test('contact modal includes languages before interpreter services', () => {
+  const component = read('src/MapComponent.tsx');
+  const modalContent = component.indexOf('className="contact-modal-content"');
+  const languages = component.indexOf('contact-languages', modalContent);
+  const interpreter = component.indexOf('contact-interpreter-services', modalContent);
+
+  assert.notEqual(modalContent, -1);
+  assert.ok(languages > modalContent, 'expected languages in contact modal');
+  assert.ok(interpreter > languages, 'expected interpreter services after languages');
+});
+
+test('cards use compact fact lists without reserving space for missing specialty rows', () => {
+  const component = read('src/MapComponent.tsx');
+  const css = read('src/App.css');
+  const tooltipRenderer = component.indexOf('const renderTooltipContent');
+  const popupDetails = component.indexOf('className="popup-details provider-facts"', tooltipRenderer);
+
+  assert.ok(component.includes('className="provider-facts tooltip-facts"'));
+  assert.ok(popupDetails > tooltipRenderer, 'expected popup details to share provider fact list spacing');
+  assert.ok(component.includes('provider-fact-item popup-specialties'));
+  assert.ok(!component.includes('className="provider-fact-item popup-specialties placeholder"'));
+
+  const facts = appCssBlock('.provider-facts');
+  const factItem = appCssBlock('.provider-fact-item');
+  const detailLabel = appCssBlock('.provider-fact-label');
+
+  assert.match(facts, /display:\s*grid\b/);
+  assert.match(facts, /gap:\s*3px\b/);
+  assert.match(factItem, /grid-template-columns:\s*max-content minmax\(0,\s*1fr\)/);
+  assert.match(detailLabel, /white-space:\s*nowrap\b/);
+  assert.ok(css.includes('.tooltip-facts .provider-fact-item'));
 });
 
 test('popup header treats the title as a tight subtitle before the institution', () => {

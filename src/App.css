@@ -234,25 +234,35 @@
   margin-bottom: 8px;
 }
 
-.detail-item {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 4px;
+.provider-facts {
+  display: grid;
+  gap: 3px;
+}
+
+.provider-fact-item {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 7px;
+  align-items: start;
   font-size: 12px;
   line-height: 1.3;
 }
 
-.detail-label {
+.provider-fact-label {
   font-weight: 600;
   color: #495057;
-  min-width: 80px;
-  margin-right: 8px;
-  flex-shrink: 0;
+  white-space: nowrap;
 }
 
-.detail-value {
+.provider-fact-value {
   color: #6c757d;
   word-break: break-word;
+  min-width: 0;
+}
+
+.tooltip-facts .provider-fact-item {
+  column-gap: 6px;
+  font-size: 11px;
 }
 
 .contact-me-btn {

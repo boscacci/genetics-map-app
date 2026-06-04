@@ -330,7 +330,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);
 
     return (
-      <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", minWidth: 200, maxWidth: 250 }}>
+      <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", minWidth: 220, maxWidth: 280 }}>
         <div style={{ marginBottom: 8 }}>
           <div style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#2c3e50', lineHeight: 1.3 }}>
             {safeName}
@@ -340,27 +340,29 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
               {displayInstitution(specialist.work_institution)}
             </div>
           )}
+          <div className="provider-facts tooltip-facts">
           {loc && (
-            <div className="detail-item tooltip-location" style={{ fontSize: 11, marginBottom: 3 }}>
-              <span className="detail-label">📍 Location:</span>
-              <span className="detail-value">{loc}</span>
+            <div className="provider-fact-item tooltip-location">
+              <span className="provider-fact-label">📍 Location:</span>
+              <span className="provider-fact-value">{loc}</span>
             </div>
           )}
           {specialtyText && (
-            <div className="detail-item tooltip-specialties" style={{ fontSize: 11, marginBottom: 3 }}>
-              <span className="detail-label">🧬 Specialty:</span>
-              <span className="detail-value">{specialtyText}</span>
+            <div className="provider-fact-item tooltip-specialties">
+              <span className="provider-fact-label">🧬 Specialty:</span>
+              <span className="provider-fact-value">{specialtyText}</span>
             </div>
           )}
           {languageText && (
-            <div className="detail-item tooltip-languages" style={{ fontSize: 11, marginBottom: 3 }}>
-              <span className="detail-label">🗣️ Languages:</span>
-              <span className="detail-value">{languageText}</span>
+            <div className="provider-fact-item tooltip-languages">
+              <span className="provider-fact-label">🗣️ Languages:</span>
+              <span className="provider-fact-value">{languageText}</span>
             </div>
           )}
-          <div className="detail-item tooltip-interpreter-services" style={{ fontSize: 11, marginBottom: 0 }}>
-            <span className="detail-label">🔄 Interpreter Services:</span>
-            <span className="detail-value">{interpreterServicesText}</span>
+          <div className="provider-fact-item tooltip-interpreter-services">
+            <span className="provider-fact-label">🔄 Interpreter Services:</span>
+            <span className="provider-fact-value">{interpreterServicesText}</span>
+          </div>
           </div>
         </div>
 
@@ -383,6 +385,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
           const { specialist, lng, index: originalIndex, isDuplicate } = markerData;
           const specialtyText = cleanDisplay(specialist.specialties);
           const jobTitle = cleanDisplay(specialist.job_title);
+          const languageText = specialist.language_spoken ? formatLanguages(specialist.language_spoken) : '';
           const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);
           // Determine tooltip class for mobile popup state
           const tooltipClass = `specialist-tooltip${isMobile() && openPopupIndex === originalIndex ? ' hide-on-mobile-popup' : ''}`;
@@ -455,29 +458,29 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                     )}
                   </div>
 
-                  <div className="popup-details">
-                    <div className="detail-item">
-                      <span className="detail-label">📍 Location:</span>
-                      <span className="detail-value">{displayLocation(specialist.City, specialist.Country)}</span>
+                  <div className="popup-details provider-facts">
+                    <div className="provider-fact-item">
+                      <span className="provider-fact-label">📍 Location:</span>
+                      <span className="provider-fact-value">{displayLocation(specialist.City, specialist.Country)}</span>
                     </div>
 
                     {specialtyText && (
-                      <div className="detail-item popup-specialties">
-                        <span className="detail-label">🧬 Specialty:</span>
-                        <span className="detail-value">{specialtyText}</span>
+                      <div className="provider-fact-item popup-specialties">
+                        <span className="provider-fact-label">🧬 Specialty:</span>
+                        <span className="provider-fact-value">{specialtyText}</span>
                       </div>
                     )}
                     
-                    {specialist.language_spoken && (
-                      <div className="detail-item">
-                        <span className="detail-label">🗣️ Languages:</span>
-                        <span className="detail-value">{formatLanguages(specialist.language_spoken)}</span>
+                    {languageText && (
+                      <div className="provider-fact-item">
+                        <span className="provider-fact-label">🗣️ Languages:</span>
+                        <span className="provider-fact-value">{languageText}</span>
                       </div>
                     )}
                     
-                    <div className="detail-item">
-                      <span className="detail-label">🔄 Interpreter Services:</span>
-                      <span className="detail-value">{interpreterServicesText}</span>
+                    <div className="provider-fact-item">
+                      <span className="provider-fact-label">🔄 Interpreter Services:</span>
+                      <span className="provider-fact-value">{interpreterServicesText}</span>
                     </div>
                   </div>
                   
@@ -504,6 +507,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
           : displayName(specialist.name_first, specialist.name_last);
         const jobTitle = cleanDisplay(specialist.job_title);
         const specialtyText = cleanDisplay(specialist.specialties);
+        const languageText = specialist.language_spoken ? formatLanguages(specialist.language_spoken) : '';
         const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);
         return showContactModal[index] && (
 
@@ -543,6 +547,13 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                   <div className="contact-item">
                     <span className="contact-icon">🧬</span>
                     <span className="contact-text">{specialtyText}</span>
+                  </div>
+                )}
+
+                {languageText && (
+                  <div className="contact-item contact-languages">
+                    <span className="contact-icon">🗣️</span>
+                    <span className="contact-text">Languages: {languageText}</span>
                   </div>
                 )}
 
