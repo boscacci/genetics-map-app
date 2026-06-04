@@ -145,11 +145,11 @@ test('popup header treats the title as a tight subtitle before the institution',
   const modalTitle = appCssBlock('.contact-modal-title');
 
   assert.match(name, /margin:\s*0\b/);
-  assert.match(name, /line-height:\s*1\.15\b/);
-  assert.match(title, /margin-top:\s*0\b/);
-  assert.match(title, /line-height:\s*1\.15\b/);
-  assert.match(title, /margin-bottom:\s*8px\b/);
-  assert.match(modalTitle, /margin-top:\s*1px\b/);
+  assert.match(name, /line-height:\s*1\.1\b/);
+  assert.match(title, /margin-top:\s*-3px\b/);
+  assert.match(title, /line-height:\s*1\.1\b/);
+  assert.match(title, /margin-bottom:\s*10px\b/);
+  assert.match(modalTitle, /margin-top:\s*0\b/);
 });
 
 test('contact modal includes interpreter services before direct contact methods', () => {

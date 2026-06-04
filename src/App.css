@@ -193,16 +193,16 @@
   font-size: 16px;
   font-weight: 600;
   color: #2c3e50;
-  line-height: 1.15;
+  line-height: 1.1;
 }
 
 .popup-title {
   font-size: 13px;
   color: #495057;
   font-weight: 500;
-  line-height: 1.15;
-  margin-top: 0;
-  margin-bottom: 8px;
+  line-height: 1.1;
+  margin-top: -3px;
+  margin-bottom: 10px;
 }
 
 .popup-institution {
@@ -390,10 +390,10 @@
 }
 
 .contact-modal-title {
-  margin-top: 1px;
+  margin-top: 0;
   font-size: 13px;
   font-weight: 500;
-  line-height: 1.15;
+  line-height: 1.1;
   color: rgba(255, 255, 255, 0.88);
 }
 
