@@ -9,13 +9,21 @@ function read(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
-function cssBlock(selector) {
-  const css = read('src/FilterComponent.css');
+function cssBlockFrom(filePath, selector) {
+  const css = read(filePath);
   const start = css.indexOf(`${selector} {`);
   assert.notEqual(start, -1, `missing CSS block for ${selector}`);
   const end = css.indexOf('\n}', start);
   assert.notEqual(end, -1, `unterminated CSS block for ${selector}`);
   return css.slice(start, end);
+}
+
+function cssBlock(selector) {
+  return cssBlockFrom('src/FilterComponent.css', selector);
+}
+
+function appCssBlock(selector) {
+  return cssBlockFrom('src/App.css', selector);
 }
 
 test('filter panel keeps text readable and clear action aligned in flow', () => {
@@ -69,6 +77,42 @@ test('initial provider tooltip shows specialty before contact prompt', () => {
   assert.notEqual(tooltipRenderer, -1);
   assert.ok(specialty > tooltipRenderer, 'expected specialty in the first provider tooltip');
   assert.ok(contactPrompt > specialty, 'expected specialty before the contact prompt');
+});
+
+test('specialty rows use the DNA emoji on preview and detail surfaces', () => {
+  const component = read('src/MapComponent.tsx');
+  const tooltipRenderer = component.indexOf('const renderTooltipContent');
+  const popupDetails = component.indexOf('className="popup-details"');
+  const modalContent = component.indexOf('className="contact-modal-content"');
+
+  assert.ok(component.indexOf('🧬 Specialty:', tooltipRenderer) > tooltipRenderer, 'expected DNA specialty label in preview card');
+  assert.ok(component.indexOf('🧬 Specialty:', popupDetails) > popupDetails, 'expected DNA specialty label in detail card');
+  assert.ok(component.indexOf('<span className="contact-icon">🧬</span>', modalContent) > modalContent, 'expected DNA specialty icon in contact details');
+  assert.ok(!component.includes('🔬'), 'expected microscope icon to be removed from specialty details');
+});
+
+test('provider preview and popup detail cards expose the same basic fact rows', () => {
+  const component = read('src/MapComponent.tsx');
+  const tooltipRenderer = component.indexOf('const renderTooltipContent');
+  const tooltipEnd = component.indexOf('Click to contact', tooltipRenderer);
+  const popupDetails = component.indexOf('className="popup-details"');
+  const popupEnd = component.indexOf('className="contact-me-btn"', popupDetails);
+  const tooltipMarkup = component.slice(tooltipRenderer, tooltipEnd);
+  const popupMarkup = component.slice(popupDetails, popupEnd);
+
+  ['📍 Location:', '🧬 Specialty:', '🗣️ Languages:', '🔄 Interpreter Services:'].forEach((label) => {
+    assert.ok(tooltipMarkup.includes(label), `expected preview card to include ${label}`);
+    assert.ok(popupMarkup.includes(label), `expected detail card to include ${label}`);
+  });
+});
+
+test('popup header treats the title as a tight subtitle before the institution', () => {
+  const name = appCssBlock('.popup-name');
+  const title = appCssBlock('.popup-title');
+
+  assert.match(name, /margin:\s*0\b/);
+  assert.match(title, /margin-top:\s*0\b/);
+  assert.match(title, /margin-bottom:\s*8px\b/);
 });
 
 test('contact modal includes interpreter services before direct contact methods', () => {

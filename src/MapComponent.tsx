@@ -326,26 +326,42 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
     const showInstitution = shouldShowInstitution(specialist);
     const loc = displayLocation(specialist.City, specialist.Country);
     const specialtyText = cleanDisplay(specialist.specialties);
+    const languageText = specialist.language_spoken ? formatLanguages(specialist.language_spoken) : '';
+    const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);
 
     return (
       <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", minWidth: 200, maxWidth: 250 }}>
         <div style={{ marginBottom: 8 }}>
-          <div style={{ margin: '0 0 3px 0', fontSize: 14, fontWeight: 600, color: '#2c3e50', lineHeight: 1.3 }}>
+          <div style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#2c3e50', lineHeight: 1.3 }}>
             {safeName}
           </div>
           {showInstitution && (
-            <div style={{ fontSize: 12, color: '#6c757d', fontWeight: 500, marginBottom: 4 }}>
+            <div style={{ fontSize: 12, color: '#6c757d', fontWeight: 500, marginTop: 8, marginBottom: 5 }}>
               {displayInstitution(specialist.work_institution)}
             </div>
           )}
-          <div style={{ fontSize: 11, color: '#6c757d' }}>
-            {loc ? `📍 ${loc}` : ''}
-          </div>
-          {specialtyText && (
-            <div className="tooltip-specialties" style={{ fontSize: 11, color: '#495057', marginTop: 5, lineHeight: 1.35 }}>
-              <span style={{ fontWeight: 600 }}>Specialty:</span> {specialtyText}
+          {loc && (
+            <div className="detail-item tooltip-location" style={{ fontSize: 11, marginBottom: 3 }}>
+              <span className="detail-label">📍 Location:</span>
+              <span className="detail-value">{loc}</span>
             </div>
           )}
+          {specialtyText && (
+            <div className="detail-item tooltip-specialties" style={{ fontSize: 11, marginBottom: 3 }}>
+              <span className="detail-label">🧬 Specialty:</span>
+              <span className="detail-value">{specialtyText}</span>
+            </div>
+          )}
+          {languageText && (
+            <div className="detail-item tooltip-languages" style={{ fontSize: 11, marginBottom: 3 }}>
+              <span className="detail-label">🗣️ Languages:</span>
+              <span className="detail-value">{languageText}</span>
+            </div>
+          )}
+          <div className="detail-item tooltip-interpreter-services" style={{ fontSize: 11, marginBottom: 0 }}>
+            <span className="detail-label">🔄 Interpreter Services:</span>
+            <span className="detail-value">{interpreterServicesText}</span>
+          </div>
         </div>
 
         <div style={{ padding: '6px 10px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 500, textAlign: 'center', marginTop: 6 }}>
@@ -447,7 +463,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
 
                     {specialtyText && (
                       <div className="detail-item popup-specialties">
-                        <span className="detail-label">Specialty:</span>
+                        <span className="detail-label">🧬 Specialty:</span>
                         <span className="detail-value">{specialtyText}</span>
                       </div>
                     )}
@@ -525,7 +541,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
 
                 {specialtyText && (
                   <div className="contact-item">
-                    <span className="contact-icon">🔬</span>
+                    <span className="contact-icon">🧬</span>
                     <span className="contact-text">{specialtyText}</span>
                   </div>
                 )}
