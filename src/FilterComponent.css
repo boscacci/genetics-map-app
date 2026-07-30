@@ -959,3 +959,33 @@
     font-size: 12px !important;
   }
 }
+
+/* Canonical search-field typography */
+.filter-input,
+.react-select__control,
+.react-select__placeholder,
+.react-select__input-container,
+.react-select__input-container input,
+.react-select__single-value {
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+}
+
+.react-select__multi-value__label {
+  font-size: 13px !important;
+}
+
+@media (max-width: 900px) {
+  .filter-input,
+  .react-select__control,
+  .react-select__placeholder,
+  .react-select__input-container,
+  .react-select__input-container input,
+  .react-select__single-value {
+    font-size: 16px !important;
+  }
+
+  .react-select__multi-value__label {
+    font-size: 13px !important;
+  }
+}

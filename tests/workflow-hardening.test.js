@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
@@ -64,26 +65,43 @@ test('deploy workflow scopes map decrypt key to the steps that need it', () => {
     /name: Generate secret hash for App\.tsx[\s\S]*?env:\n\s+REACT_APP_SECRET_KEY: \$\{\{ secrets\.REACT_APP_SECRET_KEY \}\}/,
   );
   assert.ok(workflow.includes('./node_modules/.bin/react-scripts build'));
+  const finalBuildStep = workflow.match(
+    /- name: Build app\n[\s\S]*?(?=\n\s+- name: Deploy to GitHub Pages)/,
+  );
+  assert.ok(finalBuildStep);
   assert.doesNotMatch(
-    workflow,
-    /name: Build app[\s\S]*?REACT_APP_SECRET_KEY: \$\{\{ secrets\.REACT_APP_SECRET_KEY \}\}/,
+    finalBuildStep[0],
+    /REACT_APP_SECRET_KEY: \$\{\{ secrets\.REACT_APP_SECRET_KEY \}\}/,
   );
 });
 
 test('verify command works without a local plaintext map secret', () => {
-  const result = spawnSync('node', ['scripts/verify-sync.js'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    env: {
-      ...process.env,
-      REACT_APP_SECRET_KEY: '',
-    },
-  });
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'genetics-map-verify-'));
+  try {
+    fs.mkdirSync(path.join(tempRoot, 'scripts'));
+    fs.mkdirSync(path.join(tempRoot, 'src'));
+    fs.copyFileSync(path.join(repoRoot, 'scripts/verify-sync.js'), path.join(tempRoot, 'scripts/verify-sync.js'));
+    fs.copyFileSync(path.join(repoRoot, 'src/App.tsx'), path.join(tempRoot, 'src/App.tsx'));
+    fs.copyFileSync(path.join(repoRoot, 'src/secureDataBlob.ts'), path.join(tempRoot, 'src/secureDataBlob.ts'));
+    fs.copyFileSync(path.join(repoRoot, '.env.generated'), path.join(tempRoot, '.env.generated'));
 
-  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
-  assert.match(result.stdout, /\.secret_env not found/);
-  assert.match(result.stdout, /App\.tsx SECRET_HASH matches \.env\.generated/);
-  assert.doesNotMatch(result.stdout + result.stderr, /REACT_APP_SECRET_KEY=/);
+    const result = spawnSync('node', ['scripts/verify-sync.js'], {
+      cwd: tempRoot,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        NODE_PATH: path.join(repoRoot, 'node_modules'),
+        REACT_APP_SECRET_KEY: '',
+      },
+    });
+
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    assert.match(result.stdout, /\.secret_env not found/);
+    assert.match(result.stdout, /App\.tsx SECRET_HASH matches \.env\.generated/);
+    assert.doesNotMatch(result.stdout + result.stderr, /REACT_APP_SECRET_KEY=/);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
 });
 
 test('hash prebuild reuses generated hash without a local plaintext map secret', () => {
@@ -99,4 +117,25 @@ test('hash prebuild reuses generated hash without a local plaintext map secret',
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
   assert.match(result.stdout, /\.env\.generated already contains REACT_APP_SECRET_HASH/);
   assert.doesNotMatch(result.stdout + result.stderr, /REACT_APP_SECRET_KEY=/);
+});
+
+test('deploy workflow completes code preflight before creating credentials or writing Sheet data', () => {
+  const workflow = read('.github/workflows/sync-and-deploy.yml');
+  const scriptTests = workflow.indexOf('Run script tests');
+  const componentTests = workflow.indexOf('Run React component tests');
+  const typeCheck = workflow.indexOf('Type-check app');
+  const preflightBuild = workflow.indexOf('Build app preflight');
+  const credentials = workflow.indexOf('Create GCP credentials');
+  const geocode = workflow.indexOf('- name: Geocode Working Copy');
+  const promote = workflow.indexOf('- name: Promote Working Copy');
+
+  [scriptTests, componentTests, typeCheck, preflightBuild, credentials, geocode, promote].forEach((index) => {
+    assert.ok(index > -1, 'expected all preflight and deployment steps');
+  });
+  assert.ok(scriptTests < credentials);
+  assert.ok(componentTests < credentials);
+  assert.ok(typeCheck < credentials);
+  assert.ok(preflightBuild < credentials);
+  assert.ok(credentials < geocode);
+  assert.ok(geocode < promote);
 });

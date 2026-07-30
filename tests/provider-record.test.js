@@ -87,3 +87,31 @@ test('provider normalization preserves parsed boolean interpreter values from CS
 
   assert.equal(record.interpreter_services, 'FALSE');
 });
+
+test('provider normalization supports the legacy interpreter_services alias', () => {
+  const record = normalizeProviderRecord({
+    name_first: 'Dorothy',
+    name_last: 'Vaughan',
+    interpreter_services: 'TRUE',
+    Latitude: '37.0',
+    Longitude: '-122.0',
+  });
+
+  assert.equal(record.interpreter_services, 'TRUE');
+});
+
+test('provider normalization removes null-like public contact values', () => {
+  const record = normalizeProviderRecord({
+    name_first: 'Annie',
+    name_last: 'Easley',
+    email: 'NaN',
+    phone_work: Number.NaN,
+    work_website: 'null',
+    Latitude: '37.0',
+    Longitude: '-122.0',
+  });
+
+  assert.equal(record.email, '');
+  assert.equal(record.phone_work, '');
+  assert.equal(record.work_website, '');
+});

@@ -181,6 +181,17 @@
   pointer-events: auto;
 }
 
+.specialist-popup,
+.specialist-popup * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.specialist-popup button {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .popup-header {
   margin-bottom: 8px;
   padding-bottom: 6px;
@@ -354,6 +365,8 @@
   max-height: 80vh;
   overflow-y: auto;
   animation: modalSlideIn 0.3s ease-out;
+  isolation: isolate;
+  pointer-events: auto;
 }
 
 @keyframes modalSlideIn {
@@ -459,6 +472,98 @@
   font-weight: 500;
 }
 
+.contact-modal-content .contact-link,
+.contact-modal-content .contact-text,
+.contact-modal-content .contact-copy-value {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.contact-modal-content .contact-item-copyable {
+  align-items: center;
+  gap: 10px;
+}
+
+.contact-modal-content .contact-item-copyable .contact-icon {
+  margin-right: 2px;
+}
+
+.contact-copy-value {
+  flex: 1;
+  min-width: 0;
+  color: #495057;
+  overflow-wrap: anywhere;
+}
+
+.copy-contact-btn {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  min-width: 68px;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid #667eea;
+  border-radius: 6px;
+  background: #fff;
+  color: #5a67d8;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.copy-contact-btn:hover {
+  background: #eef0ff;
+}
+
+.copy-contact-btn:focus-visible {
+  background: #eef0ff;
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.copy-contact-btn-copied {
+  border-color: #2f855a;
+  background: #f0fff4;
+  color: #276749;
+}
+
+.copy-contact-btn-select {
+  min-width: 86px;
+  border-color: #b7791f;
+  background: #fffaf0;
+  color: #975a16;
+}
+
+.private-contact-note {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #744210;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.private-contact-note a,
+.verification-disclaimer a {
+  color: #5a67d8;
+  font-weight: 600;
+}
+
+.verification-disclaimer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e9ecef;
+  color: #6c757d;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .contact-modal-content .contact-address-line {
   display: block;
 }
@@ -500,6 +605,20 @@
     margin-bottom: 12px;
     padding: 10px;
     font-size: 13px;
+  }
+
+  .contact-modal-content .contact-item-copyable {
+    gap: 8px;
+  }
+
+  .copy-contact-btn {
+    min-width: 72px;
+    min-height: 44px;
+    padding: 8px 10px;
+  }
+
+  .copy-contact-btn-select {
+    min-width: 88px;
   }
 }
 

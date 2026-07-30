@@ -32,6 +32,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate secret hash for App.tsx
+        run: node scripts/hash-secret.js
+        env:
+          REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
+
+      - name: Update secret hash in App.tsx
+        run: |
+          HASH=$(grep REACT_APP_SECRET_HASH .env.generated | cut -d'=' -f2)
+          sed -i "s|const SECRET_HASH = \"[a-f0-9]*\";|const SECRET_HASH = \"$HASH\";|" src/App.tsx
+
+      - name: Run script tests
+        run: npm run test:scripts
+
+      - name: Run React component tests
+        run: CI=true npm test -- --watchAll=false
+
+      - name: Type-check app
+        run: npx tsc --noEmit
+
+      - name: Build app preflight
+        run: GENERATE_SOURCEMAP=false ./node_modules/.bin/react-scripts build
+
       - name: Create GCP credentials
         run: |
           mkdir -p .gcp-credentials
@@ -73,16 +95,6 @@ jobs:
           npm run encrypt-data
         env:
           REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
-
-      - name: Generate secret hash for App.tsx
-        run: node scripts/hash-secret.js
-        env:
-          REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
-
-      - name: Update secret hash in App.tsx
-        run: |
-          HASH=$(grep REACT_APP_SECRET_HASH .env.generated | cut -d'=' -f2)
-          sed -i "s|const SECRET_HASH = \"[a-f0-9]*\";|const SECRET_HASH = \"$HASH\";|" src/App.tsx
 
       - name: Build app
         run: GENERATE_SOURCEMAP=false ./node_modules/.bin/dotenv -e .env.generated -- ./node_modules/.bin/react-scripts build

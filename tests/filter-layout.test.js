@@ -81,14 +81,16 @@ test('initial provider tooltip shows specialty before contact prompt', () => {
 
 test('specialty rows use the DNA emoji on preview and detail surfaces', () => {
   const component = read('src/MapComponent.tsx');
+  const modal = read('src/ContactDetailsModal.tsx');
   const tooltipRenderer = component.indexOf('const renderTooltipContent');
   const popupDetails = component.indexOf('className="popup-details"');
-  const modalContent = component.indexOf('className="contact-modal-content"');
+  const modalContent = modal.indexOf('className="contact-modal-content"');
 
   assert.ok(component.indexOf('🧬 Specialty:', tooltipRenderer) > tooltipRenderer, 'expected DNA specialty label in preview card');
   assert.ok(component.indexOf('🧬 Specialty:', popupDetails) > popupDetails, 'expected DNA specialty label in detail card');
-  assert.ok(component.indexOf('<span className="contact-icon">🧬</span>', modalContent) > modalContent, 'expected DNA specialty icon in contact details');
+  assert.ok(modal.indexOf('className="contact-icon" aria-hidden="true">🧬</span>', modalContent) > modalContent, 'expected DNA specialty icon in contact details');
   assert.ok(!component.includes('🔬'), 'expected microscope icon to be removed from specialty details');
+  assert.ok(!modal.includes('🔬'), 'expected microscope icon to be removed from contact details');
 });
 
 test('provider preview and popup detail cards expose the same basic fact rows', () => {
@@ -107,10 +109,10 @@ test('provider preview and popup detail cards expose the same basic fact rows', 
 });
 
 test('contact modal includes languages before interpreter services', () => {
-  const component = read('src/MapComponent.tsx');
-  const modalContent = component.indexOf('className="contact-modal-content"');
-  const languages = component.indexOf('contact-languages', modalContent);
-  const interpreter = component.indexOf('contact-interpreter-services', modalContent);
+  const modal = read('src/ContactDetailsModal.tsx');
+  const modalContent = modal.indexOf('className="contact-modal-content"');
+  const languages = modal.indexOf('contact-languages', modalContent);
+  const interpreter = modal.indexOf('contact-interpreter-services', modalContent);
 
   assert.notEqual(modalContent, -1);
   assert.ok(languages > modalContent, 'expected languages in contact modal');
@@ -153,10 +155,10 @@ test('popup header treats the title as a tight subtitle before the institution',
 });
 
 test('contact modal includes interpreter services before direct contact methods', () => {
-  const component = read('src/MapComponent.tsx');
-  const modalContent = component.indexOf('className="contact-modal-content"');
-  const interpreter = component.indexOf('contact-interpreter-services', modalContent);
-  const email = component.indexOf('mailto:', modalContent);
+  const modal = read('src/ContactDetailsModal.tsx');
+  const modalContent = modal.indexOf('className="contact-modal-content"');
+  const interpreter = modal.indexOf('contact-interpreter-services', modalContent);
+  const email = modal.indexOf('mailto:', modalContent);
 
   assert.notEqual(modalContent, -1);
   assert.ok(interpreter > modalContent, 'expected interpreter services in contact modal');
@@ -165,12 +167,13 @@ test('contact modal includes interpreter services before direct contact methods'
 
 test('popup and contact modal show job title as a subtitle under the name', () => {
   const component = read('src/MapComponent.tsx');
+  const modal = read('src/ContactDetailsModal.tsx');
   const popupHeader = component.indexOf('className="popup-header"');
   const popupName = component.indexOf('className="popup-name"', popupHeader);
   const popupSubtitle = component.indexOf('className="popup-title"', popupHeader);
-  const modalHeader = component.indexOf('className="contact-modal-header"');
-  const modalName = component.indexOf('Contact {safeName}', modalHeader);
-  const modalSubtitle = component.indexOf('className="contact-modal-title"', modalHeader);
+  const modalHeader = modal.indexOf('className="contact-modal-header"');
+  const modalName = modal.indexOf('{safeName}</h3>', modalHeader);
+  const modalSubtitle = modal.indexOf('className="contact-modal-title"', modalHeader);
 
   assert.ok(popupName > popupHeader, 'expected popup name in header');
   assert.ok(popupSubtitle > popupName, 'expected popup title subtitle under the name');
@@ -185,4 +188,28 @@ test('interpreter services are shown even when the Sheet value is false or unkno
   assert.ok(component.includes('const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);'));
   assert.ok(!component.includes('const interpreterAvailable = isFlagTrue(specialist.interpreter_services);'));
   assert.ok(component.includes('{interpreterServicesText}'));
+});
+
+test('contact detail modal has name-only heading, copy controls, and the public admin email', () => {
+  const modal = read('src/ContactDetailsModal.tsx');
+
+  assert.match(modal, /<h3[^>]*>\{safeName\}<\/h3>/);
+  assert.ok(!modal.includes('Contact {safeName}'));
+  ['email', 'phone', 'website', 'address'].forEach((field) => {
+    assert.ok(modal.includes(`field="${field}"`), `expected copy control for ${field}`);
+  });
+  assert.ok(modal.includes('globalgeneticsdirectory@gmail.com'));
+  assert.ok(modal.includes('private-contact-note'));
+  assert.ok(modal.includes('verification-disclaimer'));
+});
+
+test('filter search controls share canonical desktop and mobile type sizes', () => {
+  const css = read('src/FilterComponent.css');
+  const canonicalStart = css.indexOf('/* Canonical search-field typography */');
+
+  assert.ok(canonicalStart > -1, 'expected one final canonical typography block');
+  const canonical = css.slice(canonicalStart);
+  assert.match(canonical, /font-size:\s*13px\s*!important/);
+  assert.match(canonical, /@media \(max-width:\s*900px\)/);
+  assert.match(canonical, /font-size:\s*16px\s*!important/);
 });
