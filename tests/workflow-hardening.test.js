@@ -125,11 +125,12 @@ test('deploy workflow completes code preflight before creating credentials or wr
   const componentTests = workflow.indexOf('Run React component tests');
   const typeCheck = workflow.indexOf('Type-check app');
   const preflightBuild = workflow.indexOf('Build app preflight');
+  const pythonTests = workflow.indexOf('Run Python tests');
   const credentials = workflow.indexOf('Create GCP credentials');
   const geocode = workflow.indexOf('- name: Geocode Working Copy');
   const promote = workflow.indexOf('- name: Promote Working Copy');
 
-  [scriptTests, componentTests, typeCheck, preflightBuild, credentials, geocode, promote].forEach((index) => {
+  [scriptTests, componentTests, typeCheck, preflightBuild, pythonTests, credentials, geocode, promote].forEach((index) => {
     assert.ok(index > -1, 'expected all preflight and deployment steps');
   });
   assert.ok(scriptTests < credentials);
@@ -137,5 +138,7 @@ test('deploy workflow completes code preflight before creating credentials or wr
   assert.ok(typeCheck < credentials);
   assert.ok(preflightBuild < credentials);
   assert.ok(credentials < geocode);
+  assert.ok(pythonTests < geocode);
+  assert.ok(pythonTests < promote);
   assert.ok(geocode < promote);
 });

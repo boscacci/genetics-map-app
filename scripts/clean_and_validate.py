@@ -194,6 +194,15 @@ def uses_interpreters_func(val):
     return False
 
 
+def normalize_uses_interpreters(explicit_value, language_value):
+    """Preserve the Sheet flag; infer only for legacy rows without one."""
+    if not pd.isnull(explicit_value):
+        normalized = str(explicit_value).strip().upper()
+        if normalized in {"TRUE", "FALSE"}:
+            return normalized
+    return "TRUE" if uses_interpreters_func(language_value) else "FALSE"
+
+
 def clean_languages(val):
     if pd.isnull(val):
         return None
@@ -322,9 +331,12 @@ def main():
     if "phone_work" in df.columns:
         df["phone_work"] = df["phone_work"].apply(clean_phone)
     if "language_spoken" in df.columns:
-        df["uses_interpreters"] = df["language_spoken"].apply(
-            lambda v: "TRUE" if uses_interpreters_func(v) else "FALSE"
-        )
+        df["uses_interpreters"] = [
+            normalize_uses_interpreters(explicit_value, language_value)
+            for explicit_value, language_value in zip(
+                df["uses_interpreters"], df["language_spoken"]
+            )
+        ]
         df["language_spoken"] = df["language_spoken"].apply(clean_languages)
 
     df = df[[c for c in SHEET_HEADERS if c in df.columns]]
