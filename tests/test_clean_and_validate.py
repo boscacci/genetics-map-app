@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
@@ -70,3 +71,26 @@ def test_cleaning_preserves_explicit_interpreter_service_values(monkeypatch):
     clean_and_validate.main()
 
     assert captured["df"]["uses_interpreters"].tolist() == ["TRUE", "FALSE"]
+
+
+@pytest.mark.parametrize(
+    ("explicit_value", "language_value", "expected"),
+    [
+        (True, "English", "TRUE"),
+        (False, "English with interpreter services available", "FALSE"),
+        (" true ", "English", "TRUE"),
+        ("", "English with interpreter services available", "TRUE"),
+        (None, "English", "FALSE"),
+        ("unknown", "French with interpreter present", "TRUE"),
+        ("unknown", "French", "FALSE"),
+    ],
+)
+def test_interpreter_service_normalization_uses_legacy_inference_only_as_fallback(
+    explicit_value, language_value, expected
+):
+    assert (
+        clean_and_validate.normalize_uses_interpreters(
+            explicit_value, language_value
+        )
+        == expected
+    )

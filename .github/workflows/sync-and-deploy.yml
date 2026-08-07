@@ -54,6 +54,17 @@ jobs:
       - name: Build app preflight
         run: GENERATE_SOURCEMAP=false ./node_modules/.bin/react-scripts build
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Python tests
+        run: python -m pytest -q tests
+
       - name: Create GCP credentials
         run: |
           mkdir -p .gcp-credentials
@@ -65,17 +76,6 @@ jobs:
 
       - name: Validate Working Copy structure (read-only)
         run: npm run validate:promotion
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run Python tests
-        run: python -m pytest -q tests
 
       - name: Geocode Working Copy (fill missing lat/lng)
         run: python scripts/geocode_working_copy.py

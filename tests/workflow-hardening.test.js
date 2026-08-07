@@ -137,8 +137,24 @@ test('deploy workflow completes code preflight before creating credentials or wr
   assert.ok(componentTests < credentials);
   assert.ok(typeCheck < credentials);
   assert.ok(preflightBuild < credentials);
+  assert.ok(pythonTests < credentials);
   assert.ok(credentials < geocode);
   assert.ok(pythonTests < geocode);
   assert.ok(pythonTests < promote);
+  assert.ok(geocode < promote);
+});
+
+test('promote-only workflow runs Python tests before creating credentials or writing Sheet data', () => {
+  const workflow = read('.github/workflows/promote-only.yml');
+  const pythonTests = workflow.indexOf('Run Python tests');
+  const credentials = workflow.indexOf('Create GCP credentials');
+  const geocode = workflow.indexOf('- name: Geocode Working Copy');
+  const promote = workflow.indexOf('- name: Promote Working Copy');
+
+  [pythonTests, credentials, geocode, promote].forEach((index) => {
+    assert.ok(index > -1, 'expected Python tests and Sheet mutation steps');
+  });
+  assert.ok(pythonTests < credentials);
+  assert.ok(credentials < geocode);
   assert.ok(geocode < promote);
 });
