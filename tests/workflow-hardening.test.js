@@ -169,12 +169,23 @@ test('pull requests and main run the complete credential-free CI suite', () => {
   assert.match(workflow, /npx tsc --noEmit/);
   assert.match(workflow, /react-scripts build/);
   assert.match(workflow, /python -m pytest -q tests/);
-  assert.doesNotMatch(workflow, /GCP_SA_KEY|SHEET_ID|Create GCP credentials/);
+  assert.doesNotMatch(workflow, /\$\{\{\s*secrets\.|GCP_SA_KEY|SHEET_ID|Create GCP credentials/);
 });
 
-test('production publishing requires a release tag and the production environment gate', () => {
+test('production publishing is SemVer-tag-only and validates main CI before approval', () => {
   const workflow = read('.github/workflows/sync-and-deploy.yml');
 
   assert.match(workflow, /tags:\s*\n\s*- ['"]v\*['"]/);
+  assert.doesNotMatch(workflow, /\n\s+schedule:/);
+  assert.doesNotMatch(workflow, /\n\s+workflow_dispatch:/);
+  assert.match(workflow, /\^v\[0-9\]\+\\\.\[0-9\]\+\\\.\[0-9\]\+\$/);
+  assert.match(workflow, /Verify tag targets current main with successful CI/);
+  assert.match(workflow, /gh run list --workflow CI/);
+  assert.match(workflow, /sync-and-deploy:\s*\n\s*needs: validate-release/);
   assert.match(workflow, /environment:\s*\n\s*name: production/);
+  assert.ok(
+    workflow.indexOf('Verify tag targets current main with successful CI') <
+      workflow.indexOf('environment:'),
+    'release provenance must be checked before production approval'
+  );
 });
