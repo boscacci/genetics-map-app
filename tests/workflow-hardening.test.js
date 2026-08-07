@@ -125,17 +125,67 @@ test('deploy workflow completes code preflight before creating credentials or wr
   const componentTests = workflow.indexOf('Run React component tests');
   const typeCheck = workflow.indexOf('Type-check app');
   const preflightBuild = workflow.indexOf('Build app preflight');
+  const pythonTests = workflow.indexOf('Run Python tests');
   const credentials = workflow.indexOf('Create GCP credentials');
   const geocode = workflow.indexOf('- name: Geocode Working Copy');
   const promote = workflow.indexOf('- name: Promote Working Copy');
 
-  [scriptTests, componentTests, typeCheck, preflightBuild, credentials, geocode, promote].forEach((index) => {
+  [scriptTests, componentTests, typeCheck, preflightBuild, pythonTests, credentials, geocode, promote].forEach((index) => {
     assert.ok(index > -1, 'expected all preflight and deployment steps');
   });
   assert.ok(scriptTests < credentials);
   assert.ok(componentTests < credentials);
   assert.ok(typeCheck < credentials);
   assert.ok(preflightBuild < credentials);
+  assert.ok(pythonTests < credentials);
+  assert.ok(credentials < geocode);
+  assert.ok(pythonTests < geocode);
+  assert.ok(pythonTests < promote);
+  assert.ok(geocode < promote);
+});
+
+test('promote-only workflow runs Python tests before creating credentials or writing Sheet data', () => {
+  const workflow = read('.github/workflows/promote-only.yml');
+  const pythonTests = workflow.indexOf('Run Python tests');
+  const credentials = workflow.indexOf('Create GCP credentials');
+  const geocode = workflow.indexOf('- name: Geocode Working Copy');
+  const promote = workflow.indexOf('- name: Promote Working Copy');
+
+  [pythonTests, credentials, geocode, promote].forEach((index) => {
+    assert.ok(index > -1, 'expected Python tests and Sheet mutation steps');
+  });
+  assert.ok(pythonTests < credentials);
   assert.ok(credentials < geocode);
   assert.ok(geocode < promote);
+});
+
+test('pull requests and main run the complete credential-free CI suite', () => {
+  const workflow = read('.github/workflows/ci.yml');
+
+  assert.match(workflow, /pull_request:/);
+  assert.match(workflow, /branches: \[main\]/);
+  assert.match(workflow, /npm run test:scripts/);
+  assert.match(workflow, /CI=true npm test -- --watchAll=false/);
+  assert.match(workflow, /npx tsc --noEmit/);
+  assert.match(workflow, /react-scripts build/);
+  assert.match(workflow, /python -m pytest -q tests/);
+  assert.doesNotMatch(workflow, /\$\{\{\s*secrets\.|GCP_SA_KEY|SHEET_ID|Create GCP credentials/);
+});
+
+test('production publishing is SemVer-tag-only and validates main CI before approval', () => {
+  const workflow = read('.github/workflows/sync-and-deploy.yml');
+
+  assert.match(workflow, /tags:\s*\n\s*- ['"]v\*['"]/);
+  assert.doesNotMatch(workflow, /\n\s+schedule:/);
+  assert.doesNotMatch(workflow, /\n\s+workflow_dispatch:/);
+  assert.match(workflow, /\^v\[0-9\]\+\\\.\[0-9\]\+\\\.\[0-9\]\+\$/);
+  assert.match(workflow, /Verify tag targets current main with successful CI/);
+  assert.match(workflow, /gh run list --workflow CI/);
+  assert.match(workflow, /sync-and-deploy:\s*\n\s*needs: validate-release/);
+  assert.match(workflow, /environment:\s*\n\s*name: production/);
+  assert.ok(
+    workflow.indexOf('Verify tag targets current main with successful CI') <
+      workflow.indexOf('environment:'),
+    'release provenance must be checked before production approval'
+  );
 });

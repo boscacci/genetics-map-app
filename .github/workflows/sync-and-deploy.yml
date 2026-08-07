@@ -4,10 +4,9 @@ name: Sync and Deploy
 # Sheet is the primary source of truth.
 
 on:
-  schedule:
-    # Every 4 hours
-    - cron: '0 */4 * * *'
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 concurrency:
   group: genetics-map-sheet-publish
@@ -15,11 +14,46 @@ concurrency:
 
 permissions:
   actions: read
-  contents: write
+  contents: read
 
 jobs:
-  sync-and-deploy:
+  validate-release:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify tag targets current main with successful CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag must use vMAJOR.MINOR.PATCH format." >&2
+            exit 1
+          fi
+          git fetch origin main --no-tags
+          if [ "$(git rev-parse origin/main)" != "$GITHUB_SHA" ]; then
+            echo "Release tag must point to the current main commit." >&2
+            exit 1
+          fi
+          successful_runs=$(gh run list --workflow CI --commit "$GITHUB_SHA" --branch main --event push --status success --limit 1 --json databaseId --jq 'length')
+          if [ "$successful_runs" -ne 1 ]; then
+            echo "Release commit does not have a successful main CI run." >&2
+            exit 1
+          fi
+
+  sync-and-deploy:
+    needs: validate-release
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    environment:
+      name: production
+      url: https://boscacci.github.io/genetics-map-app/
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -54,6 +88,17 @@ jobs:
       - name: Build app preflight
         run: GENERATE_SOURCEMAP=false ./node_modules/.bin/react-scripts build
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Python tests
+        run: python -m pytest -q tests
+
       - name: Create GCP credentials
         run: |
           mkdir -p .gcp-credentials
@@ -65,14 +110,6 @@ jobs:
 
       - name: Validate Working Copy structure (read-only)
         run: npm run validate:promotion
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt
 
       - name: Geocode Working Copy (fill missing lat/lng)
         run: python scripts/geocode_working_copy.py
@@ -107,8 +144,8 @@ jobs:
           publish_branch: gh-pages
 
   notify-failure:
-    needs: sync-and-deploy
-    if: ${{ needs.sync-and-deploy.result == 'failure' }}
+    needs: [validate-release, sync-and-deploy]
+    if: ${{ always() && (needs.validate-release.result == 'failure' || needs.sync-and-deploy.result == 'failure') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout notification helper
