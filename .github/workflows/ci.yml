@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  node-validation:
+    name: Node validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run script tests
+        run: npm run test:scripts
+
+      - name: Run React component tests
+        run: CI=true npm test -- --watchAll=false
+
+      - name: Type-check app
+        run: npx tsc --noEmit
+
+      - name: Build app
+        run: GENERATE_SOURCEMAP=false ./node_modules/.bin/react-scripts build
+
+  python-validation:
+    name: Python validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Python tests
+        run: python -m pytest -q tests

@@ -158,3 +158,23 @@ test('promote-only workflow runs Python tests before creating credentials or wri
   assert.ok(credentials < geocode);
   assert.ok(geocode < promote);
 });
+
+test('pull requests and main run the complete credential-free CI suite', () => {
+  const workflow = read('.github/workflows/ci.yml');
+
+  assert.match(workflow, /pull_request:/);
+  assert.match(workflow, /branches: \[main\]/);
+  assert.match(workflow, /npm run test:scripts/);
+  assert.match(workflow, /CI=true npm test -- --watchAll=false/);
+  assert.match(workflow, /npx tsc --noEmit/);
+  assert.match(workflow, /react-scripts build/);
+  assert.match(workflow, /python -m pytest -q tests/);
+  assert.doesNotMatch(workflow, /GCP_SA_KEY|SHEET_ID|Create GCP credentials/);
+});
+
+test('production publishing requires a release tag and the production environment gate', () => {
+  const workflow = read('.github/workflows/sync-and-deploy.yml');
+
+  assert.match(workflow, /tags:\s*\n\s*- ['"]v\*['"]/);
+  assert.match(workflow, /environment:\s*\n\s*name: production/);
+});

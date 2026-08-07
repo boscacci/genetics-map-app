@@ -8,6 +8,9 @@ on:
     # Every 4 hours
     - cron: '0 */4 * * *'
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 concurrency:
   group: genetics-map-sheet-publish
@@ -20,6 +23,9 @@ permissions:
 jobs:
   sync-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://boscacci.github.io/genetics-map-app/
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
