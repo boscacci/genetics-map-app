@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Select from 'react-select';
 import { MapPoint } from './types';
 import { cleanSpecialtyString, getSpecialtyBuckets, splitSpecialtyTokens } from './specialtyUtils';
@@ -57,6 +57,66 @@ const toSelectOptions = (values: string[]) => {
 const cleanDisplay = (val?: string | null): string => {
   const s = (val ?? '').toString().trim();
   return ['nan', 'null', 'undefined', 'n/a', 'na', '-', '--'].includes(s.toLowerCase()) ? '' : s;
+};
+
+const filterSpecialists = (
+  specialists: MapPoint[],
+  selectedCountries: string[],
+  selectedCities: string[],
+  selectedLanguages: string[],
+  selectedSpecialties: string[],
+  nameSearchQuery: string,
+): MapPoint[] => {
+  let filtered = [...specialists];
+
+  if (selectedCountries.length > 0) {
+    filtered = filtered.filter(s =>
+      s.Country && selectedCountries.includes(s.Country),
+    );
+  }
+
+  if (selectedCities.length > 0) {
+    filtered = filtered.filter(s =>
+      s.City && selectedCities.includes(s.City),
+    );
+  }
+
+  if (selectedLanguages.length > 0) {
+    filtered = filtered.filter(s => {
+      if (!s.language_spoken) return false;
+      const specialistLanguages = s.language_spoken
+        .split(/,|;|\sand\s|\s+/)
+        .map(lang => cleanLanguageString(lang))
+        .filter(Boolean);
+
+      return selectedLanguages.some(lang =>
+        specialistLanguages.some(sLang =>
+          sLang.toLowerCase().includes(lang.toLowerCase()),
+        ),
+      );
+    });
+  }
+
+  if (selectedSpecialties.length > 0) {
+    filtered = filtered.filter(s => {
+      if (!s.specialties) return false;
+      const specialistSpecialties = getSpecialtyBuckets(s.specialties);
+      return selectedSpecialties.some(selectedSpecialty =>
+        specialistSpecialties.includes(selectedSpecialty),
+      );
+    });
+  }
+
+  if (nameSearchQuery.trim()) {
+    const query = nameSearchQuery.trim().toLowerCase();
+    filtered = filtered.filter(s => {
+      if (!s.name_first && !s.name_last) return false;
+      const fullName = `${s.name_first || ''} ${s.name_last || ''}`.trim().toLowerCase();
+      return fullName.includes(query);
+    });
+  }
+
+  return filtered;
 };
 
 const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilterChange, onMapNavigation, onDropdownStateChange }) => {
@@ -164,53 +224,39 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     }
   }, [isDragging, dragOffset, isMinimized, allowDrag]);
 
+  const appliedFilteredSpecialists = useMemo(
+    () => filterSpecialists(
+      specialists,
+      selectedCountries,
+      selectedCities,
+      selectedLanguages,
+      selectedSpecialties,
+      nameSearchQuery,
+    ),
+    [
+      specialists,
+      selectedCountries,
+      selectedCities,
+      selectedLanguages,
+      selectedSpecialties,
+      nameSearchQuery,
+    ],
+  );
+
+  const hasAppliedFilters = selectedCountries.length > 0
+    || selectedCities.length > 0
+    || selectedLanguages.length > 0
+    || selectedSpecialties.length > 0
+    || nameSearchQuery.trim().length > 0;
+  const resultCountLabel = appliedFilteredSpecialists.length === 0
+    ? 'No results'
+    : appliedFilteredSpecialists.length === 1
+      ? '1 result'
+      : `${appliedFilteredSpecialists.length} results`;
+
   // Helper function to get specialists that would remain after applying a filter
   const getRemainingSpecialists = (additionalFilter: (s: MapPoint) => boolean) => {
-    let filtered = [...specialists];
-
-    // Apply existing filters
-    if (selectedCountries.length > 0) {
-      filtered = filtered.filter(s => s.Country && selectedCountries.includes(s.Country));
-    }
-    if (selectedCities.length > 0) {
-      filtered = filtered.filter(s => s.City && selectedCities.includes(s.City));
-    }
-    if (selectedLanguages.length > 0) {
-      filtered = filtered.filter(s => {
-        if (!s.language_spoken) return false;
-        const specialistLanguages = s.language_spoken
-          .split(/,|;|\sand\s|\s+/)
-          .map(lang => cleanLanguageString(lang))
-          .filter(Boolean);
-        return selectedLanguages.some(lang => 
-          specialistLanguages.some(sLang => 
-            sLang.toLowerCase().includes(lang.toLowerCase())
-          )
-        );
-      });
-    }
-    if (selectedSpecialties.length > 0) {
-      filtered = filtered.filter(s => {
-        if (!s.specialties) return false;
-        const specialistSpecialties = getSpecialtyBuckets(s.specialties);
-        return selectedSpecialties.some(selectedSpecialty => 
-          specialistSpecialties.includes(selectedSpecialty)
-        );
-      });
-    }
-    if (nameSearchQuery.trim()) {
-      const q = nameSearchQuery.trim().toLowerCase();
-      filtered = filtered.filter(s => {
-        if (s.name_first || s.name_last) {
-          const fullName = `${s.name_first || ''} ${s.name_last || ''}`.trim().toLowerCase();
-          return fullName.includes(q);
-        }
-        return false;
-      });
-    }
-
-    // Apply the additional filter
-    return filtered.filter(additionalFilter);
+    return appliedFilteredSpecialists.filter(additionalFilter);
   };
 
   // Get available options based on current filters
@@ -295,68 +341,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
   }, [selectedCountries, selectedCities, selectedLanguages, selectedSpecialties, nameSearchQuery]);
 
   const applyFilters = () => {
-    let filtered = [...specialists];
-
-    // Filter by country
-    if (selectedCountries.length > 0) {
-      filtered = filtered.filter(s => 
-        s.Country && selectedCountries.includes(s.Country)
-      );
-    }
-
-    // Filter by city
-    if (selectedCities.length > 0) {
-      filtered = filtered.filter(s => 
-        s.City && selectedCities.includes(s.City)
-      );
-    }
-
-    // Filter by language
-    if (selectedLanguages.length > 0) {
-      filtered = filtered.filter(s => {
-        if (!s.language_spoken) return false;
-        
-        // Parse the languages and clean them (same logic as above)
-        const specialistLanguages = s.language_spoken
-          .split(/,|;|\sand\s|\s+/)
-          .map(lang => cleanLanguageString(lang))
-          .filter(Boolean);
-        
-        // Check if any of the selected languages is spoken by this specialist
-        return selectedLanguages.some(lang => 
-          specialistLanguages.some(sLang => 
-            sLang.toLowerCase().includes(lang.toLowerCase())
-          )
-        );
-      });
-    }
-
-    // Filter by specialties
-    if (selectedSpecialties.length > 0) {
-      filtered = filtered.filter(s => {
-        if (!s.specialties) return false;
-        
-        // Parse the specialties and normalize them
-        const specialistSpecialties = getSpecialtyBuckets(s.specialties);
-        
-        // Check if any of the selected specialties matches this specialist's normalized specialties
-        return selectedSpecialties.some(selectedSpecialty => 
-          specialistSpecialties.includes(selectedSpecialty)
-        );
-      });
-    }
-
-    // Filter by name search (applied on Enter)
-    if (nameSearchQuery.trim()) {
-      const q = nameSearchQuery.trim().toLowerCase();
-      filtered = filtered.filter(s => {
-        if (s.name_first || s.name_last) {
-          const fullName = `${s.name_first || ''} ${s.name_last || ''}`.trim().toLowerCase();
-          return fullName.includes(q);
-        }
-        return false;
-      });
-    }
+    const filtered = appliedFilteredSpecialists;
 
     // Pass filtered professionals to parent component
     onFilterChange(filtered);
@@ -717,6 +702,16 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
               />
             </div>
             <div className="filter-actions">
+              {hasAppliedFilters && (
+                <output
+                  className="filter-result-count"
+                  data-filter-result-count
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {resultCountLabel}
+                </output>
+              )}
               <button
                 className="filter-clear-all-btn"
                 onClick={clearAllFilters}
