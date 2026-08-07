@@ -6,7 +6,7 @@ Make the existing private-contact fallback compact until a user asks for it, whi
 
 ## Approved interaction
 
-When `hasPrivateContactDetails(specialist)` is true, the details modal renders one compact "Private details" button with an eye icon. It is initially collapsed. Activating the button toggles a guidance panel that says, "Please email globalgeneticsdirectory@gmail.com for further information." The visible email is a `mailto:` link.
+When `hasPrivateContactDetails(specialist)` is true, the details modal renders one compact "Private details" button with an eye icon. It is initially collapsed. Its guidance panel stays in the DOM with `hidden` until activation so `aria-controls` always resolves. Activating the button toggles a guidance panel that says, "Please email globalgeneticsdirectory@gmail.com for further information." The visible email is a `mailto:` link.
 
 The control is rendered once per modal even when several contact fields are hidden. It never reveals, reconstructs, copies, or places suppressed email, phone, address, or website values in the DOM.
 

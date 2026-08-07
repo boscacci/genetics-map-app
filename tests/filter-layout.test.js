@@ -190,7 +190,7 @@ test('interpreter services are shown even when the Sheet value is false or unkno
   assert.ok(component.includes('{interpreterServicesText}'));
 });
 
-test('contact detail modal has name-only heading, copy controls, and the public admin email', () => {
+test('contact detail modal has name-only heading, copy controls, and compact private-details guidance', () => {
   const modal = read('src/ContactDetailsModal.tsx');
 
   assert.match(modal, /<h3[^>]*>\{safeName\}<\/h3>/);
@@ -199,7 +199,9 @@ test('contact detail modal has name-only heading, copy controls, and the public 
     assert.ok(modal.includes(`field="${field}"`), `expected copy control for ${field}`);
   });
   assert.ok(modal.includes('globalgeneticsdirectory@gmail.com'));
-  assert.ok(modal.includes('private-contact-note'));
+  assert.ok(modal.includes('data-private-contact-toggle'));
+  assert.ok(modal.includes('aria-controls="private-contact-guidance"'));
+  assert.ok(modal.includes('hidden={!privateContactGuidanceVisible}'));
   assert.ok(modal.includes('verification-disclaimer'));
 });
 

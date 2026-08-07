@@ -50,14 +50,14 @@ describe('ContactDetailsModal', () => {
     });
   };
 
-  test('uses the provider name as the heading and includes the admin disclaimer', () => {
+  test('uses the provider name as the heading and includes the client disclaimer', () => {
     renderModal();
 
     expect(container.querySelector('.contact-modal-header h3').textContent).toBe('Ada Lovelace');
     expect(container.textContent).not.toContain('Contact Ada Lovelace');
     expect(container.textContent).toContain('Interpreter services: Available');
     expect(container.textContent).toContain(
-      'We do our best to verify that directory members are legitimate genetics professionals.',
+      'Disclaimer: We attempt to verify the credentials of every directory participant. If you notice any discrepancy, please email globalgeneticsdirectory@gmail.com.',
     );
 
     const adminLink = container.querySelector(`a[href="mailto:${ADMIN_EMAIL}"]`);
@@ -111,7 +111,7 @@ describe('ContactDetailsModal', () => {
     expect(addRange).toHaveBeenCalled();
   });
 
-  test('suppresses NaN links and shows one admin note for private details', () => {
+  test('reveals one admin guidance panel only after the private-details eye control is activated', () => {
     renderModal(provider({
       email: 'private@example.test',
       phone_work: '+1 555 0199',
@@ -125,10 +125,43 @@ describe('ContactDetailsModal', () => {
     expect(container.querySelector('[data-copy-field="email"]')).toBeNull();
     expect(container.querySelector('[data-copy-field="phone"]')).toBeNull();
     expect(container.querySelector('[data-copy-field="address"]')).toBeNull();
-    expect(container.querySelectorAll('.private-contact-note')).toHaveLength(1);
-    expect(container.querySelector('.private-contact-note').textContent).toContain(
-      'Some contact details are private. Email the directory admins for further information.',
+
+    const toggle = container.querySelector('[data-private-contact-toggle]');
+    expect(toggle).not.toBeNull();
+    expect(container.querySelectorAll('[data-private-contact-toggle]')).toHaveLength(1);
+    expect(toggle.textContent).toContain('👁');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(toggle.getAttribute('aria-controls')).toBe('private-contact-guidance');
+    const guidance = container.querySelector('#private-contact-guidance');
+    expect(guidance).not.toBeNull();
+    expect(guidance.hidden).toBe(true);
+
+    act(() => {
+      toggle.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(guidance.hidden).toBe(false);
+    expect(guidance.textContent).toContain(
+      'Please email globalgeneticsdirectory@gmail.com for further information.',
     );
+    const guidanceLink = guidance.querySelector(`a[href="mailto:${ADMIN_EMAIL}"]`);
+    expect(guidanceLink).not.toBeNull();
+    expect(guidanceLink.textContent).toBe(ADMIN_EMAIL);
+
+    act(() => {
+      toggle.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(guidance.hidden).toBe(true);
+  });
+
+  test('does not render private-details guidance when every contact field is public', () => {
+    renderModal();
+
+    expect(container.querySelector('[data-private-contact-toggle]')).toBeNull();
+    expect(container.querySelector('#private-contact-guidance')).toBeNull();
   });
 
   test('suppresses null-like contact values without constructing links', () => {
@@ -143,6 +176,9 @@ describe('ContactDetailsModal', () => {
     expect(container.querySelector('[data-copy-field="email"]')).toBeNull();
     expect(container.querySelector('[data-copy-field="phone"]')).toBeNull();
     expect(container.querySelector('[data-copy-field="website"]')).toBeNull();
-    expect(container.querySelectorAll('.private-contact-note')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-private-contact-toggle]')).toHaveLength(1);
+    const guidance = container.querySelector('#private-contact-guidance');
+    expect(guidance).not.toBeNull();
+    expect(guidance.hidden).toBe(true);
   });
 });

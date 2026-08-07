@@ -539,8 +539,39 @@
   color: #975a16;
 }
 
-.private-contact-note {
+.private-contact-details {
   margin-top: 4px;
+}
+
+.private-contact-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #b7791f;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #744210;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.private-contact-toggle:hover {
+  background: #fff3d6;
+}
+
+.private-contact-toggle:focus-visible {
+  outline: 2px solid #b7791f;
+  outline-offset: 2px;
+}
+
+.private-contact-guidance {
+  margin-top: 8px;
   padding: 10px 12px;
   border-radius: 8px;
   background: #fffaf0;
@@ -549,7 +580,7 @@
   line-height: 1.45;
 }
 
-.private-contact-note a,
+.private-contact-guidance a,
 .verification-disclaimer a {
   color: #5a67d8;
   font-weight: 600;

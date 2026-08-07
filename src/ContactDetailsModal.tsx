@@ -73,6 +73,7 @@ const CopyableContactItem: React.FC<CopyableContactItemProps> = ({
 
 const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({ specialist, onClose }) => {
   const [copyStatuses, setCopyStatuses] = useState<Partial<Record<CopyField, CopyStatus>>>({});
+  const [privateContactGuidanceVisible, setPrivateContactGuidanceVisible] = useState(false);
   const copyValueRefs = useRef<Partial<Record<CopyField, HTMLSpanElement | null>>>({});
 
   const safeName = isFlagTrue(specialist.hide_name)
@@ -251,16 +252,32 @@ const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({ specialist, o
           )}
 
           {showPrivateContactNote && (
-            <div className="private-contact-note">
-              Some contact details are private.{' '}
-              <a href={`mailto:${ADMIN_EMAIL}`}>Email the directory admins</a>
-              {' '}for further information.
+            <div className="private-contact-details">
+              <button
+                type="button"
+                className="private-contact-toggle"
+                data-private-contact-toggle
+                aria-expanded={privateContactGuidanceVisible}
+                aria-controls="private-contact-guidance"
+                onClick={() => setPrivateContactGuidanceVisible((visible) => !visible)}
+              >
+                <span aria-hidden="true">👁</span>
+                <span>Private details</span>
+              </button>
+              <div
+                id="private-contact-guidance"
+                className="private-contact-guidance"
+                role="status"
+                hidden={!privateContactGuidanceVisible}
+              >
+                Please email <a href={`mailto:${ADMIN_EMAIL}`}>{ADMIN_EMAIL}</a> for further information.
+              </div>
             </div>
           )}
 
           <div className="verification-disclaimer">
-            We do our best to verify that directory members are legitimate genetics professionals.
-            {' '}Questions or feedback?{' '}
+            Disclaimer: We attempt to verify the credentials of every directory participant.
+            {' '}If you notice any discrepancy, please email{' '}
             <a href={`mailto:${ADMIN_EMAIL}`}>{ADMIN_EMAIL}</a>.
           </div>
         </div>
