@@ -43,6 +43,19 @@ test('filter panel keeps text readable and clear action aligned in flow', () => 
   assert.ok(!/52px/.test(panel));
 });
 
+test('filter result count is visible beside Clear at desktop and mobile widths', () => {
+  const component = read('src/FilterComponent.tsx');
+  const css = read('src/FilterComponent.css');
+  const resultCount = cssBlock('.filter-result-count');
+  const mobileStart = css.indexOf('@media (max-width: 900px)');
+  const mobileCss = css.slice(mobileStart);
+
+  assert.ok(component.indexOf('data-filter-result-count') < component.indexOf('filter-clear-all-btn'));
+  assert.match(resultCount, /display:\s*inline-flex\b/);
+  assert.match(resultCount, /white-space:\s*nowrap\b/);
+  assert.match(mobileCss, /\.filter-result-count\s*\{[^}]*margin-right:\s*auto/s);
+});
+
 test('empty filter selects match the name input height', () => {
   const input = cssBlock('.filter-input');
   const select = cssBlock('.react-select__control');
