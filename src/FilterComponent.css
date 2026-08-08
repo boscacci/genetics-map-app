@@ -453,12 +453,25 @@
 .filter-actions {
   align-self: end;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 8px;
   min-width: 84px;
 }
 
 .filter-result-count {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #b9dbf3;
+  border-radius: 999px;
+  background: #eef8ff;
+  color: #1565c0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .filter-group {
@@ -718,19 +731,7 @@
   }
 
   .filter-result-count {
-    display: inline-flex;
-    align-items: center;
-    min-height: 32px;
     margin-right: auto;
-    padding: 0 10px;
-    border: 1px solid #b9dbf3;
-    border-radius: 999px;
-    background: #eef8ff;
-    color: #1565c0;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1;
-    white-space: nowrap;
   }
   
   /* Mobile-specific React-Select improvements */
