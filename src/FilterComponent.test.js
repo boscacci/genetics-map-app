@@ -93,7 +93,11 @@ describe('FilterComponent', () => {
     const navigationCallsBeforeTyping = navigationCalls.length;
 
     await setInput(input, 'Megan');
-    expect(container.querySelector('[data-filter-result-count]').textContent)
+    const resultCount = container.querySelector('[data-filter-result-count]');
+    expect(resultCount).not.toBeNull();
+    expect(resultCount.getAttribute('aria-live')).toBe('polite');
+    expect(resultCount.getAttribute('aria-atomic')).toBe('true');
+    expect(resultCount.textContent)
       .toBe('2 matching providers');
     expect(filterCalls).toHaveLength(filterCallsBeforeTyping);
     expect(navigationCalls).toHaveLength(navigationCallsBeforeTyping);
