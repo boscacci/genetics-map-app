@@ -442,7 +442,7 @@
 /* Grid layout for filters */
 .filter-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(112px, 1fr)) auto;
+  grid-template-columns: repeat(5, minmax(112px, 1fr));
   grid-template-rows: auto;
   align-items: end;
   gap: 10px 12px;
@@ -451,6 +451,7 @@
 }
 
 .filter-actions {
+  grid-column: 1 / -1;
   align-self: end;
   display: flex;
   align-items: center;
