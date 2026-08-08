@@ -105,6 +105,7 @@ describe('FilterComponent', () => {
     await commitSearch(input);
     expect(filterCalls.at(-1)).toHaveLength(2);
     expect(navigationCalls).toHaveLength(navigationCallsBeforeTyping + 1);
+    expect(resultCount.textContent).toBe('2 matching providers');
 
     await setInput(input, 'Ada');
     expect(container.querySelector('[data-filter-result-count]').textContent)

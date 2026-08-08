@@ -56,6 +56,15 @@ test('filter result count is visible beside Clear at desktop and mobile widths',
   assert.match(mobileCss, /\.filter-result-count\s*\{[^}]*margin-right:\s*auto/s);
 });
 
+test('desktop filter actions occupy a dedicated row instead of a constrained sixth column', () => {
+  const grid = cssBlock('.filter-grid');
+  const actions = cssBlock('.filter-actions');
+
+  assert.match(grid, /grid-template-columns:\s*repeat\(5,\s*minmax\(112px,\s*1fr\)\)\s*;/);
+  assert.doesNotMatch(grid, /grid-template-columns:[^;]*\bauto\b/);
+  assert.match(actions, /grid-column:\s*1\s*\/\s*-1\s*;/);
+});
+
 test('empty filter selects match the name input height', () => {
   const input = cssBlock('.filter-input');
   const select = cssBlock('.react-select__control');
