@@ -243,16 +243,40 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
     ],
   );
 
+  const liveFilteredSpecialists = useMemo(
+    () => filterSpecialists(
+      specialists,
+      selectedCountries,
+      selectedCities,
+      selectedLanguages,
+      selectedSpecialties,
+      nameInputValue,
+    ),
+    [
+      specialists,
+      selectedCountries,
+      selectedCities,
+      selectedLanguages,
+      selectedSpecialties,
+      nameInputValue,
+    ],
+  );
+
   const hasAppliedFilters = selectedCountries.length > 0
     || selectedCities.length > 0
     || selectedLanguages.length > 0
     || selectedSpecialties.length > 0
     || nameSearchQuery.trim().length > 0;
-  const resultCountLabel = appliedFilteredSpecialists.length === 0
-    ? 'No results'
-    : appliedFilteredSpecialists.length === 1
-      ? '1 result'
-      : `${appliedFilteredSpecialists.length} results`;
+  const hasLiveNameQuery = nameInputValue.trim().length > 0;
+  const resultCountSpecialists = hasLiveNameQuery
+    ? liveFilteredSpecialists
+    : appliedFilteredSpecialists;
+  const hasResultCount = hasLiveNameQuery || hasAppliedFilters;
+  const resultCountLabel = resultCountSpecialists.length === 0
+    ? 'No matching providers'
+    : resultCountSpecialists.length === 1
+      ? '1 matching provider'
+      : `${resultCountSpecialists.length} matching providers`;
 
   // Helper function to get specialists that would remain after applying a filter
   const getRemainingSpecialists = (additionalFilter: (s: MapPoint) => boolean) => {
@@ -702,7 +726,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ specialists, onFilter
               />
             </div>
             <div className="filter-actions">
-              {hasAppliedFilters && (
+              {hasResultCount && (
                 <output
                   className="filter-result-count"
                   data-filter-result-count
