@@ -6,7 +6,7 @@ Make the existing private-contact fallback compact until a user asks for it, whi
 
 ## Approved interaction
 
-When `hasPrivateContactDetails(specialist)` is true, the details modal renders one compact "Private details" button with an eye icon. It is initially collapsed. Its guidance panel stays in the DOM with `hidden` until activation so `aria-controls` always resolves. Activating the button toggles a guidance panel that says, "Please email globalgeneticsdirectory@gmail.com for further information." The visible email is a `mailto:` link.
+When `hasPrivateContactDetails(specialist)` is true, the details modal renders one compact "Private details" button with an eye icon. It is initially collapsed. Its guidance panel stays in the DOM with `hidden` until activation so `aria-controls` always resolves. Activating the button toggles a guidance panel that says, "Please email contact@globalgeneticsdirectory.org for further information." The visible email is a `mailto:` link.
 
 The control is rendered once per modal even when several contact fields are hidden. It never reveals, reconstructs, copies, or places suppressed email, phone, address, or website values in the DOM.
 
@@ -18,9 +18,9 @@ The button has an accessible name, exposes its expanded state with `aria-expande
 
 The modal footer uses the client-guided, grammar-normalized copy:
 
-> Disclaimer: We attempt to verify the credentials of every directory participant. If you notice any discrepancy, please email globalgeneticsdirectory@gmail.com.
+> Disclaimer: We attempt to verify the credentials of every directory participant. If you notice any discrepancy, please email contact@globalgeneticsdirectory.org.
 
-The address remains a visible `mailto:` link. `globalgeneticsdirectory@gmail.com` is the only public admin address in this UI.
+The address remains a visible `mailto:` link. `contact@globalgeneticsdirectory.org` is the only public admin address in this UI.
 
 ## Scope and constraints
 
@@ -35,4 +35,4 @@ The address remains a visible `mailto:` link. `globalgeneticsdirectory@gmail.com
 2. Activating that control shows only the admin-email guidance and correctly updates `aria-expanded`.
 3. Multiple hidden fields still produce one control, and private provider values are absent from the rendered modal.
 4. Providers with only public contact data do not receive the private-details control.
-5. The footer contains the approved disclaimer and a `mailto:globalgeneticsdirectory@gmail.com` link.
+5. The footer contains the approved disclaimer and a `mailto:contact@globalgeneticsdirectory.org` link.

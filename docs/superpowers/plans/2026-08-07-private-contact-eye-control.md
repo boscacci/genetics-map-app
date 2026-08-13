@@ -11,9 +11,9 @@
 ## Global Constraints
 
 - Render the control only when `hasPrivateContactDetails(specialist)` is true; render it exactly once per modal.
-- The control starts collapsed; its `#private-contact-guidance` panel remains in the DOM with `hidden` until expanded and reveals only `Please email globalgeneticsdirectory@gmail.com for further information.` with a `mailto:` link.
+- The control starts collapsed; its `#private-contact-guidance` panel remains in the DOM with `hidden` until expanded and reveals only `Please email contact@globalgeneticsdirectory.org for further information.` with a `mailto:` link.
 - Never render, copy, reconstruct, or link to a hidden contact value.
-- Use `globalgeneticsdirectory@gmail.com` as the only public admin address.
+- Use `contact@globalgeneticsdirectory.org` as the only public admin address.
 - Preserve existing public links, copy controls, selection fallback, `MapPoint`, Sheet schema, and API data.
 - Use no new dependency.
 
@@ -57,7 +57,7 @@ test('reveals one admin guidance panel only after the private-details eye contro
 
   expect(toggle.getAttribute('aria-expanded')).toBe('true');
   expect(guidance.hidden).toBe(false);
-  expect(guidance.textContent).toContain('Please email globalgeneticsdirectory@gmail.com for further information.');
+  expect(guidance.textContent).toContain('Please email contact@globalgeneticsdirectory.org for further information.');
   expect(guidance.querySelector(`a[href="mailto:${ADMIN_EMAIL}"]`).textContent).toBe(ADMIN_EMAIL);
 });
 ```
@@ -77,7 +77,7 @@ test('does not render private-details guidance when every contact field is publi
 });
 
 expect(container.textContent).toContain(
-  'Disclaimer: We attempt to verify the credentials of every directory participant. If you notice any discrepancy, please email globalgeneticsdirectory@gmail.com.',
+  'Disclaimer: We attempt to verify the credentials of every directory participant. If you notice any discrepancy, please email contact@globalgeneticsdirectory.org.',
 );
 ```
 

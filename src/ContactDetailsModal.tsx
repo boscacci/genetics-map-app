@@ -13,7 +13,7 @@ import {
   shouldShowInstitution,
 } from './providerDisplay';
 
-const ADMIN_EMAIL = 'globalgeneticsdirectory@gmail.com';
+const ADMIN_EMAIL = 'contact@globalgeneticsdirectory.org';
 
 type CopyField = 'email' | 'phone' | 'website' | 'address';
 type CopyStatus = 'idle' | 'copied' | 'select';

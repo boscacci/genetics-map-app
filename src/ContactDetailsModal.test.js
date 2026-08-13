@@ -4,7 +4,7 @@ import ContactDetailsModal from './ContactDetailsModal';
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
-const ADMIN_EMAIL = 'globalgeneticsdirectory@gmail.com';
+const ADMIN_EMAIL = 'contact@globalgeneticsdirectory.org';
 
 const provider = (overrides = {}) => ({
   name_first: 'Ada',
@@ -57,7 +57,7 @@ describe('ContactDetailsModal', () => {
     expect(container.textContent).not.toContain('Contact Ada Lovelace');
     expect(container.textContent).toContain('Interpreter services: Available');
     expect(container.textContent).toContain(
-      'Disclaimer: We attempt to verify the credentials of every directory participant. If you notice any discrepancy, please email globalgeneticsdirectory@gmail.com.',
+      'Disclaimer: We attempt to verify the credentials of every directory participant. If you notice any discrepancy, please email contact@globalgeneticsdirectory.org.',
     );
 
     const adminLink = container.querySelector(`a[href="mailto:${ADMIN_EMAIL}"]`);
@@ -143,7 +143,7 @@ describe('ContactDetailsModal', () => {
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(guidance.hidden).toBe(false);
     expect(guidance.textContent).toContain(
-      'Please email globalgeneticsdirectory@gmail.com for further information.',
+      'Please email contact@globalgeneticsdirectory.org for further information.',
     );
     const guidanceLink = guidance.querySelector(`a[href="mailto:${ADMIN_EMAIL}"]`);
     expect(guidanceLink).not.toBeNull();
@@ -155,6 +155,13 @@ describe('ContactDetailsModal', () => {
 
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     expect(guidance.hidden).toBe(true);
+  });
+
+  test('does not expose the retired public Gmail address', () => {
+    renderModal(provider({ hide_email: 'TRUE' }));
+
+    expect(container.textContent).not.toContain('globalgeneticsdirectory@gmail.com');
+    expect(container.querySelector('a[href="mailto:globalgeneticsdirectory@gmail.com"]')).toBeNull();
   });
 
   test('does not render private-details guidance when every contact field is public', () => {

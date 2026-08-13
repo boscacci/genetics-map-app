@@ -4,13 +4,11 @@ import MarkerClusterGroup from 'react-leaflet-markercluster';
 import L from 'leaflet';
 import { MapPoint } from './types';
 import ContactDetailsModal from './ContactDetailsModal';
+import ProviderFacts from './ProviderFacts';
 import {
   cleanDisplayValue as cleanDisplay,
   displayInstitution,
-  displayLocation,
   displayName,
-  formatInterpreterServices,
-  formatLanguages,
   isFlagTrue,
   shouldShowInstitution,
 } from './providerDisplay';
@@ -143,10 +141,6 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
       ? 'Anonymous Contributor'
       : displayName(specialist.name_first, specialist.name_last);
     const showInstitution = shouldShowInstitution(specialist);
-    const loc = displayLocation(specialist.City, specialist.Country);
-    const specialtyText = cleanDisplay(specialist.specialties);
-    const languageText = specialist.language_spoken ? formatLanguages(specialist.language_spoken) : '';
-    const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);
 
     return (
       <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", minWidth: 220, maxWidth: 280 }}>
@@ -159,30 +153,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
               {displayInstitution(specialist.work_institution)}
             </div>
           )}
-          <div className="provider-facts tooltip-facts">
-          {loc && (
-            <div className="provider-fact-item tooltip-location">
-              <span className="provider-fact-label">📍 Location:</span>
-              <span className="provider-fact-value">{loc}</span>
-            </div>
-          )}
-          {specialtyText && (
-            <div className="provider-fact-item tooltip-specialties">
-              <span className="provider-fact-label">🧬 Specialty:</span>
-              <span className="provider-fact-value">{specialtyText}</span>
-            </div>
-          )}
-          {languageText && (
-            <div className="provider-fact-item tooltip-languages">
-              <span className="provider-fact-label">🗣️ Languages:</span>
-              <span className="provider-fact-value">{languageText}</span>
-            </div>
-          )}
-          <div className="provider-fact-item tooltip-interpreter-services">
-            <span className="provider-fact-label">🔄 Interpreter Services:</span>
-            <span className="provider-fact-value">{interpreterServicesText}</span>
-          </div>
-          </div>
+          <ProviderFacts specialist={specialist} variant="tooltip" />
         </div>
 
         <div style={{ padding: '6px 10px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 500, textAlign: 'center', marginTop: 6 }}>
@@ -202,10 +173,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
         const markers = createDatelineMarkers(specialist, index);
         return markers.map((markerData, markerIndex) => {
           const { specialist, lng, index: originalIndex, isDuplicate } = markerData;
-          const specialtyText = cleanDisplay(specialist.specialties);
           const jobTitle = cleanDisplay(specialist.job_title);
-          const languageText = specialist.language_spoken ? formatLanguages(specialist.language_spoken) : '';
-          const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);
           // Determine tooltip class for mobile popup state
           const tooltipClass = `specialist-tooltip${isMobile() && openPopupIndex === originalIndex ? ' hide-on-mobile-popup' : ''}`;
           
@@ -275,31 +243,7 @@ const SpecialistMarkers: React.FC<{ specialists: MapPoint[] }> = React.memo(({ s
                     )}
                   </div>
 
-                  <div className="popup-details provider-facts">
-                    <div className="provider-fact-item">
-                      <span className="provider-fact-label">📍 Location:</span>
-                      <span className="provider-fact-value">{displayLocation(specialist.City, specialist.Country)}</span>
-                    </div>
-
-                    {specialtyText && (
-                      <div className="provider-fact-item popup-specialties">
-                        <span className="provider-fact-label">🧬 Specialty:</span>
-                        <span className="provider-fact-value">{specialtyText}</span>
-                      </div>
-                    )}
-                    
-                    {languageText && (
-                      <div className="provider-fact-item">
-                        <span className="provider-fact-label">🗣️ Languages:</span>
-                        <span className="provider-fact-value">{languageText}</span>
-                      </div>
-                    )}
-                    
-                    <div className="provider-fact-item">
-                      <span className="provider-fact-label">🔄 Interpreter Services:</span>
-                      <span className="provider-fact-value">{interpreterServicesText}</span>
-                    </div>
-                  </div>
+                  <ProviderFacts specialist={specialist} variant="popup" />
                   
                   <button 
                     className="contact-me-btn"
