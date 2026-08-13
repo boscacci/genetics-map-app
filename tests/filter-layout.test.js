@@ -81,52 +81,44 @@ test('empty filter selects match the name input height', () => {
 
 test('marker popup shows specialty before contact action', () => {
   const component = read('src/MapComponent.tsx');
-  const popupDetails = component.indexOf('popup-details');
-  const specialty = component.indexOf('popup-specialties', popupDetails);
-  const contactButton = component.indexOf('className="contact-me-btn"', popupDetails);
+  const popupFacts = component.indexOf('<ProviderFacts specialist={specialist} variant="popup"');
+  const contactButton = component.indexOf('className="contact-me-btn"', popupFacts);
 
-  assert.notEqual(popupDetails, -1);
-  assert.ok(specialty > popupDetails, 'expected popup specialty row in popup details');
-  assert.ok(contactButton > specialty, 'expected specialty to appear before contact button');
+  assert.notEqual(popupFacts, -1);
+  assert.ok(contactButton > popupFacts, 'expected shared profile facts before the contact button');
 });
 
 test('initial provider tooltip shows specialty before contact prompt', () => {
   const component = read('src/MapComponent.tsx');
   const tooltipRenderer = component.indexOf('const renderTooltipContent');
-  const specialty = component.indexOf('tooltip-specialties', tooltipRenderer);
+  const tooltipFacts = component.indexOf('<ProviderFacts specialist={specialist} variant="tooltip"', tooltipRenderer);
   const contactPrompt = component.indexOf('Click to contact', tooltipRenderer);
 
   assert.notEqual(tooltipRenderer, -1);
-  assert.ok(specialty > tooltipRenderer, 'expected specialty in the first provider tooltip');
-  assert.ok(contactPrompt > specialty, 'expected specialty before the contact prompt');
+  assert.ok(tooltipFacts > tooltipRenderer, 'expected shared profile facts in the first provider tooltip');
+  assert.ok(contactPrompt > tooltipFacts, 'expected profile facts before the contact prompt');
 });
 
 test('specialty rows use the DNA emoji on preview and detail surfaces', () => {
   const component = read('src/MapComponent.tsx');
+  const providerFacts = read('src/ProviderFacts.tsx');
   const modal = read('src/ContactDetailsModal.tsx');
-  const tooltipRenderer = component.indexOf('const renderTooltipContent');
-  const popupDetails = component.indexOf('className="popup-details"');
   const modalContent = modal.indexOf('className="contact-modal-content"');
 
-  assert.ok(component.indexOf('🧬 Specialty:', tooltipRenderer) > tooltipRenderer, 'expected DNA specialty label in preview card');
-  assert.ok(component.indexOf('🧬 Specialty:', popupDetails) > popupDetails, 'expected DNA specialty label in detail card');
+  assert.ok(providerFacts.includes('🧬 Specialty:'), 'expected DNA specialty label in shared map-card facts');
   assert.ok(modal.indexOf('className="contact-icon" aria-hidden="true">🧬</span>', modalContent) > modalContent, 'expected DNA specialty icon in contact details');
-  assert.ok(!component.includes('🔬'), 'expected microscope icon to be removed from specialty details');
+  assert.ok(!providerFacts.includes('🔬'), 'expected microscope icon to be removed from map-card specialty details');
+  assert.ok(!component.includes('🔬'), 'expected microscope icon to remain absent from the map component');
   assert.ok(!modal.includes('🔬'), 'expected microscope icon to be removed from contact details');
 });
 
 test('provider preview and popup detail cards expose the same basic fact rows', () => {
   const component = read('src/MapComponent.tsx');
-  const tooltipRenderer = component.indexOf('const renderTooltipContent');
-  const tooltipEnd = component.indexOf('Click to contact', tooltipRenderer);
-  const popupDetails = component.indexOf('popup-details');
-  const popupEnd = component.indexOf('className="contact-me-btn"', popupDetails);
-  const tooltipMarkup = component.slice(tooltipRenderer, tooltipEnd);
-  const popupMarkup = component.slice(popupDetails, popupEnd);
+  const facts = read('src/ProviderFacts.tsx');
 
+  assert.equal((component.match(/<ProviderFacts\b/g) || []).length, 2);
   ['📍 Location:', '🧬 Specialty:', '🗣️ Languages:', '🔄 Interpreter Services:'].forEach((label) => {
-    assert.ok(tooltipMarkup.includes(label), `expected preview card to include ${label}`);
-    assert.ok(popupMarkup.includes(label), `expected detail card to include ${label}`);
+    assert.ok(facts.includes(label), `expected shared profile facts to include ${label}`);
   });
 });
 
@@ -141,16 +133,15 @@ test('contact modal includes languages before interpreter services', () => {
   assert.ok(interpreter > languages, 'expected interpreter services after languages');
 });
 
-test('cards use compact fact lists without reserving space for missing specialty rows', () => {
+test('cards use compact fact lists with stable rows for missing values', () => {
   const component = read('src/MapComponent.tsx');
+  const providerFacts = read('src/ProviderFacts.tsx');
   const css = read('src/App.css');
-  const tooltipRenderer = component.indexOf('const renderTooltipContent');
-  const popupDetails = component.indexOf('className="popup-details provider-facts"', tooltipRenderer);
 
-  assert.ok(component.includes('className="provider-facts tooltip-facts"'));
-  assert.ok(popupDetails > tooltipRenderer, 'expected popup details to share provider fact list spacing');
-  assert.ok(component.includes('provider-fact-item popup-specialties'));
-  assert.ok(!component.includes('className="provider-fact-item popup-specialties placeholder"'));
+  assert.ok(component.includes('<ProviderFacts specialist={specialist} variant="tooltip"'));
+  assert.ok(component.includes('<ProviderFacts specialist={specialist} variant="popup"'));
+  assert.ok(providerFacts.includes("const NOT_AVAILABLE = 'Not available';"));
+  assert.ok(!providerFacts.includes('Private'));
 
   const facts = appCssBlock('.provider-facts');
   const factItem = appCssBlock('.provider-fact-item');
@@ -204,12 +195,12 @@ test('popup and contact modal show job title as a subtitle under the name', () =
 });
 
 test('interpreter services are shown even when the Sheet value is false or unknown', () => {
-  const component = read('src/MapComponent.tsx');
+  const providerFacts = read('src/ProviderFacts.tsx');
 
-  assert.ok(component.includes('formatInterpreterServices'));
-  assert.ok(component.includes('const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);'));
-  assert.ok(!component.includes('const interpreterAvailable = isFlagTrue(specialist.interpreter_services);'));
-  assert.ok(component.includes('{interpreterServicesText}'));
+  assert.ok(providerFacts.includes('formatInterpreterServices'));
+  assert.ok(providerFacts.includes('const interpreterServicesText = formatInterpreterServices(specialist.interpreter_services);'));
+  assert.ok(!providerFacts.includes('const interpreterAvailable = isFlagTrue(specialist.interpreter_services);'));
+  assert.ok(providerFacts.includes('{interpreterServicesText}'));
 });
 
 test('contact detail modal has name-only heading, copy controls, and compact private-details guidance', () => {
@@ -220,7 +211,8 @@ test('contact detail modal has name-only heading, copy controls, and compact pri
   ['email', 'phone', 'website', 'address'].forEach((field) => {
     assert.ok(modal.includes(`field="${field}"`), `expected copy control for ${field}`);
   });
-  assert.ok(modal.includes('globalgeneticsdirectory@gmail.com'));
+  assert.ok(modal.includes('contact@globalgeneticsdirectory.org'));
+  assert.ok(!modal.includes('globalgeneticsdirectory@gmail.com'));
   assert.ok(modal.includes('data-private-contact-toggle'));
   assert.ok(modal.includes('aria-controls="private-contact-guidance"'));
   assert.ok(modal.includes('hidden={!privateContactGuidanceVisible}'));
