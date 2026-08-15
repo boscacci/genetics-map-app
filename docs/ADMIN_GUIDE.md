@@ -1,15 +1,15 @@
 # Genetics Map: Administrator Guide
 
 **For Monisha and other administrators.**  
-No technical experience needed. Edit the Google Sheet, then click one button to publish.
+No technical experience needed. Edit the Google Sheet; the map normally refreshes automatically within four hours.
 
 ---
 
 ## Quick Start (3 Steps)
 
 1. **Edit** the Google Sheet → Working Copy tab
-2. **Promote** (Sheet macro, **Promote Only** workflow, or **Sync and Deploy**)
-3. **Publish** → GitHub → Actions → **Sync and Deploy** → Run workflow (when ready to go live)
+2. **Wait** up to four hours for **Refresh Map Data**
+3. **Publish sooner (optional)** → GitHub → Actions → **Refresh Map Data** → Run workflow
 
 ---
 
@@ -19,7 +19,7 @@ The Genetics Map shows genetic counselors and specialists around the world. You 
 
 **Two places you'll use:**
 - **Google Sheet** — add, edit, remove providers
-- **GitHub Actions** — run **Promote Only** (stage changes) or **Sync and Deploy** (publish to live site)
+- **GitHub Actions** — run **Promote Only** (stage changes) or **Refresh Map Data** (publish Sheet edits now)
 
 ---
 
@@ -40,17 +40,17 @@ Promoting updates the Production tab (geocoded, cleaned) to match what would app
 
 **Option B (GitHub Actions — recommended):** Run **Promote Only** — Geocode, promote, clean, backup. Updates Production without publishing. Use to stage and review before going live.
 
-**Option C:** Run **Sync and Deploy** (Step 3) — does the same as Promote Only, then encrypts, builds, and deploys to the live site.
+**Option C:** Run **Refresh Map Data** (Step 3) — does the same as Promote Only, then encrypts, builds, and publishes the live data.
 
 ---
 
 ## Step 3: Publish to the Live Map
 
-When Production looks good and you want to go live:
+The map normally refreshes automatically every four hours. To publish sooner:
 
 1. Go to **GitHub.com** → Genetics Map repository
 2. Click the **Actions** tab
-3. Select **Sync and Deploy** in the left sidebar
+3. Select **Refresh Map Data** in the left sidebar
 4. Click **Run workflow**
 5. Wait 2–5 minutes. Green check = success; red X = failure
 6. Map updates in ~5–10 minutes
@@ -58,7 +58,8 @@ When Production looks good and you want to go live:
 | Workflow | What it does |
 |----------|--------------|
 | **Promote Only** | Geocode, promote, clean, backup. Updates Production tab; no website change. |
-| **Sync and Deploy** | Same steps plus encrypt, build, deploy. Publishes to live site. |
+| **Refresh Map Data** | Same steps plus encrypt, build, deploy. Publishes Sheet edits using the application version already live. |
+| **Sync and Deploy** | Releases tested application code after a production approval. Administrators do not need this for ordinary Sheet edits. |
 
 ---
 
@@ -86,24 +87,24 @@ When Production looks good and you want to go live:
 
 ## If Something Fails
 
-### Workflow (Promote Only or Sync and Deploy)
+### Workflow (Promote Only or Refresh Map Data)
 
 | Symptom | Fix |
 |---------|-----|
 | Red X on workflow | Click run → read error. Common: wrong SHEET_ID, sheet not shared with service account |
 | Promote fails | Working Copy has data; sheet shared with genetics-map-automation@... as Editor |
 | Clean fails | Run promote first (Production empty) |
-| Encrypt/Build fails (Sync and Deploy only) | `REACT_APP_SECRET_KEY` missing in GitHub Secrets |
-| Edits not on map | Promote ran? Publish (Sync and Deploy) ran? Both needed |
+| Encrypt/Build fails (Refresh Map Data only) | `REACT_APP_SECRET_KEY` missing in GitHub Secrets |
+| Edits not on map after four hours | Check the latest Refresh Map Data run; an address may be missing or unable to geocode |
 
 ### Data issues
 
 | Symptom | Fix |
 |---------|-----|
 | Phone shows #ERROR! in sheet | Run `npm run format:phones`, then re-enter the phone as plain text and re-promote |
-| Placeholder names (nan, n/a) on map | Fix in Working Copy or leave blank; re-run Sync and Deploy |
-| City shows "NY" not "New York City" | Re-run Sync and Deploy (pipeline now fixes this) |
-| Country has "Mexico# comment" | Re-run Sync and Deploy (pipeline strips #) or edit cell |
+| Placeholder names (nan, n/a) on map | Fix in Working Copy or leave blank; re-run Refresh Map Data |
+| City shows "NY" not "New York City" | Re-run Refresh Map Data (pipeline now fixes this) |
+| Country has "Mexico# comment" | Re-run Refresh Map Data (pipeline strips #) or edit cell |
 
 ### Rollback
 
@@ -117,5 +118,5 @@ If bad data was published: Restore Production from one of the 3 backup sheets in
 |--------|-----|
 | Edit | Working Copy tab only |
 | Promote (stage) | Genetics Map → Promote, or GitHub → Actions → **Promote Only** → Run workflow |
-| Publish (go live) | GitHub → Actions → **Sync and Deploy** → Run workflow |
+| Publish Sheet edits now | GitHub → Actions → **Refresh Map Data** → Run workflow |
 | Phone with + | Type `'` first |

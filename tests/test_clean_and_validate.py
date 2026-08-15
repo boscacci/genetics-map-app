@@ -19,6 +19,31 @@ def test_clean_phone_drops_formula_error_values():
     assert clean_phone("#ERROR!") is None
 
 
+@pytest.mark.parametrize("value", [None, pd.NA, float("nan"), "nan", "None", "null"])
+def test_sheet_cell_serialization_keeps_missing_values_blank(value):
+    assert clean_and_validate._sheet_cell(value) == ""
+
+
+def test_clean_fields_does_not_stringify_missing_values():
+    source = pd.DataFrame(
+        [{
+            "name_first": None,
+            "name_last": pd.NA,
+            "work_address": "nan",
+            "City": float("nan"),
+            "Country": "null",
+        }]
+    )
+
+    cleaned = clean_and_validate.clean_fields(source)
+
+    assert cleaned.loc[0, "name_first"] is None
+    assert pd.isna(cleaned.loc[0, "name_last"])
+    assert cleaned.loc[0, "work_address"] == ""
+    assert cleaned.loc[0, "City"] == ""
+    assert cleaned.loc[0, "Country"] == ""
+
+
 def test_cleaning_preserves_explicit_interpreter_service_values(monkeypatch):
     source = pd.DataFrame(
         [

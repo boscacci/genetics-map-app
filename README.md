@@ -51,8 +51,8 @@ Replace `YOUR_SECRET_KEY` with the actual key from your `.secret_env` file. The 
 **Pipeline runs only in GitHub Actions** (no local Node for scripts/deploy). See `docs/SETUP.md`.
 
 - **Data entry:** Google Sheet Working Copy tab
-- **Promote:** Sheet macro or Sync and Deploy workflow
-- **Deploy:** Sync and Deploy workflow (every 4 hours or manual trigger)
+- **Automatic data publish:** Refresh Map Data workflow (every 4 hours or manual trigger)
+- **Application release:** SemVer tag, CI provenance check, and production approval
 
 ### Secret Management
 
@@ -69,12 +69,9 @@ This file is:
 
 ## 🚀 Deployment
 
-When you push to `main`:
-1. GitHub Actions checkout the repository (with pre-encrypted `src/secureDataBlob.ts`)
-2. Generates the SECRET_HASH from the GitHub Secret
-3. Updates `App.tsx` with the hash
-4. Builds the React app
-5. Deploys to GitHub Pages
+Code merged to `main` is validated but not published directly. A SemVer release tag selects the tested commit, and the protected Sync and Deploy workflow waits for production approval before publishing it.
+
+Sheet edits follow a separate data-only path. Refresh Map Data runs every four hours (or on demand), geocodes and validates Working Copy, promotes it to Production, and rebuilds only with the exact application release already deployed to Pages. It will not pull unreleased code from `main`.
 
 No sensitive data (CSV or secret key) is exposed - only the encrypted blob and hash are in the deployed app.
 
