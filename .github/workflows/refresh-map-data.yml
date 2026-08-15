@@ -1,0 +1,230 @@
+name: Refresh Map Data
+
+# Data-only publication. It refreshes the Sheet-backed data using the exact
+# application release already deployed to GitHub Pages; it never deploys code
+# from an unapproved main commit.
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: genetics-map-sheet-publish
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  resolve-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      release_sha: ${{ steps.release.outputs.sha }}
+    steps:
+      - name: Checkout workflow source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve deployed release provenance
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "Map data refresh must run from the protected main workflow." >&2
+            exit 1
+          fi
+          git fetch origin gh-pages:refs/remotes/origin/gh-pages --no-tags
+          git fetch origin --tags --force
+          subject=$(git log -1 --format=%s origin/gh-pages)
+          if [[ "$subject" =~ ^deploy:\ ([0-9a-f]{40})$ ]]; then
+            release_sha="${BASH_REMATCH[1]}"
+          else
+            echo "Latest gh-pages commit does not identify its deployed source." >&2
+            exit 1
+          fi
+          if ! git cat-file -e "$release_sha^{commit}"; then
+            echo "Deployed source commit is unavailable." >&2
+            exit 1
+          fi
+          release_tag=$(git tag --points-at "$release_sha" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 || true)
+          if [ -z "$release_tag" ]; then
+            echo "Deployed source is not an immutable SemVer release." >&2
+            exit 1
+          fi
+          successful_runs=$(gh run list --workflow CI --commit "$release_sha" --branch main --event push --status success --limit 1 --json databaseId --jq 'length')
+          if [ "$successful_runs" -ne 1 ]; then
+            echo "Deployed release does not have a successful main CI run." >&2
+            exit 1
+          fi
+          echo "sha=$release_sha" >> "$GITHUB_OUTPUT"
+          echo "Refreshing data with deployed release $release_tag ($release_sha)."
+
+  refresh-map-data:
+    needs: resolve-release
+    runs-on: ubuntu-latest
+    # Cold Node/Python installs plus external Sheet geocoding can exceed 90 seconds.
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Checkout workflow and health-check source
+        uses: actions/checkout@v4
+
+      - name: Checkout deployed application release
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-release.outputs.release_sha }}
+          path: release
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: release/package-lock.json
+
+      - name: Install dependencies
+        working-directory: release
+        run: npm ci
+
+      - name: Generate secret hash for App.tsx
+        working-directory: release
+        run: node scripts/hash-secret.js
+        env:
+          REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
+
+      - name: Update secret hash in App.tsx
+        working-directory: release
+        run: |
+          HASH=$(grep REACT_APP_SECRET_HASH .env.generated | cut -d'=' -f2)
+          sed -i "s|const SECRET_HASH = \"[a-f0-9]*\";|const SECRET_HASH = \"$HASH\";|" src/App.tsx
+
+      - name: Run script tests
+        working-directory: release
+        run: npm run test:scripts
+
+      - name: Run React component tests
+        working-directory: release
+        run: CI=true npm test -- --watchAll=false
+
+      - name: Type-check app
+        working-directory: release
+        run: npx tsc --noEmit
+
+      - name: Build app preflight
+        working-directory: release
+        run: GENERATE_SOURCEMAP=false ./node_modules/.bin/react-scripts build
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: release/requirements.txt
+
+      - name: Install Python dependencies
+        run: pip install -r release/requirements.txt
+
+      - name: Run Python tests
+        run: python -m pytest -q release/tests
+
+      - name: Create GCP credentials
+        env:
+          GCP_SA_KEY_BASE64: ${{ secrets.GCP_SA_KEY }}
+          GENETICS_SHEET_ID: ${{ secrets.SHEET_ID }}
+          GENETICS_GEOCODING_API_KEY: ${{ secrets.GEOCODING_API_KEY }}
+        run: |
+          mkdir -p release/.gcp-credentials
+          printf '%s' "$GCP_SA_KEY_BASE64" | base64 -d > release/.gcp-credentials/genetics-map-sa-key.json
+          printf '%s' "$GENETICS_SHEET_ID" > release/.gcp-credentials/sheet-id.txt
+          if [ -n "$GENETICS_GEOCODING_API_KEY" ]; then
+            printf '%s' "$GENETICS_GEOCODING_API_KEY" > release/.gcp-credentials/geocoding-api-key.txt
+          fi
+
+      - name: Validate Working Copy structure (read-only)
+        working-directory: release
+        run: npm run validate:promotion
+
+      - name: Geocode Working Copy (fill missing lat/lng)
+        working-directory: release
+        run: python scripts/geocode_working_copy.py
+
+      - name: Promote Working Copy → Production
+        working-directory: release
+        run: npm run promote
+
+      - name: Clean and validate Production (pandas, writes back to Sheet)
+        working-directory: release
+        run: python scripts/clean_and_validate.py --output-stdout > /tmp/cleaned.csv
+
+      - name: Check Sheet publish health
+        run: node scripts/check-sheet-health.js --require-sync --github-summary
+        env:
+          NODE_PATH: ${{ github.workspace }}/release/node_modules
+          GCP_CREDENTIALS_PATH: release/.gcp-credentials/genetics-map-sa-key.json
+          SHEET_ID_PATH: release/.gcp-credentials/sheet-id.txt
+
+      - name: Backup Production (separate sheets in Drive folder)
+        working-directory: release
+        run: node scripts/backup-production.js
+        env:
+          BACKUP_FOLDER_ID: ${{ secrets.BACKUP_FOLDER_ID }}
+
+      - name: Encrypt refreshed data
+        working-directory: release
+        run: |
+          mkdir -p data
+          cp /tmp/cleaned.csv data/data.csv
+          npm run encrypt-data
+        env:
+          REACT_APP_SECRET_KEY: ${{ secrets.REACT_APP_SECRET_KEY }}
+
+      - name: Build app with refreshed data
+        working-directory: release
+        run: GENERATE_SOURCEMAP=false ./node_modules/.bin/dotenv -e .env.generated -- ./node_modules/.bin/react-scripts build
+
+      - name: Deploy refreshed data to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./release/build
+          publish_branch: gh-pages
+          commit_message: "deploy: ${{ needs.resolve-release.outputs.release_sha }}"
+
+  notify-failure:
+    needs: [resolve-release, refresh-map-data]
+    if: ${{ always() && (needs.resolve-release.result == 'failure' || needs.refresh-map-data.result == 'failure') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout notification helper
+        uses: actions/checkout@v4
+
+      - name: Capture completed failed job logs
+        run: bash .github/scripts/capture-failure-log.sh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          secure: false
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "❌ Genetics Map: Refresh Map Data failed"
+          body: |
+            Scheduled map data refresh failed.
+
+            Repository: ${{ github.repository }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            The attached log contains only completed failed-job output.
+          to: boscacci.data@gmail.com
+          from: Genetics Map Bot <${{ secrets.SMTP_USERNAME }}>
+          attachments: failure-log.txt

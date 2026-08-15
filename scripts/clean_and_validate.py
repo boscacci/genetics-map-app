@@ -92,15 +92,37 @@ def clean_emails(df: pd.DataFrame) -> pd.DataFrame:
 
 
 CITY_ALIASES = {"ny": "New York City", "nyc": "New York City"}
+NULL_LIKE_TEXT = {"nan", "none", "null", "undefined", "n/a", "na", "-", "--"}
+
+
+def _sheet_cell(value) -> str:
+    """Serialize missing values as blank cells instead of sentinel strings."""
+    if pd.isnull(value):
+        return ""
+    text = str(value).strip()
+    return "" if text.lower() in NULL_LIKE_TEXT else text
+
+
+def _clean_text_field(value, field):
+    if pd.isnull(value):
+        return value
+    text = _sheet_cell(value)
+    text = re.sub(r"\s+", " ", text)
+    if field == "work_address":
+        text = re.sub(r"\n+", ", ", text)
+        text = re.sub(r"\s+", " ", text)
+    if field == "name_first":
+        text = text.replace(".", "")
+    return text
 
 
 def _strip_comment(val) -> str:
     """Remove inline comments (e.g. 'Mexico# Test comment' -> 'Mexico')."""
     if pd.isnull(val):
         return ""
-    s = str(val).strip()
+    s = _sheet_cell(val)
     i = s.find("#")
-    return s[:i].strip() if i >= 0 else s
+    return _sheet_cell(s[:i].strip() if i >= 0 else s)
 
 
 def clean_fields(df: pd.DataFrame) -> pd.DataFrame:
@@ -118,12 +140,7 @@ def clean_fields(df: pd.DataFrame) -> pd.DataFrame:
     for col in fields:
         if col not in df.columns:
             continue
-        s = df[col].astype(str).str.strip().str.replace(r"\s+", " ", regex=True)
-        if col == "work_address":
-            s = s.str.replace(r"\n+", ", ", regex=True)
-        if col == "name_first":
-            s = s.str.replace(".", "", regex=False)
-        df[col] = s
+        df[col] = df[col].apply(lambda value: _clean_text_field(value, col))
     # Country: strip inline comments (e.g. "Mexico# Test" -> "Mexico")
     if "Country" in df.columns:
         df["Country"] = df["Country"].astype(str).apply(_strip_comment)
@@ -278,7 +295,7 @@ def _read_production_from_sheet(sheets, spreadsheet_id):
 def _write_to_production(sheets, spreadsheet_id, header_row, df):
     rows = [SHEET_HEADERS]
     for _, r in df.iterrows():
-        row = [str(r.get(h, "")) for h in SHEET_HEADERS]
+        row = [_sheet_cell(r.get(h, "")) for h in SHEET_HEADERS]
         rows.append(row)
     sheets.spreadsheets().values().update(
         spreadsheetId=spreadsheet_id,

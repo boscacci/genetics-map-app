@@ -20,6 +20,7 @@ test('workflow failure email does not query logs for the still-running workflow 
     assert.ok(content.includes('actions: read'));
     assert.ok(content.includes('Validate Working Copy structure (read-only)'));
     assert.ok(content.includes('genetics-map-sheet-publish'));
+    assert.ok(content.includes('check:sheet-health -- --require-sync --github-summary'));
   }
 });
 
@@ -188,4 +189,34 @@ test('production publishing is SemVer-tag-only and validates main CI before appr
       workflow.indexOf('environment:'),
     'release provenance must be checked before production approval'
   );
+});
+
+test('map data refresh runs every four hours using the currently deployed release source', () => {
+  const workflow = read('.github/workflows/refresh-map-data.yml');
+
+  assert.match(workflow, /schedule:\s*\n\s*- cron: ['"]0 \*\/4 \* \* \*['"]/);
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /Resolve deployed release provenance/);
+  assert.ok(workflow.includes('^deploy:\\ ([0-9a-f]{40})$'));
+  assert.ok(workflow.includes('GITHUB_REF') && workflow.includes('refs/heads/main'));
+  assert.match(workflow, /gh run list --workflow CI/);
+  assert.match(workflow, /ref: \$\{\{ needs\.resolve-release\.outputs\.release_sha \}\}/);
+  assert.match(workflow, /commit_message: ['"]deploy: \$\{\{ needs\.resolve-release\.outputs\.release_sha \}\}['"]/);
+  assert.match(workflow, /node scripts\/check-sheet-health\.js --require-sync --github-summary/);
+  assert.match(workflow, /genetics-map-sheet-publish/);
+  assert.match(workflow, /capture-failure-log\.sh/);
+  assert.match(workflow, /to: boscacci\.data@gmail\.com/);
+  assert.doesNotMatch(workflow, /ref: main/);
+
+  const credentialsStep = workflow.match(
+    /- name: Create GCP credentials[\s\S]*?(?=\n\s+- name: Validate Working Copy structure)/,
+  );
+  assert.ok(credentialsStep);
+  assert.match(credentialsStep[0], /GCP_SA_KEY_BASE64: \$\{\{ secrets\.GCP_SA_KEY \}\}/);
+  assert.doesNotMatch(credentialsStep[0], /echo ['"]\$\{\{ secrets\./);
+
+  const clean = workflow.indexOf('Clean and validate Production');
+  const health = workflow.indexOf('Check Sheet publish health');
+  const deploy = workflow.indexOf('Deploy refreshed data to GitHub Pages');
+  assert.ok(clean > -1 && health > clean && deploy > health);
 });

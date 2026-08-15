@@ -21,6 +21,7 @@ const {
   WORKING_COPY_SHEET_RANGE_A1,
 } = require('./lib/sheet-schema');
 const { applySheetColumnFormatting } = require('./lib/sheet-formatting');
+const { isBlankRow } = require('./lib/publish-diagnostics');
 
 const CREDENTIALS_PATH = path.resolve(__dirname, '../.gcp-credentials/genetics-map-sa-key.json');
 const SHEET_ID_PATH = path.resolve(__dirname, '../.gcp-credentials/sheet-id.txt');
@@ -37,6 +38,15 @@ function buildHeaderIndex(headerRow) {
     if (header) idxByHeader[header] = idx;
   }
   return idxByHeader;
+}
+
+function filterProviderRows(rows, sourceHeader) {
+  return rows.filter((row) => {
+    const record = Object.fromEntries(
+      sourceHeader.map((header, index) => [String(header || '').trim(), row[index] ?? '']),
+    );
+    return !isBlankRow(record);
+  });
 }
 
 /** Build Production context for recovering phones. */
@@ -100,7 +110,7 @@ async function main() {
 
   const sourceHeader = rows[0] || [];
   const sourceIdxByHeader = buildHeaderIndex(sourceHeader);
-  const dataRows = rows.slice(1);
+  const dataRows = filterProviderRows(rows.slice(1), sourceHeader);
 
   const headerRow = [...PRODUCTION_HEADERS];
 
@@ -154,5 +164,6 @@ if (require.main === module) {
 
 module.exports = {
   buildHeaderIndex,
+  filterProviderRows,
   loadProductionContext,
 };

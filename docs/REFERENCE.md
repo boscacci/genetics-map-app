@@ -18,7 +18,7 @@ Google Sheet (Working Copy + Production)
 → Live map
 ```
 
-**Workflows:** **Promote Only** runs steps 1–4 (Geocode through Backup); Production is updated but no deploy. **Sync and Deploy** runs the full pipeline and publishes to the live site (scheduled every 4h or manual).
+**Workflows:** **Promote Only** runs steps 1–4 (Geocode through Backup); Production is updated but no deploy. **Refresh Map Data** runs every four hours or manually and publishes through the exact SemVer release already live. **Sync and Deploy** is the separately approved application-release path.
 
 | Step | Script | Input | Output |
 |------|--------|-------|--------|
@@ -88,4 +88,5 @@ Working Copy has one additional internal-only boolean column: signed_up_for_news
 
 - Two-week monitoring and email support post-launch
 - Promote Only: stage changes without publishing
-- Sync and Deploy: publish to live site
+- Refresh Map Data: automatically publish Sheet edits through the deployed release
+- Sync and Deploy: publish a new tested application release after production approval

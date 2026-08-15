@@ -120,6 +120,9 @@ jobs:
       - name: Clean and validate Production (pandas, writes back to Sheet)
         run: python scripts/clean_and_validate.py --output-stdout > /tmp/cleaned.csv
 
+      - name: Check Sheet publish health
+        run: npm run check:sheet-health -- --require-sync --github-summary
+
       - name: Backup Production (separate sheets in Drive folder)
         run: node scripts/backup-production.js
         env:

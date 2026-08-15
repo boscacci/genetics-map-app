@@ -1,7 +1,7 @@
 # Genetics Map: Migration Plan
 
 **Last Updated:** February 16, 2026  
-**Status:** Phases 1–3 complete. Automation pipeline runs every 4h; backup, geocoding, email notifications wired up.
+**Status:** Phases 1–3 complete. Refresh Map Data runs every 4h; backup, geocoding, health checks, and failure notifications are wired up.
 
 **Design:** All automation runs in GitHub Actions; no local deployment steps required.
 
@@ -213,8 +213,8 @@ Transfer all operational costs to **Einstein Montefiore Hospital** or **Monisha*
 4. Review your changes (check for typos, required fields)
 5. **Promote to Production:**
    - **Option A (Sheet Macro):** Extensions → Apps Script → Run `promoteWorkingCopyToProduction`, or use the custom menu "Genetics Map" → "Promote to Production"
-   - **Option B:** Trigger **Sync and Deploy** workflow (GitHub → Actions → "Sync and Deploy" → Run workflow) — promotes, cleans, and deploys in one run
-6. **Website update:** Happens automatically every 4 hours via GitHub Actions. Manual trigger: GitHub → Actions → "Sync and Deploy" → Run workflow.
+   - **Option B:** Trigger **Refresh Map Data** (GitHub → Actions → "Refresh Map Data" → Run workflow) — promotes, cleans, and deploys in one run
+6. **Website update:** Happens automatically every 4 hours via GitHub Actions. Manual trigger: GitHub → Actions → "Refresh Map Data" → Run workflow.
 7. Website updates within ~10 minutes after the sync runs
 
 ### Data Entry Tips
@@ -279,7 +279,7 @@ The system stores and displays all phone values as plain text—no calculations,
 
 ## Automated Sync (Every 4 Hours)
 
-GitHub Action `sync-and-deploy` runs every 4 hours (0:00, 4:00, 8:00, 12:00, 16:00, 20:00 UTC):
+GitHub Action `refresh-map-data` runs every 4 hours (0:00, 4:00, 8:00, 12:00, 16:00, 20:00 UTC) using the exact application release already deployed to Pages:
 
 1. **Geocode** Working Copy (skips when no API key) — fills missing lat/lng
 2. Promote Working Copy → Production (in the sheet, with name/phone cleanup)

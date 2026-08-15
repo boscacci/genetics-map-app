@@ -25,7 +25,8 @@
     "promote": "node scripts/promote-to-production.js",
     "export:production": "node scripts/export-production-to-csv.js",
     "backup:production": "node scripts/backup-production.js",
-    "clean:data": "python scripts/clean_and_validate.py"
+    "clean:data": "python scripts/clean_and_validate.py",
+    "check:sheet-health": "node scripts/check-sheet-health.js"
   },
   "keywords": [],
   "author": "",

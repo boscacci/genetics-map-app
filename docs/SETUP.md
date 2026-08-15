@@ -29,12 +29,13 @@ The service account cannot create new files (GCP default). Create the sheet with
 
 ## Part 2: GitHub Actions
 
-Two workflows use the Sheet as the sole source (no local Node or CSV):
+Three workflows use the Sheet as the sole source (no local Node or CSV):
 
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
 | **Promote Only** | Manual only | Geocode, promote, clean, backup. Updates Production tab without deploying. |
-| **Sync and Deploy** | Every 4h (cron) + manual | Same steps plus encrypt, build, deploy. Publishes to live site. |
+| **Refresh Map Data** | Every 4h (cron) + manual | Geocodes, promotes, validates, and publishes Sheet data using the exact application release already live. |
+| **Sync and Deploy** | SemVer release tag | Validates the tagged main commit, waits for production approval, then publishes code and current Sheet data. |
 
 ### Required secrets
 
@@ -70,7 +71,7 @@ Create 3 blank sheets in a Drive folder: "Genetics Map Backup (2 days ago)", "Ge
 
 ## Verify
 
-1. **Actions** → **Promote Only** or **Sync and Deploy** → **Run workflow**
+1. **Actions** → **Promote Only** or **Refresh Map Data** → **Run workflow**
 2. Watch the run. Common failures:
 
    | Failing step | Likely cause |
@@ -87,4 +88,4 @@ Create 3 blank sheets in a Drive folder: "Genetics Map Backup (2 days ago)", "Ge
 
 ## Schedule
 
-**Sync and Deploy** runs at 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC (every 4 hours). Both workflows support manual trigger via `workflow_dispatch`.
+**Refresh Map Data** runs at 00:00, 04:00, 08:00, 12:00, 16:00, and 20:00 UTC. It can also be run manually from `main`. The job fails closed if the Sheet schema is incomplete, Production does not cover the Working Copy publishable count, or the currently deployed Pages source is not an immutable SemVer release with successful main CI.
