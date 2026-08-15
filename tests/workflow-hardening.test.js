@@ -201,7 +201,8 @@ test('map data refresh runs every four hours using the currently deployed releas
   assert.ok(workflow.includes('GITHUB_REF') && workflow.includes('refs/heads/main'));
   assert.match(workflow, /gh run list --workflow CI/);
   assert.match(workflow, /ref: \$\{\{ needs\.resolve-release\.outputs\.release_sha \}\}/);
-  assert.match(workflow, /commit_message: ['"]deploy: \$\{\{ needs\.resolve-release\.outputs\.release_sha \}\}['"]/);
+  assert.match(workflow, /full_commit_message: ['"]deploy: \$\{\{ needs\.resolve-release\.outputs\.release_sha \}\}['"]/);
+  assert.doesNotMatch(workflow, /^\s+commit_message:/m);
   assert.match(workflow, /node scripts\/check-sheet-health\.js --require-sync --github-summary/);
   assert.match(workflow, /genetics-map-sheet-publish/);
   assert.match(workflow, /capture-failure-log\.sh/);

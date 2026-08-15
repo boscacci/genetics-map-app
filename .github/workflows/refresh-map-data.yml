@@ -195,7 +195,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./release/build
           publish_branch: gh-pages
-          commit_message: "deploy: ${{ needs.resolve-release.outputs.release_sha }}"
+          full_commit_message: "deploy: ${{ needs.resolve-release.outputs.release_sha }}"
 
   notify-failure:
     needs: [resolve-release, refresh-map-data]
