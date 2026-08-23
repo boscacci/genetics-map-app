@@ -212,12 +212,18 @@ def uses_interpreters_func(val):
 
 
 def normalize_uses_interpreters(explicit_value, language_value):
-    """Preserve the Sheet flag; infer only for legacy rows without one."""
+    """Preserve the Sheet flag; infer only for legacy rows without one.
+
+    Returns "TRUE"/"FALSE" only when the data actually says so (an explicit
+    Sheet answer, or a clear interpreter mention in language_spoken). When
+    neither gives a signal we return "" rather than fabricating "FALSE" — we
+    don't know, so we shouldn't tell providers' contacts we do.
+    """
     if not pd.isnull(explicit_value):
         normalized = str(explicit_value).strip().upper()
         if normalized in {"TRUE", "FALSE"}:
             return normalized
-    return "TRUE" if uses_interpreters_func(language_value) else "FALSE"
+    return "TRUE" if uses_interpreters_func(language_value) else ""
 
 
 def clean_languages(val):

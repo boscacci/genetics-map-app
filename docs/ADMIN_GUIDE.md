@@ -78,7 +78,7 @@ The map normally refreshes automatically every four hours. To publish sooner:
 | work_address | Full street address |
 | hide_institution_address | TRUE/FALSE value; TRUE hides institution and address details |
 | language_spoken | Languages (e.g., English, Spanish) |
-| uses_interpreters | TRUE or FALSE |
+| uses_interpreters | TRUE or FALSE; leave blank if unknown — cleaning no longer guesses FALSE for blanks, and the map shows "Unknown" rather than implying interpreter services aren't offered |
 | specialties | Areas of focus |
 | signed_up_for_newsletter | Working Copy only; TRUE/FALSE value; TRUE if they opted into news/updates/future research contact |
 | Latitude, Longitude, City, Country | *Usually blank—the system fills these in* |

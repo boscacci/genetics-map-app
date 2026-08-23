@@ -7,14 +7,14 @@ import {
   formatLanguages,
 } from './providerDisplay';
 
-const NOT_AVAILABLE = 'Not available';
+const UNKNOWN = 'Unknown';
 
 interface ProviderFactsProps {
   specialist: MapPoint;
   variant: 'tooltip' | 'popup';
 }
 
-const availableOrFallback = (value: string): string => value || NOT_AVAILABLE;
+const availableOrFallback = (value: string): string => value || UNKNOWN;
 
 const ProviderFacts: React.FC<ProviderFactsProps> = ({ specialist, variant }) => {
   const locationText = availableOrFallback(displayLocation(specialist.City, specialist.Country));
