@@ -190,8 +190,19 @@ describe('ContactDetailsModal', () => {
 
     const rows = container.querySelectorAll('.contact-modal-content .contact-item');
     expect(rows).toHaveLength(8);
-    expect(container.textContent).toContain('Interpreter services: Unknown');
     expect(container.querySelectorAll('.contact-text-unknown')).toHaveLength(8);
+    [
+      'Institution: Unknown',
+      'Specialty: Unknown',
+      'Languages: Unknown',
+      'Interpreter services: Unknown',
+      'Email: Unknown',
+      'Phone: Unknown',
+      'Website: Unknown',
+      'Address: Unknown',
+    ].forEach((expectedText) => {
+      expect(container.textContent).toContain(expectedText);
+    });
     expect(container.querySelector('[data-copy-field="email"]')).toBeNull();
     expect(container.querySelector('[data-copy-field="phone"]')).toBeNull();
     expect(container.querySelector('[data-copy-field="website"]')).toBeNull();
@@ -210,6 +221,14 @@ describe('ContactDetailsModal', () => {
     const rows = container.querySelectorAll('.contact-modal-content .contact-item');
     expect(rows).toHaveLength(8);
     expect(container.querySelectorAll('.contact-text-private')).toHaveLength(4);
+    [
+      'Institution: Private',
+      'Email: Private',
+      'Phone: Private',
+      'Address: Private',
+    ].forEach((expectedText) => {
+      expect(container.textContent).toContain(expectedText);
+    });
     expect(container.textContent).not.toContain('ada@example.test');
     expect(container.textContent).not.toContain('+1 555 0100');
     expect(container.textContent).not.toContain('Example Hospital');
