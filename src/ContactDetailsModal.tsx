@@ -3,7 +3,6 @@ import { MapPoint } from './types';
 import {
   cleanDisplayValue,
   displayFullAddress,
-  displayInstitution,
   displayName,
   formatInterpreterServices,
   formatLanguages,
@@ -14,6 +13,8 @@ import {
 } from './providerDisplay';
 
 const ADMIN_EMAIL = 'contact@globalgeneticsdirectory.org';
+const UNKNOWN = 'Unknown';
+const PRIVATE = 'Private';
 
 type CopyField = 'email' | 'phone' | 'website' | 'address';
 type CopyStatus = 'idle' | 'copied' | 'select';
@@ -92,6 +93,7 @@ const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({ specialist, o
   const address = displayFullAddress(specialist);
   const addressIsPrivate = isFlagTrue(specialist.hide_institution_address);
   const showInstitution = shouldShowInstitution(specialist);
+  const institutionIsPrivate = !showInstitution;
   const showPrivateContactNote = hasPrivateContactDetails(specialist);
 
   const setValueRef = (field: CopyField, node: HTMLSpanElement | null) => {
@@ -151,33 +153,40 @@ const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({ specialist, o
         </div>
 
         <div className="contact-modal-content">
-          {showInstitution && institutionText && (
-            <div className="contact-item">
-              <span className="contact-icon" aria-hidden="true">🏢</span>
-              <span className="contact-text">{displayInstitution(institutionText)}</span>
-            </div>
-          )}
+          <div className="contact-item">
+            <span className="contact-icon" aria-hidden="true">🏢</span>
+            <span className={`contact-text${institutionIsPrivate ? ' contact-text-private' : institutionText ? '' : ' contact-text-unknown'}`}>
+              {institutionIsPrivate ? PRIVATE : institutionText || UNKNOWN}
+            </span>
+          </div>
 
-          {specialtyText && (
-            <div className="contact-item">
-              <span className="contact-icon" aria-hidden="true">🧬</span>
-              <span className="contact-text">{specialtyText}</span>
-            </div>
-          )}
+          <div className="contact-item">
+            <span className="contact-icon" aria-hidden="true">🧬</span>
+            <span className={`contact-text${specialtyText ? '' : ' contact-text-unknown'}`}>
+              {specialtyText || UNKNOWN}
+            </span>
+          </div>
 
-          {languageText && (
-            <div className="contact-item contact-languages">
-              <span className="contact-icon" aria-hidden="true">🗣️</span>
-              <span className="contact-text">Languages: {languageText}</span>
-            </div>
-          )}
+          <div className="contact-item contact-languages">
+            <span className="contact-icon" aria-hidden="true">🗣️</span>
+            <span className={`contact-text${languageText ? '' : ' contact-text-unknown'}`}>
+              Languages: {languageText || UNKNOWN}
+            </span>
+          </div>
 
           <div className="contact-item contact-interpreter-services">
             <span className="contact-icon" aria-hidden="true">🔄</span>
-            <span className="contact-text">Interpreter services: {interpreterServicesText}</span>
+            <span className={`contact-text${interpreterServicesText === UNKNOWN ? ' contact-text-unknown' : ''}`}>
+              Interpreter services: {interpreterServicesText}
+            </span>
           </div>
 
-          {!emailIsPrivate && email && (
+          {emailIsPrivate ? (
+            <div className="contact-item">
+              <span className="contact-icon" aria-hidden="true">📧</span>
+              <span className="contact-text contact-text-private">{PRIVATE}</span>
+            </div>
+          ) : email ? (
             <CopyableContactItem
               field="email"
               icon="📧"
@@ -188,9 +197,19 @@ const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({ specialist, o
             >
               <a href={`mailto:${email}`} className="contact-link">{email}</a>
             </CopyableContactItem>
+          ) : (
+            <div className="contact-item">
+              <span className="contact-icon" aria-hidden="true">📧</span>
+              <span className="contact-text contact-text-unknown">{UNKNOWN}</span>
+            </div>
           )}
 
-          {!phoneIsPrivate && phone && (
+          {phoneIsPrivate ? (
+            <div className="contact-item">
+              <span className="contact-icon" aria-hidden="true">📞</span>
+              <span className="contact-text contact-text-private">{PRIVATE}</span>
+            </div>
+          ) : phone ? (
             <CopyableContactItem
               field="phone"
               icon="📞"
@@ -201,9 +220,14 @@ const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({ specialist, o
             >
               <a href={`tel:${phone}`} className="contact-link">{phone}</a>
             </CopyableContactItem>
+          ) : (
+            <div className="contact-item">
+              <span className="contact-icon" aria-hidden="true">📞</span>
+              <span className="contact-text contact-text-unknown">{UNKNOWN}</span>
+            </div>
           )}
 
-          {website.displayValue && (
+          {website.displayValue ? (
             <CopyableContactItem
               field="website"
               icon="🌐"
@@ -225,9 +249,19 @@ const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({ specialist, o
                 <span className="contact-text">{website.displayValue}</span>
               )}
             </CopyableContactItem>
+          ) : (
+            <div className="contact-item">
+              <span className="contact-icon" aria-hidden="true">🌐</span>
+              <span className="contact-text contact-text-unknown">{UNKNOWN}</span>
+            </div>
           )}
 
-          {!addressIsPrivate && address.copyValue && (
+          {addressIsPrivate ? (
+            <div className="contact-item">
+              <span className="contact-icon" aria-hidden="true">📍</span>
+              <span className="contact-text contact-text-private">{PRIVATE}</span>
+            </div>
+          ) : address.copyValue ? (
             <CopyableContactItem
               field="address"
               icon="📍"
@@ -249,6 +283,11 @@ const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({ specialist, o
                 )}
               </span>
             </CopyableContactItem>
+          ) : (
+            <div className="contact-item">
+              <span className="contact-icon" aria-hidden="true">📍</span>
+              <span className="contact-text contact-text-unknown">{UNKNOWN}</span>
+            </div>
           )}
 
           {showPrivateContactNote && (
