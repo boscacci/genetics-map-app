@@ -140,7 +140,7 @@ test('cards use compact fact lists with stable rows for missing values', () => {
 
   assert.ok(component.includes('<ProviderFacts specialist={specialist} variant="tooltip"'));
   assert.ok(component.includes('<ProviderFacts specialist={specialist} variant="popup"'));
-  assert.ok(providerFacts.includes("const NOT_AVAILABLE = 'Not available';"));
+  assert.ok(providerFacts.includes("const UNKNOWN = 'Unknown';"));
   assert.ok(!providerFacts.includes('Private'));
 
   const facts = appCssBlock('.provider-facts');

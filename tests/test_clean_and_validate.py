@@ -105,9 +105,9 @@ def test_cleaning_preserves_explicit_interpreter_service_values(monkeypatch):
         (False, "English with interpreter services available", "FALSE"),
         (" true ", "English", "TRUE"),
         ("", "English with interpreter services available", "TRUE"),
-        (None, "English", "FALSE"),
+        (None, "English", ""),
         ("unknown", "French with interpreter present", "TRUE"),
-        ("unknown", "French", "FALSE"),
+        ("unknown", "French", ""),
     ],
 )
 def test_interpreter_service_normalization_uses_legacy_inference_only_as_fallback(

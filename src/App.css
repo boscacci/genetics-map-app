@@ -472,6 +472,17 @@
   font-weight: 500;
 }
 
+.contact-modal-content .contact-text-unknown {
+  color: #adb5bd;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.contact-modal-content .contact-text-private {
+  color: #b7791f;
+  font-style: italic;
+}
+
 .contact-modal-content .contact-link,
 .contact-modal-content .contact-text,
 .contact-modal-content .contact-copy-value {

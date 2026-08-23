@@ -171,6 +171,53 @@ describe('ContactDetailsModal', () => {
     expect(container.querySelector('#private-contact-guidance')).toBeNull();
   });
 
+  test('shows the same eight fields for a sparse provider, each marked Unknown instead of omitted', () => {
+    renderModal(provider({
+      work_institution: '',
+      specialties: '',
+      language_spoken: '',
+      interpreter_services: undefined,
+      email: '',
+      phone_work: '',
+      work_website: '',
+      work_address: '',
+      address_street: '',
+      address_state: '',
+      address_zip: '',
+      City: '',
+      Country: '',
+    }));
+
+    const rows = container.querySelectorAll('.contact-modal-content .contact-item');
+    expect(rows).toHaveLength(8);
+    expect(container.textContent).toContain('Interpreter services: Unknown');
+    expect(container.querySelectorAll('.contact-text-unknown')).toHaveLength(8);
+    expect(container.querySelector('[data-copy-field="email"]')).toBeNull();
+    expect(container.querySelector('[data-copy-field="phone"]')).toBeNull();
+    expect(container.querySelector('[data-copy-field="website"]')).toBeNull();
+    expect(container.querySelector('[data-copy-field="address"]')).toBeNull();
+    expect(container.textContent).not.toContain('Private');
+  });
+
+  test('marks every privacy-flagged field as Private in place, without shrinking the field count', () => {
+    renderModal(provider({
+      hide_workinstitution: 'TRUE',
+      hide_email: 'TRUE',
+      hide_phone: 'TRUE',
+      hide_institution_address: 'TRUE',
+    }));
+
+    const rows = container.querySelectorAll('.contact-modal-content .contact-item');
+    expect(rows).toHaveLength(8);
+    expect(container.querySelectorAll('.contact-text-private')).toHaveLength(4);
+    expect(container.textContent).not.toContain('ada@example.test');
+    expect(container.textContent).not.toContain('+1 555 0100');
+    expect(container.textContent).not.toContain('Example Hospital');
+    expect(container.querySelector('[data-copy-field="email"]')).toBeNull();
+    expect(container.querySelector('[data-copy-field="phone"]')).toBeNull();
+    expect(container.querySelector('[data-copy-field="address"]')).toBeNull();
+  });
+
   test('suppresses null-like contact values without constructing links', () => {
     renderModal(provider({
       email: 'NaN',

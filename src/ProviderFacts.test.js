@@ -57,7 +57,7 @@ describe('ProviderFacts', () => {
     ]);
   });
 
-  test.each(['tooltip', 'popup'])('renders Not available for missing non-interpreter facts in the %s card', (variant) => {
+  test.each(['tooltip', 'popup'])('renders Unknown for missing facts in the %s card', (variant) => {
     renderFacts(provider({
       City: 'NaN',
       Country: null,
@@ -69,10 +69,10 @@ describe('ProviderFacts', () => {
     const rows = Array.from(container.querySelectorAll('.provider-fact-item'));
     expect(rows).toHaveLength(4);
     expect(rows.map((row) => row.textContent)).toEqual([
-      '📍 Location:Not available',
-      '🧬 Specialty:Not available',
-      '🗣️ Languages:Not available',
-      '🔄 Interpreter Services:Not specified',
+      '📍 Location:Unknown',
+      '🧬 Specialty:Unknown',
+      '🗣️ Languages:Unknown',
+      '🔄 Interpreter Services:Unknown',
     ]);
     expect(container.textContent).not.toContain('Private');
     expect(container.textContent).not.toContain('👁');

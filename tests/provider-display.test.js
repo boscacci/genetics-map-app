@@ -40,8 +40,8 @@ test('interpreter services retain explicit three-state display text', () => {
   assert.equal(formatInterpreterServices('TRUE'), 'Available');
   assert.equal(formatInterpreterServices(false), 'Not available');
   assert.equal(formatInterpreterServices('false'), 'Not available');
-  assert.equal(formatInterpreterServices('NaN'), 'Not specified');
-  assert.equal(formatInterpreterServices(undefined), 'Not specified');
+  assert.equal(formatInterpreterServices('NaN'), 'Unknown');
+  assert.equal(formatInterpreterServices(undefined), 'Unknown');
 });
 
 test('private contact note is triggered by privacy flags and legacy null-like values', () => {

@@ -68,7 +68,7 @@ export const formatInterpreterServices = (value: unknown): string => {
   const normalized = cleanDisplayValue(value).toUpperCase();
   if (normalized === 'TRUE') return 'Available';
   if (normalized === 'FALSE') return 'Not available';
-  return 'Not specified';
+  return 'Unknown';
 };
 
 export const shouldShowInstitution = (specialist: MapPoint): boolean => {
