@@ -198,6 +198,19 @@ test('pull requests and main run the complete credential-free CI suite', () => {
   assert.doesNotMatch(workflow, /\$\{\{\s*secrets\.|GCP_SA_KEY|SHEET_ID|Create GCP credentials/);
 });
 
+test('workflow dependency installs use the lockfile without install-time network audit calls', () => {
+  for (const workflowName of [
+    'ci.yml',
+    'sync-and-deploy.yml',
+    'refresh-map-data.yml',
+    'promote-only.yml',
+  ]) {
+    const workflow = read(`.github/workflows/${workflowName}`);
+    assert.match(workflow, /npm ci --no-audit --no-fund --prefer-offline/);
+    assert.doesNotMatch(workflow, /^\s+run: npm ci$/m);
+  }
+});
+
 test('production publishing is SemVer-tag-only and validates main CI before approval', () => {
   const workflow = read('.github/workflows/sync-and-deploy.yml');
 

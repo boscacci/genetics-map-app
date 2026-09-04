@@ -64,7 +64,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Generate secret hash for App.tsx
         run: node scripts/hash-secret.js

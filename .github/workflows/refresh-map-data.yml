@@ -91,7 +91,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: release
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Generate secret hash for App.tsx
         working-directory: release
