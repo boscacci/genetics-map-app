@@ -153,11 +153,6 @@ body {
   min-width: 0;
 }
 
-/* Hide Leaflet attribution */
-.leaflet-control-attribution {
-  display: none !important;
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .header {
