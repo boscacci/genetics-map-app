@@ -5,6 +5,7 @@ import L from 'leaflet';
 import { MapPoint } from './types';
 import ContactDetailsModal from './ContactDetailsModal';
 import ProviderFacts from './ProviderFacts';
+import { getCartoBasemapUrl } from './basemap';
 import {
   cleanDisplayValue as cleanDisplay,
   displayInstitution,
@@ -298,8 +299,8 @@ const MapComponent: React.FC<MapComponentProps> = ({ specialists, filteredSpecia
         />
         <CustomZoomControl />
         <TileLayer
-          attribution="©OpenStreetMap contributors ©CartoDB"
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url={getCartoBasemapUrl(process.env.REACT_APP_CARTO_BASEMAP_API_KEY)}
         />
         {disableClustering ? (
           <SpecialistMarkers key="no-cluster" specialists={specialistsToShow} />

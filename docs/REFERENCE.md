@@ -39,6 +39,7 @@ Google Sheet (Working Copy + Production)
 | `GCP_SA_KEY` | Base64 of service account JSON (Sheets + Drive) |
 | `SHEET_ID` | Google Sheet ID |
 | `REACT_APP_SECRET_KEY` | AES key; must match `?key=` in map URL |
+| `CARTO_BASEMAP_API_KEY` | Browser key for CARTO map tiles; restricted to the GitHub Pages domain |
 | `BACKUP_FOLDER_ID` | Drive folder for backup sheets. Optional. |
 | `GEOCODING_API_KEY` | Geocoding API. Optional. |
 | `SMTP_USERNAME`, `SMTP_PASSWORD` | Failure email notifications. Optional. |

@@ -46,6 +46,7 @@ Set these in **GitHub → Settings → Secrets and variables → Actions**:
 | `GCP_SA_KEY` | **Base64-encoded** contents of `.gcp-credentials/genetics-map-sa-key.json` |
 | `SHEET_ID` | Google Sheet ID from the sheet URL |
 | `REACT_APP_SECRET_KEY` | From `.secret_env` (value after `=`) |
+| `CARTO_BASEMAP_API_KEY` | CARTO browser basemap key for `boscacci.github.io`; injected only into published builds |
 | `BACKUP_FOLDER_ID` | Optional. Drive folder ID for backups. Share folder with service account as Editor. |
 | `GEOCODING_API_KEY` | Optional. When set, geocodes new rows before promote |
 | `SMTP_USERNAME` | Optional. Gmail for failure notifications |
@@ -80,6 +81,7 @@ Create 3 blank sheets in a Drive folder: "Genetics Map Backup (2 days ago)", "Ge
    | Promote Working Copy → Production | `SHEET_ID` wrong, or sheet not shared with service account |
    | Clean and validate | Empty Production tab, or Sheets API permission |
    | Encrypt data | `REACT_APP_SECRET_KEY` missing |
+   | Build app | `CARTO_BASEMAP_API_KEY` missing |
    | Deploy | `Settings → Pages` not set to `gh-pages` branch |
 
 3. On success: site updates at your GitHub Pages URL.

@@ -76,6 +76,31 @@ test('deploy workflow scopes map decrypt key to the steps that need it', () => {
   );
 });
 
+test('publishing workflows inject the CARTO basemap key only into final browser builds', () => {
+  for (const [workflowName, buildStepName] of [
+    ['sync-and-deploy.yml', 'Build app'],
+    ['refresh-map-data.yml', 'Build app with refreshed data'],
+  ]) {
+    const workflow = read(`.github/workflows/${workflowName}`);
+    const finalBuildStep = workflow.match(
+      new RegExp(`- name: ${buildStepName}\\n[\\s\\S]*?(?=\\n\\s+- name: Deploy)`),
+    );
+
+    assert.ok(finalBuildStep, `expected final build step in ${workflowName}`);
+    assert.match(
+      finalBuildStep[0],
+      /REACT_APP_CARTO_BASEMAP_API_KEY: \$\{\{ secrets\.CARTO_BASEMAP_API_KEY \}\}/,
+    );
+    assert.match(finalBuildStep[0], /CARTO_BASEMAP_API_KEY is required/);
+
+    const beforeFinalBuild = workflow.slice(0, workflow.indexOf(finalBuildStep[0]));
+    assert.doesNotMatch(beforeFinalBuild, /secrets\.CARTO_BASEMAP_API_KEY/);
+  }
+
+  assert.doesNotMatch(read('.github/workflows/ci.yml'), /CARTO_BASEMAP_API_KEY/);
+  assert.doesNotMatch(read('.github/workflows/promote-only.yml'), /CARTO_BASEMAP_API_KEY/);
+});
+
 test('verify command works without a local plaintext map secret', () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'genetics-map-verify-'));
   try {
@@ -171,6 +196,19 @@ test('pull requests and main run the complete credential-free CI suite', () => {
   assert.match(workflow, /react-scripts build/);
   assert.match(workflow, /python -m pytest -q tests/);
   assert.doesNotMatch(workflow, /\$\{\{\s*secrets\.|GCP_SA_KEY|SHEET_ID|Create GCP credentials/);
+});
+
+test('workflow dependency installs use the lockfile without install-time network audit calls', () => {
+  for (const workflowName of [
+    'ci.yml',
+    'sync-and-deploy.yml',
+    'refresh-map-data.yml',
+    'promote-only.yml',
+  ]) {
+    const workflow = read(`.github/workflows/${workflowName}`);
+    assert.match(workflow, /npm ci --no-audit --no-fund --prefer-offline/);
+    assert.doesNotMatch(workflow, /^\s+run: npm ci$/m);
+  }
 });
 
 test('production publishing is SemVer-tag-only and validates main CI before approval', () => {

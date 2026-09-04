@@ -91,7 +91,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: release
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Generate secret hash for App.tsx
         working-directory: release
@@ -187,7 +187,14 @@ jobs:
 
       - name: Build app with refreshed data
         working-directory: release
-        run: GENERATE_SOURCEMAP=false ./node_modules/.bin/dotenv -e .env.generated -- ./node_modules/.bin/react-scripts build
+        env:
+          REACT_APP_CARTO_BASEMAP_API_KEY: ${{ secrets.CARTO_BASEMAP_API_KEY }}
+        run: |
+          if [ -z "$REACT_APP_CARTO_BASEMAP_API_KEY" ]; then
+            echo "CARTO_BASEMAP_API_KEY is required for production map builds." >&2
+            exit 1
+          fi
+          GENERATE_SOURCEMAP=false ./node_modules/.bin/dotenv -e .env.generated -- ./node_modules/.bin/react-scripts build
 
       - name: Deploy refreshed data to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

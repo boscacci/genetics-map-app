@@ -57,3 +57,13 @@ test('geocoding scripts do not log Working Copy address details', () => {
   assert.ok(!appsScriptGeocoder.includes('already has geocoding data ('));
   assert.ok(!appsScriptGeocoder.includes('lat=${result.lat}, lng=${result.lng}'));
 });
+
+test('CARTO basemap uses the build-time key and keeps required attribution visible', () => {
+  const map = read('src/MapComponent.tsx');
+  const styles = read('src/index.css');
+
+  assert.ok(map.includes('getCartoBasemapUrl(process.env.REACT_APP_CARTO_BASEMAP_API_KEY)'));
+  assert.match(map, /openstreetmap\.org\/copyright/);
+  assert.match(map, /carto\.com\/attributions/);
+  assert.doesNotMatch(styles, /\.leaflet-control-attribution\s*\{[\s\S]*?display:\s*none/);
+});
