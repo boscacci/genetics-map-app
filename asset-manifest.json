@@ -1,11 +1,11 @@
 {
   "files": {
     "main.css": "/genetics-map-app/static/css/main.8c1fcf51.css",
-    "main.js": "/genetics-map-app/static/js/main.f97ecd8f.js",
+    "main.js": "/genetics-map-app/static/js/main.bdc91d2b.js",
     "index.html": "/genetics-map-app/index.html"
   },
   "entrypoints": [
     "static/css/main.8c1fcf51.css",
-    "static/js/main.f97ecd8f.js"
+    "static/js/main.bdc91d2b.js"
   ]
 }
